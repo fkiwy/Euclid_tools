@@ -11,7 +11,7 @@ class MagnitudeSystem(Enum):
     Vega = 'Vega'
 
 
-def find_object(ra, dec, search_radius=5):
+def find_objects(ra, dec, search_radius=5, nearest_object=True):
     search_radius = search_radius * u.arcsec.to(u.deg)
 
     adql = f"""
@@ -27,6 +27,22 @@ def find_object(ra, dec, search_radius=5):
     if len(table) == 0:
         return None
 
+    def add_magnitude(flux, flux_err, band):
+        table[band + '_AB_mag'], table[band + '_AB_err'] = convert_flux_to_mag(
+            flux, flux_err, magnitude_system=MagnitudeSystem.AB)
+        table[band + '_AB_mag'].unit = u.mag
+        table[band + '_AB_err'].unit = u.mag
+
+        table[band + '_Vega_mag'], table[band + '_Vega_err'] = convert_flux_to_mag(
+            flux, flux_err, magnitude_system=MagnitudeSystem.Vega, band=band)
+        table[band + '_Vega_mag'].unit = u.mag
+        table[band + '_Vega_err'].unit = u.mag
+
+    add_magnitude(result['flux_vis_psf'], result['fluxerr_vis_psf'], 'VIS')
+    add_magnitude(result['flux_y_templfit'], result['fluxerr_y_templfit'], 'Y')
+    add_magnitude(result['flux_j_templfit'], result['fluxerr_j_templfit'], 'J')
+    add_magnitude(result['flux_h_templfit'], result['fluxerr_h_templfit'], 'H')
+
     # Create a SkyCoord object for the target
     target_coord = SkyCoord(ra, dec, unit=(u.deg, u.deg), frame='icrs')
 
@@ -36,13 +52,19 @@ def find_object(ra, dec, search_radius=5):
     # Calculate the angular separation between the target and each object in the result table
     separations = target_coord.separation(object_coords).value
 
+    # Convert speparations from degree to arcsec
+    sparations = (separations * u.deg).to(u.arcsec)
+
     # Add the separations to the result table
-    table['separation'] = separations
+    table['separation'] = np.round(sparations, 3)
 
-    # Find the object with the minimum separation (closest object)
-    closest_object = table[separations.argmin()]
+    table.sort('separation')
 
-    return closest_object
+    if nearest_object:
+        # Find the object with the minimum separation (nearest object)
+        return table[:1]
+    else:
+        return table
 
 
 def print_catalog_info():
@@ -52,7 +74,7 @@ def print_catalog_info():
         print(f'{f"{col.name}":45s} {f"{col.unit}":12s} {col.description}')
 
 
-def convert_flux_to_mag(flux, band=None, magnitude_system=MagnitudeSystem.AB):
+def convert_flux_to_mag(flux, flux_err, magnitude_system, band=None):
     zero_points = {
         'VIS': 2835.34,
         'Y': 1916.10,
@@ -62,6 +84,9 @@ def convert_flux_to_mag(flux, band=None, magnitude_system=MagnitudeSystem.AB):
 
     def flux_to_mag(flux, zero_point):
         return -2.5 * np.log10(flux) + 2.5 * np.log10(zero_point)
+
+    def flux_err_to_mag(flux, flux_err):
+        return 2.5 / np.log(10) * (flux_err / flux)
 
     zero_point = None
 
@@ -73,6 +98,7 @@ def convert_flux_to_mag(flux, band=None, magnitude_system=MagnitudeSystem.AB):
 
     zero_point = (zero_point * u.Jy).to(u.uJy).value
 
-    magnitude = flux_to_mag(flux, zero_point)
+    mag = flux_to_mag(flux, zero_point)
+    mag_err = flux_err_to_mag(flux, flux_err)
 
-    return np.round(magnitude, 3)
+    return np.round(mag, 3), np.round(mag_err, 3)
