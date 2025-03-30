@@ -152,4 +152,5 @@ cython_debug/
 #.idea/
 
 *_test.py
+results
 UltracoolSheet.csv
