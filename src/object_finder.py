@@ -2,8 +2,8 @@ import numpy as np
 import pyvo as vo
 import astropy.units as u
 from astropy.coordinates import SkyCoord
-import shared as shr
 from enum import Enum
+import shared as shr
 
 
 class MagnitudeSystem(Enum):

@@ -1,12 +1,10 @@
 import os
-import sys
 import tempfile
 import warnings
-import subprocess
 import numpy as np
-import astropy.units as u
-# from astropy.nddata import Cutout2D
+from astropy import units as u
 from astropy.coordinates import SkyCoord
+# from astropy.nddata import Cutout2D
 from astropy.visualization import make_lupton_rgb
 from astropy.utils.exceptions import AstropyWarning
 from reproject import reproject_interp
@@ -15,16 +13,17 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import BoxStyle, Rectangle
 from PIL import Image
 import PIL.ImageOps
+import shared as shr
 
 
-def create_images(position, b_image, g_image, r_image, b_band, g_band, r_band, img_size,
-                  image_contrast=10, output_dir=tempfile.gettempdir()):
+def plot_images(ra, dec, images, img_size, image_contrast=10,
+                output_dir=tempfile.gettempdir(), open_plot=True, plot_format='png'):
 
     def create_image(hdu, img_idx, band):
         wcs, shape = find_optimal_celestial_wcs([hdu], frame='icrs')
         data, _ = reproject_interp(hdu, wcs, shape_out=shape)
 
-        # position = SkyCoord(ra*u.deg, dec*u.deg)
+        position = SkyCoord(ra, dec, unit=(u.deg, u.deg), frame='icrs')
         # cutout = Cutout2D(hdu.data, position, img_size*u.arcsec, wcs=wcs, mode='partial')
         # data = cutout.data
         # wcs = cutout.wcs
@@ -43,9 +42,9 @@ def create_images(position, b_image, g_image, r_image, b_band, g_band, r_band, i
         return data, x, y
 
     def create_color_image(r, g, b, img_idx, band, x, y, invert=False):
-        r = Image.fromarray(create_lupton_rgb(r)).convert('L')
-        g = Image.fromarray(create_lupton_rgb(g)).convert('L')
-        b = Image.fromarray(create_lupton_rgb(b)).convert('L')
+        r = Image.fromarray(get_rgb(r)).convert('L')
+        g = Image.fromarray(get_rgb(g)).convert('L')
+        b = Image.fromarray(get_rgb(b)).convert('L')
 
         if invert:
             r = PIL.ImageOps.invert(r)
@@ -63,7 +62,7 @@ def create_images(position, b_image, g_image, r_image, b_band, g_band, r_band, i
         ax.imshow(rgb, origin='lower')
         ax.axis('off')
 
-    def create_lupton_rgb(data):
+    def get_rgb(data):
         vmin, vmax = get_min_max(data)
         return make_lupton_rgb(data, data, data, minimum=vmin, stretch=vmax-vmin, Q=0)
 
@@ -77,81 +76,45 @@ def create_images(position, b_image, g_image, r_image, b_band, g_band, r_band, i
         vmax = med + 2.0 * dev
         return vmin, vmax
 
-    def create_obj_name(ra, dec, precision=0, sep='', prefix=None, shortform=False, decimal=True):
-        coords = SkyCoord(ra=ra * u.degree, dec=dec * u.degree)
-
-        if shortform:
-            coords_str = coords.to_string('hmsdms', decimal=False, sep=sep, precision=0)
-            obj_name = coords_str[0:4] + coords_str[7:12]
-        else:
-            if decimal:
-                obj_name = coords.to_string(decimal=True, precision=precision)
-            else:
-                obj_name = coords.to_string('hmsdms', decimal=False, sep=sep, precision=precision).replace(' ', '')
-
-        if prefix:
-            obj_name = prefix + obj_name
-
-        return str(obj_name)
-
-    def start_file(filename):
-        if sys.platform == 'win32':
-            os.startfile(filename)
-        else:
-            opener = 'open' if sys.platform == 'darwin' else 'evince'
-            subprocess.call([opener, filename])
-
-    def get_vega_photometry(catalog_entry, aper_size):
-        vegamag = catalog_entry[aper_size + '_vegamag']
-        vegamag_err = catalog_entry[aper_size + '_vegamag_err']
-        return vegamag, vegamag_err
-
-    def get_ab_photometry(catalog_entry, aper_size):
-        abmag = catalog_entry[aper_size + '_abmag']
-        abmag_err = catalog_entry[aper_size + '_abmag_err']
-        return abmag, abmag_err
-
-    # --------------------------------------
-    # Code for create_finder_charts function
-    # --------------------------------------
     warnings.simplefilter('ignore', category=AstropyWarning)
 
-    rows = 10
-    cols = 5
     img_idx = 1
+    fontsize = 2.4
+    rows, cols = 10, 5
+
     fig = plt.figure()
     fig.set_figheight(5)
     fig.set_figwidth(5)
     plt.subplots_adjust(wspace=0, hspace=0.05, right=0.5)
 
-    r = g = b = None
+    for image in images:
+        hdu = image['hdu']
+        band = image['band']
+        rgb = image['rgb']
 
-    ra = position.ra.deg
-    dec = position.dec.deg
+        print(f'Creating {band}-band image')
+        data, x, y = create_image(hdu, img_idx, band)
 
-    print(f'Object {ra} {dec}')
+        if rgb == 'r':
+            r_data = data
+            r_band = band
+        if rgb == 'g':
+            g_data = data
+            g_band = band
+        if rgb == 'b':
+            b_data = data
+            b_band = band
+        img_idx += 1
 
-    print(f'  Creating {b_band}-band image')
-    b, x, y = create_image(b_image, img_idx, b_band)
+    print('Creating color image')
+    create_color_image(r_data, g_data, b_data, img_idx, f'{r_band}-{g_band}-{b_band}', x, y)
     img_idx += 1
 
-    print(f'  Creating {g_band}-band image')
-    g, x, y = create_image(g_image, img_idx, g_band)
-    img_idx += 1
+    object_name = shr.create_object_name(ra, dec, precision=2, shortform=False, prefix='J', decimal=False)
+    filename = os.path.join(output_dir, object_name + '.' + plot_format)
 
-    print(f'  Creating {r_band}-band image')
-    r, x, y = create_image(r_image, img_idx, r_band)
-    img_idx += 1
-
-    print('  Creating color image')
-    create_color_image(r, g, b, img_idx, f'{r_band}-{g_band}-{b_band}', x, y)
-    img_idx += 1
-
-    # Astrometry
-    fontsize = 2.4
     ax = fig.add_subplot(rows, cols, img_idx)
-    obj_name = create_obj_name(ra, dec, precision=2, shortform=False, prefix='J', decimal=False)
-    ax.text(0.1, 0.75, obj_name, fontsize=fontsize, transform=ax.transAxes)
+    ax.text(0.1, 0.75, object_name, fontsize=fontsize, transform=ax.transAxes)
     ax.text(0.1, 0.60, r'$\alpha$ = ' + str(round(ra, 7)), fontsize=fontsize, transform=ax.transAxes)
     ax.text(0.1, 0.45, r'$\delta$ = ' + str(round(dec, 7)), fontsize=fontsize, transform=ax.transAxes)
     ax.text(0.1, 0.30, 'Size = ' + str(int(img_size)) + ' arcsec', fontsize=fontsize, transform=ax.transAxes)
@@ -159,9 +122,8 @@ def create_images(position, b_image, g_image, r_image, b_band, g_band, r_band, i
     ax.axis('off')
     img_idx += 1
 
-    # Save and open the file
-    filename = os.path.join(output_dir, obj_name + '.pdf')
-    plt.savefig(filename, dpi=2000, bbox_inches='tight', format='pdf')
+    plt.savefig(filename, dpi=600, bbox_inches='tight', format=plot_format)
     plt.close()
 
-    start_file(filename)
+    if open_plot:
+        shr.open_file(filename)
