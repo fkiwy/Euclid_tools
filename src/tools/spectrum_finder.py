@@ -1,17 +1,13 @@
-import warnings
 import requests
 import pyvo as vo
 from io import BytesIO
 from astropy.io import fits
 from astropy.table import Table
-from astropy.utils.exceptions import AstropyWarning
 
 import tools.shared as shr
 
 
 def find_spectrum(object_id):
-    warnings.simplefilter("ignore", category=AstropyWarning)
-
     adql = f"""
     SELECT *
       FROM {shr.table_1dspectra}

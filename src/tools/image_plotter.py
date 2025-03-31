@@ -103,6 +103,7 @@ def plot_images(
     fig.set_figheight(5)
     fig.set_figwidth(5)
     plt.subplots_adjust(wspace=0, hspace=0.05, right=0.5)
+    plt.rcParams.update({"font.family": "Arial"})
 
     for image in images:
         hdu = image["hdu"]
@@ -128,7 +129,7 @@ def plot_images(
     img_idx += 1
 
     object_name = shr.create_object_name(ra, dec, precision=2, shortform=False, prefix="J", decimal=False)
-    filename = os.path.join(output_dir, object_name + "." + plot_format)
+    filename = os.path.join(output_dir, object_name + "_images." + plot_format)
 
     ax = fig.add_subplot(rows, cols, img_idx)
     ax.text(0.1, 0.75, object_name, fontsize=fontsize, transform=ax.transAxes)

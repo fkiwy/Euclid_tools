@@ -6,9 +6,9 @@ import matplotlib.pyplot as plt
 import tools.shared as shr
 
 
-def plot_spectrum(data, ra, dec, output_dir=tempfile.gettempdir(), open_plot=True, plot_format="png"):
+def plot_spectrum(data, ra, dec, output_dir=tempfile.gettempdir(), open_plot=True, plot_format="pdf"):
     object_name = shr.create_object_name(ra, dec, precision=2, shortform=False, prefix="J", decimal=False)
-    filename = os.path.join(output_dir, object_name + "." + plot_format)
+    filename = os.path.join(output_dir, object_name + "_spectrum." + plot_format)
 
     plt.rcParams.update({"font.family": "Arial"})
     plt.plot(data["WAVELENGTH"].to(u.um), data["SIGNAL"])

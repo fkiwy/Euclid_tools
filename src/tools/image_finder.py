@@ -33,6 +33,9 @@ def find_images(ra, dec, search_radius=5, cutout_size=20):
 
     result = table[(table["dataproduct_subtype"] == "science")]
 
+    if result and len(result) == 0:
+        return None
+
     vis_hdu = create_cutout(position, cutout_size, get_image_url(result, "VIS"), "VIS")
     y_hdu = create_cutout(position, cutout_size, get_image_url(result, "Y"), "Y")
     j_hdu = create_cutout(position, cutout_size, get_image_url(result, "J"), "J")
