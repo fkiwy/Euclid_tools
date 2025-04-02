@@ -1,11 +1,14 @@
 import os
 import tempfile
+import numpy as np
 from datetime import datetime
 from astroquery.esa.euclid import Euclid
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
 from astropy.io import fits
 import astropy.units as u
+
+import tools.shared as shr
 
 
 def retrieve_objects(ra: float, dec: float, radius: float) -> Table:
@@ -31,11 +34,22 @@ def retrieve_objects(ra: float, dec: float, radius: float) -> Table:
         columns="*",
         async_job=False,
     )
-    results = job.get_results()
-    results["dist"] = (results["dist"] * u.deg).to(u.arcsec)
-    results.rename_column("right_ascension", "ra")
-    results.rename_column("declination", "dec")
-    return results
+    table = job.get_results()
+
+    if len(table) == 0:
+        return None
+
+    add_magnitude(table, table["flux_vis_psf"], table["fluxerr_vis_psf"], "VIS")
+    add_magnitude(table, table["flux_y_templfit"], table["fluxerr_y_templfit"], "Y")
+    add_magnitude(table, table["flux_j_templfit"], table["fluxerr_j_templfit"], "J")
+    add_magnitude(table, table["flux_h_templfit"], table["fluxerr_h_templfit"], "H")
+
+    separation = (table["dist"] * u.deg).to(u.arcsec)
+    table["separation"] = np.round(separation, 3)
+    table.rename_column("right_ascension", "ra")
+    table.rename_column("declination", "dec")
+
+    return table
 
 
 def retrieve_spectrum(object_id: str, spectrum_type: str = "RGS") -> fits.HDUList:
@@ -98,7 +112,7 @@ def retrieve_cutout(ra: float, dec: float, search_radius: float, cutout_size: fl
     job_async = Euclid.launch_job(query)
     results = job_async.get_results()
 
-    if results and len(results) == 0:
+    if not results or len(results) == 0:
         return None
 
     result = results[0]
@@ -117,6 +131,26 @@ def retrieve_cutout(ra: float, dec: float, search_radius: float, cutout_size: fl
 
     hdul = fits.open(cutout_filepath[0])
     return hdul[0]
+
+
+def print_catalog_info():
+    table = Euclid.load_table("catalogue.mer_catalogue")
+    for col in table.columns:
+        print(f'{f"{col.name}":45s} {f"{col.unit}":12s} {col.description}')
+
+
+def add_magnitude(table, flux, flux_err, band):
+    table[band + "_AB_mag"], table[band + "_AB_err"] = shr.convert_flux_to_mag(
+        flux, flux_err, magnitude_system=shr.MagnitudeSystem.AB
+    )
+    table[band + "_AB_mag"].unit = u.mag
+    table[band + "_AB_err"].unit = u.mag
+
+    table[band + "_Vega_mag"], table[band + "_Vega_err"] = shr.convert_flux_to_mag(
+        flux, flux_err, magnitude_system=shr.MagnitudeSystem.Vega, band=band
+    )
+    table[band + "_Vega_mag"].unit = u.mag
+    table[band + "_Vega_err"].unit = u.mag
 
 
 def generate_filename(working_dir: str, source_id: str) -> str:
