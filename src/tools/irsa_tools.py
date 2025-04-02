@@ -65,7 +65,7 @@ def retrieve_objects(ra: float, dec: float, radius: float) -> Table:
     return table
 
 
-def retrieve_spectrum(object_id: str, spectrum_type: str = "RGS") -> fits.HDUList:
+def retrieve_spectrum(object_id: str) -> fits.HDUList:
     """
     Retrieve the spectrum for a given object ID.
 
