@@ -11,6 +11,9 @@ import astropy.units as u
 import tools.shared as shr
 
 
+COLUMNS_TO_REMOVE = ["basic_download_data_oid", "to_be_published"]
+
+
 def retrieve_objects(ra: float, dec: float, radius: float) -> Table:
     """
     Perform a cone search on the Euclid archive.
@@ -39,15 +42,21 @@ def retrieve_objects(ra: float, dec: float, radius: float) -> Table:
     if len(table) == 0:
         return None
 
+    table.remove_columns(COLUMNS_TO_REMOVE)
+
     add_magnitude(table, table["flux_vis_psf"], table["fluxerr_vis_psf"], "VIS")
     add_magnitude(table, table["flux_y_templfit"], table["fluxerr_y_templfit"], "Y")
     add_magnitude(table, table["flux_j_templfit"], table["fluxerr_j_templfit"], "J")
     add_magnitude(table, table["flux_h_templfit"], table["fluxerr_h_templfit"], "H")
 
-    separation = (table["dist"] * u.deg).to(u.arcsec)
-    table["separation"] = np.round(separation, 3)
     table.rename_column("right_ascension", "ra")
     table.rename_column("declination", "dec")
+    table.rename_column("dist", "separation")
+
+    separation = (table["separation"] * u.deg).to(u.arcsec)
+    table["separation"] = np.round(separation, 3)
+
+    table.sort("separation")
 
     return table
 
@@ -63,8 +72,8 @@ def retrieve_spectrum(object_id: str, spectrum_type: str = "RGS") -> fits.HDULis
     fits.HDUList: HDU list containing the spectrum data.
     """
     filename = generate_filename(tempfile.gettempdir(), object_id)
-    spectrum = Euclid.get_spectrum(retrieval_type=f"SPECTRA_{spectrum_type}", source_id=object_id, output_file=filename)
-    return spectrum
+    hdul = Euclid.get_spectrum(retrieval_type=f"SPECTRA_{spectrum_type}", source_id=object_id, output_file=filename)
+    return hdul
 
 
 def retrieve_cutout(ra: float, dec: float, search_radius: float, cutout_size: float, band: str) -> fits.HDUList:
@@ -135,7 +144,15 @@ def retrieve_cutout(ra: float, dec: float, search_radius: float, cutout_size: fl
 
 def print_catalog_info():
     table = Euclid.load_table("catalogue.mer_catalogue")
+
     for col in table.columns:
+        if col.name in COLUMNS_TO_REMOVE:
+            continue
+        if col.name == "right_ascension":
+            col.name = "ra"
+        if col.name == "declination":
+            col.name = "dec"
+
         print(f'{f"{col.name}":45s} {f"{col.unit}":12s} {col.description}')
 
 

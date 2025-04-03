@@ -12,6 +12,9 @@ import astropy.units as u
 import tools.shared as shr
 
 
+COLUMNS_TO_REMOVE = ["tileid", "x", "y", "z", "spt_ind", "htm20", "cntr"]
+
+
 def retrieve_objects(ra: float, dec: float, radius: float) -> Table:
     """
     Perform a cone search on the Euclid archive.
@@ -38,6 +41,8 @@ def retrieve_objects(ra: float, dec: float, radius: float) -> Table:
 
     if len(table) == 0:
         return None
+
+    table.remove_columns(COLUMNS_TO_REMOVE)
 
     add_magnitude(table, table["flux_vis_psf"], table["fluxerr_vis_psf"], "VIS")
     add_magnitude(table, table["flux_y_templfit"], table["fluxerr_y_templfit"], "Y")
@@ -146,6 +151,8 @@ def print_catalog_info():
     service = vo.dal.TAPService(shr.irsa_url + "TAP")
     table = service.tables[shr.table_mer]
     for col in table.columns:
+        if col.name in COLUMNS_TO_REMOVE:
+            continue
         print(f'{f"{col.name}":45s} {f"{col.unit}":12s} {col.description}')
 
 
