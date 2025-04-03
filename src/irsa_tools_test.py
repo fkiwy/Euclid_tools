@@ -17,7 +17,7 @@ warnings.simplefilter("ignore", category=AstropyWarning)
 # ------------------------------
 # Print catalog information
 # ------------------------------
-print_catalog_info()
+# print_catalog_info()
 
 
 # ------------------------------
@@ -38,17 +38,16 @@ shr.print_results(results)
 result = results[0]
 object_id = str(result["object_id"])
 
-hdul = retrieve_spectrum(object_id)
+table = retrieve_spectrum(object_id, ignore_bad_values=True)
 
-if hdul and len(hdul) > 0:
-    data = Table.read(hdul[0], format="fits")
-    plot_spectrum(data, ra, dec)
+if table and len(table) > 0:
+    plot_spectrum(table, ra, dec)
 
 
 # ------------------------------
 # Retrieve cutouts
 # ------------------------------
-
+"""
 search_radius = 5  # arcsec
 cutout_size = 20  # arcsec
 
@@ -65,3 +64,4 @@ images.append({"hdu": j_hdu, "band": "J", "rgb": None})
 images.append({"hdu": h_hdu, "band": "H", "rgb": "r"})
 
 plot_images(ra, dec, images, cutout_size, plot_format="pdf")
+"""

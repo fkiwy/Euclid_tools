@@ -4,7 +4,7 @@ import numpy as np
 from datetime import datetime
 from astroquery.esa.euclid import Euclid
 from astropy.coordinates import SkyCoord
-from astropy.table import Table
+from astropy.table import Table, QTable, MaskedColumn
 from astropy.io import fits
 import astropy.units as u
 
@@ -61,7 +61,7 @@ def retrieve_objects(ra: float, dec: float, radius: float) -> Table:
     return table
 
 
-def retrieve_spectrum(object_id: str, spectrum_type: str = "RGS") -> fits.HDUList:
+def retrieve_spectrum(object_id: str, ignore_bad_values: bool = False) -> fits.HDUList:
     """
     Retrieve the spectrum for a given object ID.
 
@@ -72,8 +72,32 @@ def retrieve_spectrum(object_id: str, spectrum_type: str = "RGS") -> fits.HDULis
     fits.HDUList: HDU list containing the spectrum data.
     """
     filename = generate_filename(tempfile.gettempdir(), object_id)
-    hdul = Euclid.get_spectrum(retrieval_type=f"SPECTRA_{spectrum_type}", source_id=object_id, output_file=filename)
-    return hdul
+    results = Euclid.get_spectrum(retrieval_type="SPECTRA_RGS", source_id=object_id, output_file=filename)
+
+    if results and len(results) > 0:
+        hdu = fits.open(results[0])[1]
+        spectrum = QTable.read(hdu, format="fits")
+        spec_header = hdu.header
+
+        # Convert wavelength to microns
+        wavelength = spectrum["WAVELENGTH"].to(u.micron)
+
+        # Scale the flux and error using the scaling factor from the fits header
+        flux = spectrum["SIGNAL"] * spec_header["FSCALE"]
+        error = np.sqrt(spectrum["VAR"]) * spec_header["FSCALE"]
+
+        if ignore_bad_values:
+            # Use the MASK column to create a boolean mask for values to ignore
+            bad_mask = (spectrum["MASK"].value % 2 == 1) | (spectrum["MASK"].value >= 64)
+
+            # Apply the mask to the flux and error values
+            flux = MaskedColumn(flux, mask=bad_mask)
+            error = MaskedColumn(error, mask=bad_mask)
+
+        # Create a new QTable for the result
+        result = QTable([wavelength, flux, error], names=("WAVELENGTH", "FLUX", "ERROR"))
+
+    return result
 
 
 def retrieve_cutout(ra: float, dec: float, search_radius: float, cutout_size: float, band: str) -> fits.HDUList:

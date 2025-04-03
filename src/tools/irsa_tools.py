@@ -1,13 +1,13 @@
-import requests
-from io import BytesIO
+import urllib
 import numpy as np
+import pyvo as vo
+import astropy.units as u
+from astropy.io import fits
 from astropy.coordinates import SkyCoord
-from astropy.table import Table
+from astropy.table import Table, QTable, MaskedColumn
 from astropy.nddata import Cutout2D
 from astropy.wcs import WCS
-import pyvo as vo
-from astropy.io import fits
-import astropy.units as u
+from astroquery.ipac.irsa import Irsa
 
 import tools.shared as shr
 
@@ -70,7 +70,7 @@ def retrieve_objects(ra: float, dec: float, radius: float) -> Table:
     return table
 
 
-def retrieve_spectrum(object_id: str) -> fits.HDUList:
+def retrieve_spectrum(object_id: str, ignore_bad_values: bool = False) -> QTable:
     """
     Retrieve the spectrum for a given object ID.
 
@@ -78,7 +78,7 @@ def retrieve_spectrum(object_id: str) -> fits.HDUList:
     object_id (str): The ID of the object to retrieve the spectrum for.
 
     Returns:
-    fits.HDUList: HDU list containing the spectrum data.
+    QTable: A QTable containing the wavelength, flux, and error data.
     """
     adql = f"""
     SELECT *
@@ -87,18 +87,37 @@ def retrieve_spectrum(object_id: str) -> fits.HDUList:
        AND uri IS NOT NULL
     """
 
-    service = vo.dal.TAPService(shr.irsa_url + "TAP")
-    results = service.search(adql)
-    table = results.to_table()
+    table = Irsa.query_tap(adql).to_table()
 
     if len(table) == 0:
         return None
 
-    file_url = shr.irsa_url + table["uri"][0]
-    response = requests.get(file_url)
+    file_url = urllib.parse.urljoin(Irsa.tap_url, table["uri"][0])
 
-    with fits.open(BytesIO(response.content), memmap=True) as hdul:
-        return hdul[table["hdu"][0]]
+    with fits.open(file_url) as hdul:
+        hdu = hdul[table["hdu"][0]]
+        spectrum = QTable.read(hdu, format="fits")
+        spec_header = hdu.header
+
+        # Convert wavelength to microns
+        wavelength = spectrum["WAVELENGTH"].to(u.micron)
+
+        # Scale the flux and error using the scaling factor from the fits header
+        flux = spectrum["SIGNAL"] * spec_header["FSCALE"]
+        error = np.sqrt(spectrum["VAR"]) * spec_header["FSCALE"]
+
+        if ignore_bad_values:
+            # Use the MASK column to create a boolean mask for values to ignore
+            bad_mask = (spectrum["MASK"].value % 2 == 1) | (spectrum["MASK"].value >= 64)
+
+            # Apply the mask to the flux and error values
+            flux = MaskedColumn(flux, mask=bad_mask)
+            error = MaskedColumn(error, mask=bad_mask)
+
+        # Create a new QTable for the result
+        result = QTable([wavelength, flux, error], names=("WAVELENGTH", "FLUX", "ERROR"))
+
+    return result
 
 
 def retrieve_cutout(ra: float, dec: float, search_radius: float, cutout_size: float, band: str) -> fits.HDUList:
