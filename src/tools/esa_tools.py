@@ -1,6 +1,7 @@
 import os
 import tempfile
 import numpy as np
+from enum import Enum
 from datetime import datetime
 from astroquery.esa.euclid import Euclid
 from astropy.coordinates import SkyCoord
@@ -8,7 +9,7 @@ from astropy.table import Table, QTable, MaskedColumn
 from astropy.io import fits
 import astropy.units as u
 
-import tools.shared as shr
+from tools.shared import MaskType, add_magnitude
 
 
 COLUMNS_TO_REMOVE = ["basic_download_data_oid", "to_be_published"]
@@ -26,8 +27,9 @@ def retrieve_objects(ra: float, dec: float, radius: float) -> Table:
     Returns:
     Table: Astropy table containing catalog entries.
     """
-    coord = SkyCoord(ra=ra, dec=dec, unit=(u.deg, u.deg))
+    coord = SkyCoord(ra=ra, dec=dec, unit=(u.deg, u.deg), frame="icrs")
     radius = u.Quantity(radius, u.arcsec)
+
     job = Euclid.cone_search(
         coordinate=coord,
         radius=radius,
@@ -61,7 +63,7 @@ def retrieve_objects(ra: float, dec: float, radius: float) -> Table:
     return table
 
 
-def retrieve_spectrum(object_id: str, ignore_bad_values: bool = False) -> fits.HDUList:
+def retrieve_spectrum(object_id: str, maskType: Enum = MaskType.NONE) -> fits.HDUList:
     """
     Retrieve the spectrum for a given object ID.
 
@@ -86,13 +88,17 @@ def retrieve_spectrum(object_id: str, ignore_bad_values: bool = False) -> fits.H
         flux = spectrum["SIGNAL"] * spec_header["FSCALE"]
         error = np.sqrt(spectrum["VAR"]) * spec_header["FSCALE"]
 
-        if ignore_bad_values:
+        if maskType in [MaskType.FLUX, MaskType.ERROR, MaskType.BOTH]:
             # Use the MASK column to create a boolean mask for values to ignore
             bad_mask = (spectrum["MASK"].value % 2 == 1) | (spectrum["MASK"].value >= 64)
 
-            # Apply the mask to the flux and error values
-            flux = MaskedColumn(flux, mask=bad_mask)
-            error = MaskedColumn(error, mask=bad_mask)
+            if maskType in [MaskType.FLUX, MaskType.BOTH]:
+                # Apply the mask to the flux values
+                flux = MaskedColumn(flux, mask=bad_mask)
+
+            if maskType in [MaskType.ERROR, MaskType.BOTH]:
+                # Apply the mask to the error values
+                error = MaskedColumn(error, mask=bad_mask)
 
         # Create a new QTable for the result
         result = QTable([wavelength, flux, error], names=("WAVELENGTH", "FLUX", "ERROR"))
@@ -153,16 +159,18 @@ def retrieve_cutout(ra: float, dec: float, search_radius: float, cutout_size: fl
     instrument = result["instrument_name"]
     obs_id = result["tile_index"]
 
-    coord = SkyCoord(ra=ra, dec=dec, unit=(u.deg, u.deg))
+    coord = SkyCoord(ra=ra, dec=dec, unit=(u.deg, u.deg), frame="icrs")
     radius = (cutout_size / 2) * u.arcsec
 
     filename = generate_filename(tempfile.gettempdir(), obs_id)
 
-    cutout_filepath = Euclid.get_cutout(
+    print(file_path)
+
+    cutout_url = Euclid.get_cutout(
         file_path=file_path, instrument=instrument, id=obs_id, coordinate=coord, radius=radius, output_file=filename
     )
+    hdul = fits.open(cutout_url[0])
 
-    hdul = fits.open(cutout_filepath[0])
     return hdul[0]
 
 
@@ -178,20 +186,6 @@ def print_catalog_info():
             col.name = "dec"
 
         print(f'{f"{col.name}":45s} {f"{col.unit}":12s} {col.description}')
-
-
-def add_magnitude(table, flux, flux_err, band):
-    table[band + "_AB_mag"], table[band + "_AB_err"] = shr.convert_flux_to_mag(
-        flux, flux_err, magnitude_system=shr.MagnitudeSystem.AB
-    )
-    table[band + "_AB_mag"].unit = u.mag
-    table[band + "_AB_err"].unit = u.mag
-
-    table[band + "_Vega_mag"], table[band + "_Vega_err"] = shr.convert_flux_to_mag(
-        flux, flux_err, magnitude_system=shr.MagnitudeSystem.Vega, band=band
-    )
-    table[band + "_Vega_mag"].unit = u.mag
-    table[band + "_Vega_err"].unit = u.mag
 
 
 def generate_filename(working_dir: str, source_id: str) -> str:

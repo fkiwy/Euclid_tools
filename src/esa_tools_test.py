@@ -1,11 +1,10 @@
 import warnings
-from astropy.table import Table
 from astropy.utils.exceptions import AstropyWarning
 
 from tools.esa_tools import retrieve_objects, retrieve_spectrum, retrieve_cutout, print_catalog_info
 from tools.spectrum_plotter import plot_spectrum
 from tools.image_plotter import plot_images
-import tools.shared as shr
+from tools.shared import MaskType, print_results
 
 
 # ==============================
@@ -17,7 +16,7 @@ warnings.simplefilter("ignore", category=AstropyWarning)
 # ------------------------------
 # Print catalog information
 # ------------------------------
-# print_catalog_info()
+print_catalog_info()
 
 
 # ------------------------------
@@ -28,7 +27,7 @@ ra, dec = 266.4850113, 64.9936424
 search_radius = 5  # arcsec
 
 results = retrieve_objects(ra, dec, search_radius)
-shr.print_results(results)
+print_results(results)
 
 
 # ------------------------------
@@ -38,7 +37,7 @@ shr.print_results(results)
 result = results[0]
 object_id = str(result["object_id"])
 
-table = retrieve_spectrum(object_id, ignore_bad_values=False)
+table = retrieve_spectrum(object_id, maskType=MaskType.NONE)
 
 if table and len(table) > 0:
     plot_spectrum(table, ra, dec)
@@ -47,7 +46,7 @@ if table and len(table) > 0:
 # ------------------------------
 # Retrieve cutouts
 # ------------------------------
-"""
+
 search_radius = 5  # arcsec
 cutout_size = 20  # arcsec
 
@@ -64,4 +63,3 @@ images.append({"hdu": j_hdu, "band": "J", "rgb": None})
 images.append({"hdu": h_hdu, "band": "H", "rgb": "r"})
 
 plot_images(ra, dec, images, cutout_size, plot_format="pdf")
-"""

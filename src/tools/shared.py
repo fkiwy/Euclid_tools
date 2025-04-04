@@ -6,16 +6,17 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 from enum import Enum
 
-irsa_url = "https://irsa.ipac.caltech.edu/"
-
-table_mer = "euclid_q1_mer_catalogue"
-
-table_1dspectra = "euclid.objectid_spectrafile_association_q1"
-
 
 class MagnitudeSystem(Enum):
-    AB = "AB"
-    Vega = "Vega"
+    AB = 1
+    Vega = 2
+
+
+class MaskType(Enum):
+    NONE = 0
+    FLUX = 1
+    ERROR = 2
+    BOTH = 3
 
 
 def open_file(filename):
@@ -42,6 +43,20 @@ def create_object_name(ra, dec, precision=0, sep="", prefix=None, shortform=Fals
         object_name = prefix + object_name
 
     return str(object_name)
+
+
+def add_magnitude(table, flux, flux_err, band):
+    table[band + "_AB_mag"], table[band + "_AB_err"] = convert_flux_to_mag(
+        flux, flux_err, magnitude_system=MagnitudeSystem.AB
+    )
+    table[band + "_AB_mag"].unit = u.mag
+    table[band + "_AB_err"].unit = u.mag
+
+    table[band + "_Vega_mag"], table[band + "_Vega_err"] = convert_flux_to_mag(
+        flux, flux_err, magnitude_system=MagnitudeSystem.Vega, band=band
+    )
+    table[band + "_Vega_mag"].unit = u.mag
+    table[band + "_Vega_err"].unit = u.mag
 
 
 def convert_flux_to_mag(flux, flux_err, magnitude_system, band=None):

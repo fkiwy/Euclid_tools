@@ -164,7 +164,7 @@ class SED:
         templates,
         number_of_matches=1,
         number_of_bands_to_omit=0,
-        metric="chi2",
+        metric="reduced-chi2",
         trim_wave=False,
         verbose=False,
         plot=False,
