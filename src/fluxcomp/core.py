@@ -491,16 +491,21 @@ class SED:
                     color = curves[-1].get_color()
                     flux_lower_bound = flux - uncertainty
                     flux_upper_bound = flux + uncertainty
-                    plt.plot(
+
+                    # Replace negative lower bound values by nan
+                    flux_lower_bound[flux_lower_bound < 0] = np.nan
+
+                    # Replace upper bound counterparts by nan
+                    flux_upper_bound[np.isnan(flux_lower_bound)] = np.nan
+
+                    plt.fill_between(
                         wavelength,
                         flux_lower_bound + delta,
-                        lw=0.3,
-                        c=color,
-                        ls="dashed",
-                        zorder=zorder,
+                        flux_upper_bound + delta,
+                        color=color,
+                        alpha=0.3,
                         label="Uncertainty",
                     )
-                    plt.plot(wavelength, flux_upper_bound + delta, lw=0.3, c=color, ls="dashed", zorder=zorder)
             if label_aside_curve:
                 color = curves[-1].get_color()
                 if label_position == "left" or label_position == "both":
@@ -553,7 +558,7 @@ class SED:
         elif normalized:
             plt.ylabel("Normalized Flux")
         else:
-            plt.ylabel(f"Flux [{self.flux_unit:latex}]")
+            plt.ylabel(f"Flux [{self.flux_unit:latex_inline}]")
 
         if x_limits:
             xmin, xmax = x_limits
