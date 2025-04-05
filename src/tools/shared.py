@@ -108,3 +108,16 @@ def print_results(results):
         "separation",
     ]
     table.pprint_all()
+
+
+def print_message(ra, dec, search_radius):
+    print(
+        f"""
+No object found in Euclid Q1 MER catalog at the specified coordinates.
+- Right Ascension: {ra}
+- Declination: {dec}
+- Search radius: {search_radius} arcsec
+
+Please verify the coordinates or try increasing the search radius.
+"""
+    )

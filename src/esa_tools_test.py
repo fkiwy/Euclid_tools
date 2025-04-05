@@ -1,10 +1,11 @@
+import sys
 import warnings
 from astropy.utils.exceptions import AstropyWarning
 
 from tools.esa_tools import retrieve_objects, retrieve_spectrum, retrieve_cutout, print_catalog_info
 from tools.spectrum_plotter import plot_spectrum
 from tools.image_plotter import plot_images
-from tools.shared import MaskType, print_results
+from tools.shared import MaskType, print_results, print_message
 
 
 # ==============================
@@ -27,6 +28,11 @@ ra, dec = 266.4850113, 64.9936424
 search_radius = 5  # arcsec
 
 results = retrieve_objects(ra, dec, search_radius)
+
+if not results:
+    print_message(ra, dec, search_radius)
+    sys.exit()
+
 print_results(results)
 
 
