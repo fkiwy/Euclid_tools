@@ -17,16 +17,30 @@ COLUMNS_TO_REMOVE = ["basic_download_data_oid", "to_be_published"]
 
 def retrieve_objects(ra: float, dec: float, radius: float) -> Table:
     """
-    Perform a cone search on the Euclid archive.
+    Perform a cone search on the Euclid Q1 MER catalog and return nearby objects.
 
-    Parameters:
-    ra (float): Right ascension in degrees.
-    dec (float): Declination in degrees.
-    radius (float): Search radius in arcseconds.
+    Parameters
+    ----------
+    ra : float
+        Right Ascension in degrees.
+    dec : float
+        Declination in degrees.
+    radius : float
+        Search radius in arcseconds.
 
-    Returns:
-    Table: Astropy table containing catalog entries.
+    Returns
+    -------
+    Table
+        Astropy Table containing catalog entries with added AB and Vega magnitudes.
+        Returns `None` if no objects are found.
+
+    Notes
+    -----
+    - Columns `basic_download_data_oid` and `to_be_published` are removed.
+    - Adds VIS, Y, J, and H magnitudes using `add_magnitude`.
+    - Results are sorted by angular separation in arcseconds.
     """
+
     coord = SkyCoord(ra=ra, dec=dec, unit=(u.deg, u.deg), frame="icrs")
     radius = u.Quantity(radius, u.arcsec)
 
@@ -65,15 +79,32 @@ def retrieve_objects(ra: float, dec: float, radius: float) -> Table:
 
 def retrieve_spectrum(object_id: str, maskType: Enum = MaskType.NONE) -> fits.HDUList:
     """
-    Retrieve the spectrum for a given object ID.
+    Retrieve the 1D spectrum for a given object ID from the Euclid archive.
 
-    Parameters:
-    object_id (str): The ID of the object to retrieve the spectrum for.
+    Parameters
+    ----------
+    object_id : str
+        Unique identifier of the source.
+    maskType : MaskType, optional
+        Type of data masking to apply. Options:
+        - MaskType.NONE: No masking.
+        - MaskType.FLUX: Mask bad flux values.
+        - MaskType.ERROR: Mask bad error values.
+        - MaskType.BOTH: Mask both flux and error.
 
-    Returns:
-    fits.HDUList: HDU list containing the spectrum data.
+    Returns
+    -------
+    QTable
+        A table containing wavelength (microns), flux, and flux error.
+        Flux and error are scaled using the FITS header FSCALE keyword.
+
+    Notes
+    -----
+    - Wavelength is converted to microns.
+    - Data is masked based on the bitmask in the `MASK` column if requested.
     """
-    filename = generate_filename(tempfile.gettempdir(), object_id)
+
+    filename = _generate_filename(tempfile.gettempdir(), object_id)
     results = Euclid.get_spectrum(retrieval_type="SPECTRA_RGS", source_id=object_id, output_file=filename)
 
     if results and len(results) > 0:
@@ -108,18 +139,33 @@ def retrieve_spectrum(object_id: str, maskType: Enum = MaskType.NONE) -> fits.HD
 
 def retrieve_cutout(ra: float, dec: float, search_radius: float, cutout_size: float, band: str) -> fits.HDUList:
     """
-    Retrieve a cutout image from the Euclid archive.
+    Retrieve an image cutout from Euclid imaging data.
 
-    Parameters:
-    ra (float): Right ascension in degrees.
-    dec (float): Declination in degrees.
-    search_radius (float): Search radius in arcseconds.
-    cutout_size (float): Size of the cutout in arcseconds.
-    band (str): Euclid band ('VIS', 'Y', 'J', 'H').
+    Parameters
+    ----------
+    ra : float
+        Right Ascension in degrees.
+    dec : float
+        Declination in degrees.
+    search_radius : float
+        Radius used to find the overlapping mosaic (in arcseconds).
+    cutout_size : float
+        Size of the image cutout in arcseconds.
+    band : str
+        Observing band to extract cutout from ('VIS', 'Y', 'J', 'H').
 
-    Returns:
-    fits.HDUList: HDU list containing the image cutout.
+    Returns
+    -------
+    fits.HDUList
+        FITS HDU containing the image cutout.
+        Returns `None` if no suitable image is found.
+
+    Raises
+    ------
+    ValueError
+        If the provided band is not one of the allowed options.
     """
+
     if band not in ["VIS", "Y", "J", "H"]:
         raise ValueError("Invalid band. Choose from 'VIS', 'Y', 'J', or 'H'.")
 
@@ -162,7 +208,7 @@ def retrieve_cutout(ra: float, dec: float, search_radius: float, cutout_size: fl
     coord = SkyCoord(ra=ra, dec=dec, unit=(u.deg, u.deg), frame="icrs")
     radius = (cutout_size / 2) * u.arcsec
 
-    filename = generate_filename(tempfile.gettempdir(), obs_id)
+    filename = _generate_filename(tempfile.gettempdir(), obs_id)
 
     print(file_path)
 
@@ -175,6 +221,16 @@ def retrieve_cutout(ra: float, dec: float, search_radius: float, cutout_size: fl
 
 
 def print_catalog_info():
+    """
+    Print metadata information for each column in the Euclid MER catalog.
+
+    Notes
+    -----
+    - Skips columns listed in `COLUMNS_TO_REMOVE`.
+    - Renames 'right_ascension' to 'ra' and 'declination' to 'dec' for clarity.
+    - Prints column name, unit, and description.
+    """
+
     table = Euclid.load_table("catalogue.mer_catalogue")
 
     for col in table.columns:
@@ -188,7 +244,29 @@ def print_catalog_info():
         print(f'{f"{col.name}":45s} {f"{col.unit}":12s} {col.description}')
 
 
-def generate_filename(working_dir: str, source_id: str) -> str:
+def _generate_filename(working_dir: str, source_id: str) -> str:
+    """
+    Generate a unique file path in a temporary directory for storing FITS output.
+
+    Parameters
+    ----------
+    working_dir : str
+        Base directory in which to create the subdirectory.
+    source_id : str
+        Source identifier used to name the FITS file.
+
+    Returns
+    -------
+    str
+        Full file path to the FITS file.
+
+    Notes
+    -----
+    - The filename includes a timestamp to ensure uniqueness.
+    - Creates the subdirectory if it doesn't already exist.
+    - Intended for internal use only.
+    """
+
     # Get the current timestamp and format it
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 

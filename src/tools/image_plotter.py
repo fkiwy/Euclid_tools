@@ -21,6 +21,40 @@ import tools.shared as shr
 def plot_images(
     ra, dec, images, img_size, image_contrast=10, output_dir=tempfile.gettempdir(), open_plot=True, plot_format="png"
 ):
+    """
+    Generate and save a panel of individual and RGB composite images centered on the specified coordinates.
+
+    This function takes a list of Euclid (or other) image HDUs, reprojects them to a common WCS,
+    generates grayscale band images and an RGB color composite, and annotates each with position markers
+    and band labels. It also includes metadata about the target (RA/Dec, cutout size, etc.)
+    in the final panel.
+
+    Parameters:
+        ra (float): Right Ascension of the target in degrees.
+        dec (float): Declination of the target in degrees.
+        images (list): List of dictionaries, each containing:
+            - "hdu": FITS HDU with image data and WCS,
+            - "band": String representing the band name (e.g., 'VIS', 'Y', 'J'),
+            - "rgb": String flag indicating whether the band corresponds to R, G, or B channel (e.g., 'r', 'g', 'b').
+        img_size (float): Desired cutout size in arcseconds.
+        image_contrast (float, optional): Percentile range used for display scaling (default is 10).
+        output_dir (str, optional): Directory to save the output image file (default: system temp directory).
+        open_plot (bool, optional): Whether to open the plot after saving (default: True).
+        plot_format (str, optional): Format to save the image file in (e.g., 'png', 'pdf').
+
+    Output:
+        Saves a figure in the specified format showing:
+            - A grid of grayscale band images with band labels.
+            - A composite RGB image based on selected bands.
+            - A panel with object information (coordinates, size, orientation).
+        The filename is constructed from the RA/Dec coordinates (e.g., 'JHHMMSS+DDMMSS_images.png').
+
+    Notes:
+        - The function uses astropy's WCS tools to reproject and align the images.
+        - The RGB image is built using Lupton scaling via `make_lupton_rgb`.
+        - Images are displayed in grayscale ('gray_r') with dynamic scaling based on median and MAD.
+        - The composite image assumes all three RGB bands are provided.
+    """
 
     def create_image(hdu, img_idx, band):
         wcs, shape = find_optimal_celestial_wcs([hdu], frame="icrs")

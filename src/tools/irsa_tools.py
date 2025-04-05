@@ -20,16 +20,30 @@ TABLE_MER = "euclid_q1_mer_catalogue"
 
 def retrieve_objects(ra: float, dec: float, radius: float) -> Table:
     """
-    Perform a cone search on the Euclid archive.
+    Perform a cone search on the Euclid Q1 MER catalog and return nearby objects.
 
-    Parameters:
-    ra (float): Right ascension in degrees.
-    dec (float): Declination in degrees.
-    radius (float): Search radius in arcseconds.
+    Parameters
+    ----------
+    ra : float
+        Right Ascension in degrees.
+    dec : float
+        Declination in degrees.
+    radius : float
+        Search radius in arcseconds.
 
-    Returns:
-    Table: Astropy table containing catalog entries.
+    Returns
+    -------
+    Table
+        Astropy Table containing catalog entries with added AB and Vega magnitudes.
+        Returns `None` if no objects are found.
+
+    Notes
+    -----
+    - Columns `tileid`, `x`, `y`, `z`, `spt_ind`, `htm20`, `cntr`are removed.
+    - Adds VIS, Y, J, and H magnitudes using `add_magnitude`.
+    - Results are sorted by angular separation in arcseconds.
     """
+
     position = SkyCoord(ra, dec, unit=(u.deg, u.deg), frame="icrs")
     radius = radius * u.arcsec
 
@@ -68,14 +82,31 @@ def retrieve_objects(ra: float, dec: float, radius: float) -> Table:
 
 def retrieve_spectrum(object_id: str, maskType: Enum = MaskType.NONE) -> QTable:
     """
-    Retrieve the spectrum for a given object ID.
+    Retrieve the 1D spectrum for a given object ID from the Euclid archive.
 
-    Parameters:
-    object_id (str): The ID of the object to retrieve the spectrum for.
+    Parameters
+    ----------
+    object_id : str
+        Unique identifier of the source.
+    maskType : MaskType, optional
+        Type of data masking to apply. Options:
+        - MaskType.NONE: No masking.
+        - MaskType.FLUX: Mask bad flux values.
+        - MaskType.ERROR: Mask bad error values.
+        - MaskType.BOTH: Mask both flux and error.
 
-    Returns:
-    QTable: A QTable containing the wavelength, flux, and error data.
+    Returns
+    -------
+    QTable
+        A table containing wavelength (microns), flux, and flux error.
+        Flux and error are scaled using the FITS header FSCALE keyword.
+
+    Notes
+    -----
+    - Wavelength is converted to microns.
+    - Data is masked based on the bitmask in the `MASK` column if requested.
     """
+
     adql = f"""
     SELECT *
       FROM euclid.objectid_spectrafile_association_q1
@@ -122,18 +153,33 @@ def retrieve_spectrum(object_id: str, maskType: Enum = MaskType.NONE) -> QTable:
 
 def retrieve_cutout(ra: float, dec: float, search_radius: float, cutout_size: float, band: str) -> fits.HDUList:
     """
-    Retrieve a cutout image from the Euclid archive.
+    Retrieve an image cutout from Euclid imaging data.
 
-    Parameters:
-    ra (float): Right ascension in degrees.
-    dec (float): Declination in degrees.
-    search_radius (float): Search radius in arcseconds.
-    cutout_size (float): Size of the cutout in arcseconds.
-    band (str): Euclid band ('VIS', 'Y', 'J', 'H').
+    Parameters
+    ----------
+    ra : float
+        Right Ascension in degrees.
+    dec : float
+        Declination in degrees.
+    search_radius : float
+        Radius used to find the overlapping mosaic (in arcseconds).
+    cutout_size : float
+        Size of the image cutout in arcseconds.
+    band : str
+        Observing band to extract cutout from ('VIS', 'Y', 'J', 'H').
 
-    Returns:
-    fits.HDUList: HDU list containing the image cutout.
+    Returns
+    -------
+    fits.HDUList
+        FITS HDU containing the image cutout.
+        Returns `None` if no suitable image is found.
+
+    Raises
+    ------
+    ValueError
+        If the provided band is not one of the allowed options.
     """
+
     if band not in ["VIS", "Y", "J", "H"]:
         raise ValueError("Invalid band. Choose from 'VIS', 'Y', 'J', or 'H'.")
 
@@ -159,6 +205,15 @@ def retrieve_cutout(ra: float, dec: float, search_radius: float, cutout_size: fl
 
 
 def print_catalog_info():
+    """
+    Print metadata information for each column in the Euclid MER catalog.
+
+    Notes
+    -----
+    - Skips columns listed in `COLUMNS_TO_REMOVE`.
+    - Prints column name, unit, and description.
+    """
+
     service = vo.dal.TAPService("https://irsa.ipac.caltech.edu/TAP")
     table = service.tables[TABLE_MER]
 
