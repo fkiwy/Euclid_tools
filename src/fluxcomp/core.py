@@ -2319,7 +2319,7 @@ class TemplateProvider:
 
     def get_Kesseli_2017_templates(self, wave_range=None, spt=None, smooth_window=None):
         print("Loading Kesseli+2017 templates ...")
-        template_dir = join(self.module_path, "../../resources/templates/Kesseli+2017/")
+        template_dir = join(self.module_path, "templates/Kesseli+2017/")
         template_paths = [
             template_dir + f for f in os.listdir(template_dir) if f.endswith(".fits") and isfile(join(template_dir, f))
         ]
@@ -2363,7 +2363,7 @@ class TemplateProvider:
 
     def get_Theissen_2022_templates(self, wave_range=None, spt=None, smooth_window=None):
         print("Loading Theissen+2022 templates ...")
-        template_dir = join(self.module_path, "../../resources/templates/Theissen+2022/")
+        template_dir = join(self.module_path, "templates/Theissen+2022/")
         template_paths = [
             template_dir + f for f in os.listdir(template_dir) if f.endswith(".fits") and isfile(join(template_dir, f))
         ]
@@ -2409,7 +2409,7 @@ class TemplateProvider:
 
     def get_Burgasser_2017_templates(self, wave_range=None, spt=None, smooth_window=None):
         print("Loading Burgasser+2017 templates ...")
-        template_dir = join(self.module_path, "../../resources/templates/Burgasser+2017/")
+        template_dir = join(self.module_path, "templates/Burgasser+2017/")
         template_paths = [
             template_dir + f for f in os.listdir(template_dir) if f.endswith(".fits") and isfile(join(template_dir, f))
         ]
