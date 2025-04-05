@@ -236,3 +236,13 @@ sed.plot(reference_on_top=False, spec_uncertainty=True)
 ```
 ![Comparison](examples/J174556.40+645937.11_vs._Theissen+2022.png)
 ![Comparison](examples/J174556.40+645937.11_vs._Burgasser+2017.png)
+
+## Installation
+
+To install the Euclid Tools package, clone the repository and install the dependencies:
+
+```bash
+git clone https://github.com/fkiwy/Euclid_tools.git
+cd Euclid_tools
+pip install .
+```
