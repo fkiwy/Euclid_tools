@@ -1,4 +1,3 @@
-import fluxcomp.uhs as uhs
 import re
 import os
 import sys
@@ -27,6 +26,8 @@ from astroquery.sdss import SDSS
 from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FormatStrFormatter, ScalarFormatter
+
+import flux_comp.uhs as uhs
 
 
 SVO_URL = "http://svo2.cab.inta-csic.es/theory/fps3/fps.php"

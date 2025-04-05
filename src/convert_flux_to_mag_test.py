@@ -1,5 +1,5 @@
-from tools.esa_tools import retrieve_objects
-import tools.shared as shr
+from euclid_tools.esa_tools import retrieve_objects
+import euclid_tools.shared as shr
 
 
 def print_magnitude(flux, flux_err, band):

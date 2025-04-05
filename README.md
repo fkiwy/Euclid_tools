@@ -19,12 +19,12 @@ The core functionality of the Euclid Tools package is to retrieve data from the 
 - **Cutouts**: Retrieve image cutouts for a specific region around a given object and band (e.g., VIS, Y, J, H).
 
 There are two versions of the data retrieval tools:
-- **IRSA Version**: Located in `tools/irsa_tools.py`. These functions retrieve data from the IRSA archive.
-- **ESA Version**: Located in `tools/esa_tools.py`. These functions retrieve data from the ESA archive and are faster.
+- **IRSA Version**: Located in `euclid_tools/irsa_tools.py`. These functions retrieve data from the IRSA archive.
+- **ESA Version**: Located in `euclid_tools/esa_tools.py`. These functions retrieve data from the ESA archive and are faster.
 
 ### 2. Spectrum Comparison
 
-The toolset includes a specialized comparison tool using the `fluxcomp` package to compare observed spectra to template models. The comparison metrics, such as reduced chi-squared, can help assess the quality of the fit between the observed spectrum and the templates.
+The toolset includes a specialized comparison tool using the `flux_comp` package to compare observed spectra to template models. The comparison metrics, such as reduced chi-squared, can help assess the quality of the fit between the observed spectrum and the templates.
 
 ### 3. Plotting
 
@@ -39,16 +39,16 @@ The toolset consists of several scripts and modules:
 - **`compare_spectrum_example.py`**: Example script to compare a spectrum with template SEDs.
 - **`esa_tools_example.py`**: Example script for retrieving and plotting data from the ESA archive.
 - **`irsa_tools_example.py`**: Example script for retrieving and plotting data from the IRSA archive.
-- **`tools/esa_tools.py`**: Contains functions for interacting with the ESA archive.
-- **`tools/irsa_tools.py`**: Contains functions for interacting with the IRSA archive.
-- **`tools/image_plotter.py`**: Functions for plotting image cutouts.
-- **`tools/spectrum_plotter.py`**: Functions for plotting spectra.
-- **`tools/shared.py`**: Shared utility functions used across the toolset.
-- **`fluxcomp/core.py`**: Core functions for spectrum comparison.
+- **`euclid_tools/esa_tools.py`**: Contains functions for interacting with the ESA archive.
+- **`euclid_tools/irsa_tools.py`**: Contains functions for interacting with the IRSA archive.
+- **`euclid_tools/image_plotter.py`**: Functions for plotting image cutouts.
+- **`euclid_tools/spectrum_plotter.py`**: Functions for plotting spectra.
+- **`euclid_tools/shared.py`**: Shared utility functions used across the toolset.
+- **`flux_comp/core.py`**: Core functions for spectrum comparison.
 
 ### 1. `retrieve_objects()`
 
-Located in `tools/esa_tools.py` or `tools/irsa_tools.py` depending on which version is used.
+Located in `euclid_tools/esa_tools.py` or `euclid_tools/irsa_tools.py` depending on which version is used.
 
 This function allows users to retrieve catalog objects from the Euclid archive based on coordinates and a specified search radius.
 
@@ -62,7 +62,7 @@ This function allows users to retrieve catalog objects from the Euclid archive b
 
 ### 2. `retrieve_spectrum()`
 
-Located in `tools/esa_tools.py` or `tools/irsa_tools.py`.
+Located in `euclid_tools/esa_tools.py` or `euclid_tools/irsa_tools.py`.
 
 This function retrieves the spectrum of a given object from the Euclid archive based on the object ID. It also allows users to mask bad data points (e.g., those with erroneous error values) to improve the comparison accuracy.
 
@@ -75,7 +75,7 @@ This function retrieves the spectrum of a given object from the Euclid archive b
 
 ### 3. `retrieve_cutout()`
 
-Located in `tools/esa_tools.py` or `tools/irsa_tools.py`.
+Located in `euclid_tools/esa_tools.py` or `euclid_tools/irsa_tools.py`.
 
 This function retrieves an image cutout for a given region around the target object and specified band (e.g., VIS, Y, J, H).
 
@@ -91,7 +91,7 @@ This function retrieves an image cutout for a given region around the target obj
 
 ### 4. `plot_spectrum()`
 
-Located in `tools/spectrum_plotter.py`.
+Located in `euclid_tools/spectrum_plotter.py`.
 
 This function generates a plot of the observed spectrum for a given object. The plot includes both the flux and error values, allowing users to visualize the spectrum and uncertainties.
 
@@ -108,7 +108,7 @@ This function generates a plot of the observed spectrum for a given object. The 
 
 ### 5. `plot_images()`
 
-Located in `tools/image_plotter.py`.
+Located in `euclid_tools/image_plotter.py`.
 
 This function generates plots for multiple images (cutouts) of the object in different bands (e.g., VIS, Y, J, H). The images can be combined into RGB composites.
 
@@ -125,11 +125,11 @@ This function generates plots for multiple images (cutouts) of the object in dif
 #### Returns:
 - A saved plot of the RGB images.
 
-### 6. Spectrum Comparison Using `fluxcomp`
+### 6. Spectrum Comparison Using `flux_comp`
 
-Located in `fluxcomp/core.py`.
+Located in `flux_comp/core.py`.
 
-To compare an observed spectrum to a template, the `fluxcomp` package is used. The script leverages the `SED` and `WaveFlux` classes for the comparison, employing metrics such as reduced chi-squared.
+To compare an observed spectrum to a template, the `flux_comp` package is used. The script leverages the `SED` and `WaveFlux` classes for the comparison, employing metrics such as reduced chi-squared.
 
 #### Key steps:
 1. Retrieve the catalog object based on RA, Dec.
@@ -146,8 +146,8 @@ To compare an observed spectrum to a template, the `fluxcomp` package is used. T
 This example demonstrates how to retrieve a spectrum for an object and plot it using the `plot_spectrum` function. The full example code can be found in `esa_tools_example.py`.
 
 ```python
-from tools.esa_tools import retrieve_objects, retrieve_spectrum
-from tools.spectrum_plotter import plot_spectrum
+from euclid_tools.esa_tools import retrieve_objects, retrieve_spectrum
+from euclid_tools.spectrum_plotter import plot_spectrum
 
 # Define object coordinates
 ra, dec = 266.4850113, 64.9936424
@@ -177,8 +177,8 @@ else:
 This example shows how to retrieve image cutouts for a given object using different bands, and plot them using the `plot_images` function. The full example code can be found in `esa_tools_example.py`.
 
 ```python
-from tools.esa_tools import retrieve_cutout
-from tools.image_plotter import plot_images
+from euclid_tools.esa_tools import retrieve_cutout
+from euclid_tools.image_plotter import plot_images
 
 # Define object coordinates and cutout size (arcsec)
 ra, dec = 266.4850113, 64.9936424
@@ -204,15 +204,15 @@ plot_images(ra, dec, images, cutout_size, plot_format="pdf")
 ```
 ![Images](examples/J174556.40+645937.11_images.png)
 
-### Example 3: Compare Spectrum to Template Using Fluxcomp
+### Example 3: Compare Spectrum to Template Using `flux_comp`
 
 This example demonstrates how to use the Euclid tools to retrieve a spectrum for a given object
-and compare it to predefined templates using the `fluxcomp` tool. The full example code can be found in `compare_spectrum_example.py`.
+and compare it to predefined templates using the `flux_comp` tool. The full example code can be found in `compare_spectrum_example.py`.
 
 ```python
-from fluxcomp.core import SED, WaveFlux, TemplateProvider
-from tools.esa_tools import retrieve_spectrum
-from tools.shared import MaskType
+from flux_comp.core import SED, WaveFlux, TemplateProvider
+from euclid_tools.esa_tools import retrieve_spectrum
+from euclid_tools.shared import MaskType
 
 # Retrieve spectrum for an object
 data = retrieve_spectrum(object_id, maskType=MaskType.ERROR)

@@ -18,12 +18,12 @@ setup(
         "Pillow",
     ],
     packages=["euclid_tools", "flux_comp"],
-    package_dir={"euclid_tools": "tools", "flux_comp": "fluxcomp"},
+    package_dir={"euclid_tools": "euclid_tools", "flux_comp": "flux_comp"},
     package_data={
         "flux_comp": [
-            "fluxcomp/templates/Burgasser+2017/*.fits",
-            "fluxcomp/templates/Kesseli+2017/*.fits",
-            "fluxcomp/templates/Theissen+2022/*.fits",
+            "flux_comp/templates/Burgasser+2017/*.fits",
+            "flux_comp/templates/Kesseli+2017/*.fits",
+            "flux_comp/templates/Theissen+2022/*.fits",
         ]
     },
     zip_safe=False,

@@ -48,9 +48,9 @@ Example Output:
 """
 
 from astropy import units as u
-from tools.esa_tools import retrieve_objects, retrieve_spectrum
-from fluxcomp.core import SED, WaveFlux, TemplateProvider
-from tools.shared import MaskType, create_object_name
+from euclid_tools.esa_tools import retrieve_objects, retrieve_spectrum
+from euclid_tools.shared import MaskType, create_object_name
+from flux_comp.core import SED, WaveFlux, TemplateProvider
 
 # Coordinates for the object of interest
 ra, dec = 266.4850113, 64.9936424

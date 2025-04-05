@@ -54,10 +54,10 @@ import sys
 import warnings
 from astropy.utils.exceptions import AstropyWarning
 
-from tools.irsa_tools import retrieve_objects, retrieve_spectrum, retrieve_cutout, print_catalog_info
-from tools.spectrum_plotter import plot_spectrum
-from tools.image_plotter import plot_images
-from tools.shared import MaskType, print_results, print_message
+from euclid_tools.irsa_tools import retrieve_objects, retrieve_spectrum, retrieve_cutout, print_catalog_info
+from euclid_tools.spectrum_plotter import plot_spectrum
+from euclid_tools.image_plotter import plot_images
+from euclid_tools.shared import MaskType, print_results, print_message
 
 
 # ==============================
@@ -103,7 +103,7 @@ table = retrieve_spectrum(object_id, maskType=MaskType.NONE)
 
 if table and len(table) > 0:
     # Plot the spectrum if data is available
-    plot_spectrum(table, ra, dec, plot_format="png")
+    plot_spectrum(table, ra, dec, plot_format="pdf")
 
 # ------------------------------
 # Retrieve cutouts
@@ -126,4 +126,4 @@ images.append({"hdu": j_hdu, "band": "J", "rgb": None})
 images.append({"hdu": h_hdu, "band": "H", "rgb": "r"})
 
 # Plot the images in a multi-band format and save the plot as a PDF
-plot_images(ra, dec, images, cutout_size, plot_format="png")
+plot_images(ra, dec, images, cutout_size, plot_format="pdf")

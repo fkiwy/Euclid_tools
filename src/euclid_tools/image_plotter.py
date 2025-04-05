@@ -15,7 +15,7 @@ from matplotlib.patches import BoxStyle, Rectangle
 from PIL import Image
 import PIL.ImageOps
 
-import tools.shared as shr
+import euclid_tools.shared as shr
 
 
 def plot_images(

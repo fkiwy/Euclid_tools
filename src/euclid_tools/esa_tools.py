@@ -1,21 +1,18 @@
-import urllib
+import os
+import tempfile
 import numpy as np
-import pyvo as vo
 from enum import Enum
-import astropy.units as u
-from astropy.io import fits
+from datetime import datetime
+from astroquery.esa.euclid import Euclid
 from astropy.coordinates import SkyCoord
 from astropy.table import Table, QTable, MaskedColumn
-from astropy.nddata import Cutout2D
-from astropy.wcs import WCS
-from astroquery.ipac.irsa import Irsa
+from astropy.io import fits
+import astropy.units as u
 
-from tools.shared import MaskType, add_magnitude
+from euclid_tools.shared import MaskType, add_magnitude
 
 
-COLUMNS_TO_REMOVE = ["tileid", "x", "y", "z", "spt_ind", "htm20", "cntr"]
-
-TABLE_MER = "euclid_q1_mer_catalogue"
+COLUMNS_TO_REMOVE = ["basic_download_data_oid", "to_be_published"]
 
 
 def retrieve_objects(ra: float, dec: float, radius: float) -> Table:
@@ -39,15 +36,24 @@ def retrieve_objects(ra: float, dec: float, radius: float) -> Table:
 
     Notes
     -----
-    - Columns `tileid`, `x`, `y`, `z`, `spt_ind`, `htm20`, `cntr`are removed.
+    - Columns `basic_download_data_oid` and `to_be_published` are removed.
     - Adds VIS, Y, J, and H magnitudes using `add_magnitude`.
     - Results are sorted by angular separation in arcseconds.
     """
 
-    position = SkyCoord(ra, dec, unit=(u.deg, u.deg), frame="icrs")
-    radius = radius * u.arcsec
+    coord = SkyCoord(ra=ra, dec=dec, unit=(u.deg, u.deg), frame="icrs")
+    radius = u.Quantity(radius, u.arcsec)
 
-    table = Irsa.query_region(coordinates=position, spatial="Cone", catalog=TABLE_MER, radius=radius)
+    job = Euclid.cone_search(
+        coordinate=coord,
+        radius=radius,
+        table_name="catalogue.mer_catalogue",
+        ra_column_name="right_ascension",
+        dec_column_name="declination",
+        columns="*",
+        async_job=False,
+    )
+    table = job.get_results()
 
     if len(table) == 0:
         return None
@@ -59,28 +65,19 @@ def retrieve_objects(ra: float, dec: float, radius: float) -> Table:
     add_magnitude(table, table["flux_j_templfit"], table["fluxerr_j_templfit"], "J")
     add_magnitude(table, table["flux_h_templfit"], table["fluxerr_h_templfit"], "H")
 
-    # Create a SkyCoord object for the target
-    target_coord = SkyCoord(ra, dec, unit=(u.deg, u.deg), frame="icrs")
+    table.rename_column("right_ascension", "ra")
+    table.rename_column("declination", "dec")
+    table.rename_column("dist", "separation")
 
-    # Create a SkyCoord object for the objects in the result table
-    object_coords = SkyCoord(table["ra"], table["dec"], unit=(u.deg, u.deg), frame="icrs")
+    separation = (table["separation"] * u.deg).to(u.arcsec)
+    table["separation"] = np.round(separation, 3)
 
-    # Calculate the angular separation between the target and each object in the result table
-    separations = target_coord.separation(object_coords).value
-
-    # Convert speparations from degree to arcsec
-    sparations = (separations * u.deg).to(u.arcsec)
-
-    # Add the separations to the result table
-    table["separation"] = np.round(sparations, 3)
-
-    # Sort the result table on separation
     table.sort("separation")
 
     return table
 
 
-def retrieve_spectrum(object_id: str, maskType: Enum = MaskType.NONE) -> QTable:
+def retrieve_spectrum(object_id: str, maskType: Enum = MaskType.NONE) -> fits.HDUList:
     """
     Retrieve the 1D spectrum for a given object ID from the Euclid archive.
 
@@ -107,22 +104,11 @@ def retrieve_spectrum(object_id: str, maskType: Enum = MaskType.NONE) -> QTable:
     - Data is masked based on the bitmask in the `MASK` column if requested.
     """
 
-    adql = f"""
-    SELECT *
-      FROM euclid.objectid_spectrafile_association_q1
-     WHERE objectid = {object_id}
-       AND uri IS NOT NULL
-    """
+    filename = _generate_filename(tempfile.gettempdir(), object_id)
+    results = Euclid.get_spectrum(retrieval_type="SPECTRA_RGS", source_id=object_id, output_file=filename)
 
-    table = Irsa.query_tap(adql).to_table()
-
-    if len(table) == 0:
-        return None
-
-    file_url = urllib.parse.urljoin(Irsa.tap_url, table["uri"][0])
-
-    with fits.open(file_url) as hdul:
-        hdu = hdul[table["hdu"][0]]
+    if results and len(results) > 0:
+        hdu = fits.open(results[0])[1]
         spectrum = QTable.read(hdu, format="fits")
         spec_header = hdu.header
 
@@ -183,25 +169,55 @@ def retrieve_cutout(ra: float, dec: float, search_radius: float, cutout_size: fl
     if band not in ["VIS", "Y", "J", "H"]:
         raise ValueError("Invalid band. Choose from 'VIS', 'Y', 'J', or 'H'.")
 
-    position = SkyCoord(ra, dec, unit=(u.deg, u.deg), frame="icrs")
-    search_radius *= u.arcsec
+    if band == "VIS":
+        instrument_name = "VIS"
+        filter_name = "VIS"
+    else:
+        instrument_name = "NISP"
+        filter_name = "NIR_" + band
 
-    table = Irsa.query_sia(pos=(position, search_radius), collection="euclid_DpdMerBksMosaic")
+    radius = search_radius * u.arcsec.to(u.deg)
 
-    results = table[(table["dataproduct_subtype"] == "science")]
+    query = f"""
+    SELECT file_name, 
+           file_path, 
+           datalabs_path, 
+           mosaic_product_oid, 
+           tile_index, 
+           instrument_name, 
+           filter_name, 
+           ra, 
+           dec 
+      FROM sedm.mosaic_product 
+     WHERE (instrument_name='{instrument_name}') 
+       AND (filter_name='{filter_name}') 
+       AND (((mosaic_product.fov IS NOT NULL AND INTERSECTS(CIRCLE('ICRS', {ra}, {dec},{radius}), mosaic_product.fov)=1))) 
+     ORDER BY mosaic_product.tile_index ASC
+    """
+    job_async = Euclid.launch_job(query)
+    results = job_async.get_results()
 
     if not results or len(results) == 0:
         return None
 
-    image_url = results[results["energy_bandpassname"] == band]["access_url"][0]
+    result = results[0]
+    file_path = result["file_path"] + "/" + result["file_name"]
+    instrument = result["instrument_name"]
+    obs_id = result["tile_index"]
 
-    print(f"Downloading {band}-band cutout")
-    with fits.open(image_url, use_fsspec=True) as hdul:
-        wcs = WCS(hdul[0].header)
-        cutout = Cutout2D(hdul[0].section, position=position, size=cutout_size * u.arcsec, wcs=wcs)
-        hdu = fits.PrimaryHDU(data=cutout.data, header=cutout.wcs.to_header())
+    coord = SkyCoord(ra=ra, dec=dec, unit=(u.deg, u.deg), frame="icrs")
+    radius = (cutout_size / 2) * u.arcsec
 
-    return hdu
+    filename = _generate_filename(tempfile.gettempdir(), obs_id)
+
+    print(file_path)
+
+    cutout_url = Euclid.get_cutout(
+        file_path=file_path, instrument=instrument, id=obs_id, coordinate=coord, radius=radius, output_file=filename
+    )
+    hdul = fits.open(cutout_url[0])
+
+    return hdul[0]
 
 
 def print_catalog_info():
@@ -211,14 +227,56 @@ def print_catalog_info():
     Notes
     -----
     - Skips columns listed in `COLUMNS_TO_REMOVE`.
+    - Renames 'right_ascension' to 'ra' and 'declination' to 'dec' for clarity.
     - Prints column name, unit, and description.
     """
 
-    service = vo.dal.TAPService("https://irsa.ipac.caltech.edu/TAP")
-    table = service.tables[TABLE_MER]
+    table = Euclid.load_table("catalogue.mer_catalogue")
 
     for col in table.columns:
         if col.name in COLUMNS_TO_REMOVE:
             continue
+        if col.name == "right_ascension":
+            col.name = "ra"
+        if col.name == "declination":
+            col.name = "dec"
 
         print(f'{f"{col.name}":45s} {f"{col.unit}":12s} {col.description}')
+
+
+def _generate_filename(working_dir: str, source_id: str) -> str:
+    """
+    Generate a unique file path in a temporary directory for storing FITS output.
+
+    Parameters
+    ----------
+    working_dir : str
+        Base directory in which to create the subdirectory.
+    source_id : str
+        Source identifier used to name the FITS file.
+
+    Returns
+    -------
+    str
+        Full file path to the FITS file.
+
+    Notes
+    -----
+    - The filename includes a timestamp to ensure uniqueness.
+    - Creates the subdirectory if it doesn't already exist.
+    - Intended for internal use only.
+    """
+
+    # Get the current timestamp and format it
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+    # Construct the directory path
+    directory_path = os.path.join(working_dir, f"temp_{timestamp}")
+
+    # Make sure the directory exists
+    os.makedirs(directory_path, exist_ok=True)
+
+    # Create the full file path
+    file_path = os.path.join(directory_path, f"{source_id}.fits")
+
+    return file_path
