@@ -103,7 +103,7 @@ table = retrieve_spectrum(object_id, maskType=MaskType.NONE)
 
 if table and len(table) > 0:
     # Plot the spectrum if data is available
-    plot_spectrum(table, ra, dec)
+    plot_spectrum(table, ra, dec, plot_format="png")
 
 # ------------------------------
 # Retrieve cutouts
@@ -126,4 +126,4 @@ images.append({"hdu": j_hdu, "band": "J", "rgb": None})
 images.append({"hdu": h_hdu, "band": "H", "rgb": "r"})
 
 # Plot the images in a multi-band format and save the plot as a PDF
-plot_images(ra, dec, images, cutout_size, plot_format="pdf")
+plot_images(ra, dec, images, cutout_size, plot_format="png")

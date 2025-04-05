@@ -380,6 +380,7 @@ class SED:
         margins=(0.02, 0.02),
         line_width=1.0,
         open_plot=True,
+        plot_format="png",
         offset=0,
         distinct_colors=None,
         colors=None,
@@ -503,7 +504,7 @@ class SED:
                         flux_lower_bound + delta,
                         flux_upper_bound + delta,
                         color=color,
-                        alpha=0.3,
+                        alpha=0.2,
                         label="Uncertainty",
                     )
             if label_aside_curve:
@@ -696,8 +697,8 @@ class SED:
         # Save and open the plot
         target_name = self.target_name if self.target_name else "SED"
         target_name = target_name.replace(" ", "_")
-        filename = join(self.directory, target_name + ".pdf")
-        plt.savefig(filename, dpi=300, bbox_inches="tight", format="pdf")
+        filename = join(self.directory, target_name + "." + plot_format)
+        plt.savefig(filename, dpi=300, bbox_inches="tight", format=plot_format)
         plt.close()
 
         # Show plot

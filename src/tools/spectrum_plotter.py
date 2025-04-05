@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import tools.shared as shr
 
 
-def plot_spectrum(data, ra, dec, output_dir=tempfile.gettempdir(), open_plot=True, plot_format="pdf"):
+def plot_spectrum(data, ra, dec, output_dir=tempfile.gettempdir(), open_plot=True, plot_format="png"):
     """
     Plot and save the spectrum of a source at given coordinates.
 

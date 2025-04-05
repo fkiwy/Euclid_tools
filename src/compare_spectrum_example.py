@@ -95,7 +95,7 @@ if results:
 
         # Convert to flux lambda and plot the results
         sed.to_flux_lambda()
-        sed.plot(reference_on_top=False, spec_uncertainty=True)
+        sed.plot(reference_on_top=False, spec_uncertainty=True, plot_format="pdf")
     else:
         print("No spectrum found for the given object ID")
 else:
