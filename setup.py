@@ -9,11 +9,13 @@ setup(
     author_email="frank.kiwy@outlook.com",
     license="MIT",
     install_requires=[
+        "aiohttp",
         "astropy",
         "astroquery",
         "matplotlib",
         "numpy",
         "requests",
+        "reproject",
         "scipy",
         "Pillow",
     ],
