@@ -137,7 +137,7 @@ def retrieve_spectrum(object_id: str, maskType: Enum = MaskType.NONE) -> QTable:
     return result
 
 
-def retrieve_cutout(ra: float, dec: float, search_radius: float, cutout_size: float, band: str) -> fits.HDU:
+def retrieve_cutout(ra: float, dec: float, search_radius: float, cutout_size: float, band: str) -> fits.PrimaryHDU:
     """
     Retrieve an image cutout from Euclid imaging data.
 
@@ -210,8 +210,7 @@ def retrieve_cutout(ra: float, dec: float, search_radius: float, cutout_size: fl
 
     filename = _generate_filename(tempfile.gettempdir(), obs_id)
 
-    print(file_path)
-
+    print(f"Downloading {band}-band cutout")
     cutout_url = Euclid.get_cutout(
         file_path=file_path, instrument=instrument, id=obs_id, coordinate=coord, radius=radius, output_file=filename
     )
