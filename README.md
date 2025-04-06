@@ -1,10 +1,10 @@
 # Euclid Tools
 
-A collection of tools to work with spectral and imaging data from the **ESA Euclid mission**, specifically tailored to handle data from the **Euclid Quick Release 1 (Q1)**. This package supports retrieval, visualization, and comparison of Euclid spectra and image cutouts, as well as matching them to template libraries.
+A collection of tools to work with spectral and imaging data from the **ESA Euclid mission**, specifically tailored to handle data from the **Euclid Quick Release 1 (Q1)**. This package supports the retrieval, visualization, and comparison of Euclid spectra, as well as the retrieval and visualization of image cutouts.
 
 The toolkit is written in Python and is designed to be lightweight, modular, and extensible. It includes high-level convenience functions for accessing and processing data, making it suitable for both exploratory data analysis and more in-depth scientific research.
 
-> **Note:** The tools are designed to support both **ESA** and **IRSA** data access. While functionality is similar between the two, **ESA services are significantly faster** and are preferred for most use cases. This toolkit includes high-level convenience functions for accessing and processing data from both services.
+> **Note:** The tools are designed to support both **ESA** and **IRSA** data access. While functionality is similar between the two, **ESA services are significantly faster** and are preferred for most use cases.
 
 The tools allow users to:
 - Retrieve catalog objects, spectra, and image cutouts.
