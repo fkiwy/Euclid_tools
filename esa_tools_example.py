@@ -47,7 +47,6 @@ Notes for Users:
   
 Example Output:
 The script will generate a plot that shows the spectrum of the selected object, as well as a multi-band image plot in the VIS, Y, J, and H bands. The plot will be saved in the specified format (PDF by default).
-
 """
 
 import sys

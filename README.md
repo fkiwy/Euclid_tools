@@ -61,7 +61,7 @@ This function allows users to retrieve catalog objects from the Euclid archive b
 - `search_radius`: Radius (in arcseconds) around the target to search for objects.
 
 #### Returns:
-- An Astropy table containing objects that are found within the specified search radius.
+- An Astropy Table containing objects that are found within the specified search radius.
 
 ### 2. `retrieve_spectrum()`
 
