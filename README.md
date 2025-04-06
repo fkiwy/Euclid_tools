@@ -1,36 +1,43 @@
 # Euclid Tools
 
-## Introduction
+A collection of tools to work with spectral and imaging data from the **ESA Euclid mission**, specifically tailored to handle data from the **Euclid Quick Release 1 (Q1)**. This package supports retrieval, visualization, and comparison of Euclid spectra and image cutouts, as well as matching them to template libraries.
 
-The **Euclid Tools** package is a collection of Python utilities designed to work with data retrieved from the Euclid mission's archives. The tools are divided into two versions: one pulling data from the **IRSA (Infrared Science Archive)** and the other from **ESA (European Space Agency)**. While both versions provide the same core functionality, the **ESA services** are faster than the IRSA services and should be preferred when available.
+The toolkit is written in Python and is designed to be lightweight, modular, and extensible. It includes high-level convenience functions for accessing and processing data, making it suitable for both exploratory data analysis and more in-depth scientific research.
+
+> **Note:** The tools are designed to support both **ESA** and **IRSA** data access. While functionality is similar between the two, **ESA services are significantly faster** and are preferred for most use cases.
 
 The tools allow users to:
 - Retrieve catalog objects, spectra, and image cutouts.
-- Compare observed spectra to predefined templates.
 - Visualize spectra and images (RGB composites).
-  
+- Compare observed spectra to predefined templates.
+
 ## Functionality Overview
 
-### 1. Data Retrieval
+This toolkit provides the following core functionality:
 
-The core functionality of the Euclid Tools package is to retrieve data from the Euclid archives. This includes:
-- **Catalog Objects**: Retrieve astronomical objects based on coordinates (RA, Dec) and search radius.
-- **Spectra**: Retrieve spectra for objects identified in the catalog.
-- **Cutouts**: Retrieve image cutouts for a specific region around a given object and band (e.g., VIS, Y, J, H).
+- **Object Search and Metadata Retrieval**
+  - Search for Euclid sources near specified sky coordinates.
+  - Retrieve source metadata from the Euclid MER (Merged External Reference) catalog.
 
-There are two versions of the data retrieval tools:
-- **IRSA Version**: Located in `euclid_tools/irsa_tools.py`. These functions retrieve data from the IRSA archive.
-- **ESA Version**: Located in `euclid_tools/esa_tools.py`. These functions retrieve data from the ESA archive and are faster.
+> **Note:** The Euclid MER catalog does **not include magnitudes for Euclid bands**. To address this, the toolkit calculates magnitudes with uncertainties from the available flux columns using appropriate zero-points. Magnitudes are computed in both **AB** and **Vega** systems, and added directly to the result table returned by `retrieve_objects()`.
+> - VIS magnitude is derived from `flux_vis_psf`
+> - Y magnitude from `flux_y_templfit`
+> - J magnitude from `flux_j_templfit`
+> - H magnitude from `flux_h_templfit`
 
-### 2. Spectrum Comparison
+- **Spectrum Retrieval and Visualization**
+  - Retrieve NISP spectra (slitless grism) for individual sources.
+  - Automatically mask unreliable flux or error values.
+  - Plot flux and uncertainty versus wavelength with publication-quality visuals.
 
-The toolset includes a specialized comparison tool using the `flux_comp` package to compare observed spectra to template models. The comparison metrics, such as reduced chi-squared, can help assess the quality of the fit between the observed spectrum and the templates.
+- **Image Cutout Retrieval**
+  - Access small imaging cutouts in VIS, Y, J, and H bands for any Euclid-detected source.
+  - Plot single- and multi-band image views (with optional RGB assignments).
 
-### 3. Plotting
-
-The package includes utilities for plotting:
-- **Spectra**: Plot observed spectra with error bars and uncertainties.
-- **Images**: Plot individual images and combine them into RGB composites.
+- **Spectral Comparison**
+  - Match retrieved Euclid spectra to template libraries (e.g., Burgasser+2017, Theissen+2022).
+  - Automatically evaluate fits using reduced χ² or other metrics.
+  - Generate labeled and customizable comparison plots.
 
 ## Detailed Description
 
