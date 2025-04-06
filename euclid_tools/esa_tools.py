@@ -77,7 +77,7 @@ def retrieve_objects(ra: float, dec: float, radius: float) -> Table:
     return table
 
 
-def retrieve_spectrum(object_id: str, maskType: Enum = MaskType.NONE) -> fits.HDUList:
+def retrieve_spectrum(object_id: str, maskType: Enum = MaskType.NONE) -> QTable:
     """
     Retrieve the 1D spectrum for a given object ID from the Euclid archive.
 
@@ -137,7 +137,7 @@ def retrieve_spectrum(object_id: str, maskType: Enum = MaskType.NONE) -> fits.HD
     return result
 
 
-def retrieve_cutout(ra: float, dec: float, search_radius: float, cutout_size: float, band: str) -> fits.HDUList:
+def retrieve_cutout(ra: float, dec: float, search_radius: float, cutout_size: float, band: str) -> fits.HDU:
     """
     Retrieve an image cutout from Euclid imaging data.
 
@@ -156,7 +156,7 @@ def retrieve_cutout(ra: float, dec: float, search_radius: float, cutout_size: fl
 
     Returns
     -------
-    fits.HDUList
+    fits.HDU
         FITS HDU containing the image cutout.
         Returns `None` if no suitable image is found.
 

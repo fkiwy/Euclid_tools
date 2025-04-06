@@ -15,20 +15,20 @@ The tools allow users to:
 
 This toolkit provides the following core functionality:
 
-- **Object Search and Metadata Retrieval**
+- **Object Search and Data Retrieval**
   - Search for Euclid sources near specified sky coordinates.
-  - Retrieve source metadata from the Euclid MER catalog.
+  - Retrieve source data from the Euclid MER catalog.
 
 > **Note:** The Euclid MER catalog does **not include magnitudes for Euclid bands**. To address this, the toolkit calculates magnitudes with uncertainties from the available flux columns using appropriate zero-points. Magnitudes are computed in both **AB** and **Vega** systems, and added directly to the result table returned by `retrieve_objects()`. VIS magnitude is derived from `flux_vis_psf` and Y, J, H magnitudes from `flux_[band]_templfit`.
 
 - **Spectrum Retrieval and Visualization**
   - Retrieve NISP spectra (slitless grism) for individual sources.
   - Automatically mask unreliable flux or error values.
-  - Plot flux and uncertainty versus wavelength with publication-quality visuals.
+  - Plot flux and uncertainty versus wavelength.
 
 - **Image Cutout Retrieval**
-  - Access small imaging cutouts in VIS, Y, J, and H bands for any Euclid-detected source.
-  - Plot single- and multi-band image views (with optional RGB assignments).
+  - Retrieve image cutouts in VIS, Y, J, and H bands for any Euclid-detected source.
+  - Plot single- and multi-band image views (with customizable RGB assignments).
 
 - **Spectral Comparison**
   - Match retrieved Euclid spectra to template libraries (e.g., Burgasser+2017, Theissen+2022).
@@ -61,7 +61,7 @@ This function allows users to retrieve catalog objects from the Euclid archive b
 - `search_radius`: Radius (in arcseconds) around the target to search for objects.
 
 #### Returns:
-- A list of objects that are found within the specified search radius.
+- An Astropy table containing objects that are found within the specified search radius.
 
 ### 2. `retrieve_spectrum()`
 
@@ -74,7 +74,7 @@ This function retrieves the spectrum of a given object from the Euclid archive b
 - `maskType`: A type of mask to apply to the spectrum data (e.g., `MaskType.ERROR`).
 
 #### Returns:
-- A table containing the spectrum data, including wavelength, flux, and error.
+- An Astropy QTable containing the spectrum data, including wavelength, flux, and error.
 
 ### 3. `retrieve_cutout()`
 
@@ -90,7 +90,7 @@ This function retrieves an image cutout for a given region around the target obj
 - `band`: The band (e.g., "VIS", "Y", "J", "H") to retrieve.
 
 #### Returns:
-- A data object (typically FITS HDUs, or Header/Data Units) containing the image cutout for the specified band.
+- A FITS HDU containing the image cutout for the specified band.
 
 ### 4. `plot_spectrum()`
 
@@ -106,7 +106,7 @@ This function generates a plot of the observed spectrum for a given object. The 
 - `open_plot`: Whether to open the plot file immediately after saving. Default is `False`. If set to `True`, the plot will be opened using the default system viewer.
 - `plot_format`: The format of the plot (e.g., "pdf", "png").
 
-#### Returns:
+#### Output:
 - A saved plot of the spectrum.
 
 ### 5. `plot_images()`
@@ -125,7 +125,7 @@ This function generates plots for multiple images (cutouts) of the object in dif
 - `open_plot`: Whether to open the plot file after saving.
 - `plot_format`: The format of the plot (e.g., "pdf", "png").
 
-#### Returns:
+#### Output:
 - A saved plot of the RGB images.
 
 ### 6. Spectrum Comparison Using `flux_comp`

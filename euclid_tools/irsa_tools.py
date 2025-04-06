@@ -151,7 +151,7 @@ def retrieve_spectrum(object_id: str, maskType: Enum = MaskType.NONE) -> QTable:
     return result
 
 
-def retrieve_cutout(ra: float, dec: float, search_radius: float, cutout_size: float, band: str) -> fits.HDUList:
+def retrieve_cutout(ra: float, dec: float, search_radius: float, cutout_size: float, band: str) -> fits.HDU:
     """
     Retrieve an image cutout from Euclid imaging data.
 
@@ -170,7 +170,7 @@ def retrieve_cutout(ra: float, dec: float, search_radius: float, cutout_size: fl
 
     Returns
     -------
-    fits.HDUList
+    fits.HDU
         FITS HDU containing the image cutout.
         Returns `None` if no suitable image is found.
 
