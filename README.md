@@ -4,7 +4,7 @@ A collection of tools to work with spectral and imaging data from the **ESA Eucl
 
 The toolkit is written in Python and is designed to be lightweight, modular, and extensible. It includes high-level convenience functions for accessing and processing data, making it suitable for both exploratory data analysis and more in-depth scientific research.
 
-> **Note:** The tools are designed to support both **ESA** and **IRSA** data access. While functionality is similar between the two, **ESA services are significantly faster** and are preferred for most use cases.
+> **Note:** The tools are designed to support both **ESA** and **IRSA** data access. While functionality is similar between the two, **ESA services are significantly faster** and are preferred for most use cases. This toolkit includes high-level convenience functions for accessing and processing data from both services.
 
 The tools allow users to:
 - Retrieve catalog objects, spectra, and image cutouts.
@@ -20,10 +20,10 @@ This toolkit provides the following core functionality:
   - Retrieve source metadata from the Euclid MER (Merged External Reference) catalog.
 
 > **Note:** The Euclid MER catalog does **not include magnitudes for Euclid bands**. To address this, the toolkit calculates magnitudes with uncertainties from the available flux columns using appropriate zero-points. Magnitudes are computed in both **AB** and **Vega** systems, and added directly to the result table returned by `retrieve_objects()`.
-> - VIS magnitude is derived from `flux_vis_psf`
-> - Y magnitude from `flux_y_templfit`
-> - J magnitude from `flux_j_templfit`
-> - H magnitude from `flux_h_templfit`
+  - VIS magnitude is derived from `flux_vis_psf`
+  - Y magnitude from `flux_y_templfit`
+  - J magnitude from `flux_j_templfit`
+  - H magnitude from `flux_h_templfit`
 
 - **Spectrum Retrieval and Visualization**
   - Retrieve NISP spectra (slitless grism) for individual sources.
@@ -94,7 +94,7 @@ This function retrieves an image cutout for a given region around the target obj
 - `band`: The band (e.g., "VIS", "Y", "J", "H") to retrieve.
 
 #### Returns:
-- A data object (HDUs) containing the image cutout for the specified band.
+- A data object (typically FITS HDUs, or Header/Data Units) containing the image cutout for the specified band.
 
 ### 4. `plot_spectrum()`
 
@@ -107,7 +107,7 @@ This function generates a plot of the observed spectrum for a given object. The 
 - `ra`: Right Ascension of the target object.
 - `dec`: Declination of the target object.
 - `output_dir`: Directory where the plot will be saved.
-- `open_plot`: Whether to open the plot file after saving.
+- `open_plot`: Whether to open the plot file immediately after saving. Default is `False`. If set to `True`, the plot will be opened using the default system viewer.
 - `plot_format`: The format of the plot (e.g., "pdf", "png").
 
 #### Returns:
@@ -142,7 +142,7 @@ To compare an observed spectrum to a template, the `flux_comp` package is used. 
 1. Retrieve the catalog object based on RA, Dec.
 2. Retrieve the spectrum for the object.
 3. Retrieve template(s) for comparison (e.g., from "Theissen+2022").
-4. Trim the spectrum to a specific wavelength range.
+4. Trim the spectrum to a specific wavelength range (either specified by the user or automatically based on template overlaps).
 5. Compare the spectrum to the templates using the reduced chi-squared metric.
 6. Plot the comparison.
 
