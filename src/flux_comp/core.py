@@ -64,7 +64,66 @@ class SED:
         iterations=100,
         parameter_keys=[],
     ):
+        """
+        Compares the reference data with the provided templates, estimating parameter errors by introducing
+        random noise based on uncertainties. This method runs multiple iterations to compute the uncertainty
+        in the model parameters, using either multi-processing or sequential execution.
 
+        Parameters:
+        -----------
+        reference : WaveFlux
+            The reference data to be compared with the templates. The reference must be an instance of
+            the `WaveFlux` class, containing wavelength, flux, and uncertainty data.
+
+        templates : list of WaveFlux
+            A list of `WaveFlux` templates that are compared to the reference data. Each template should
+            be an instance of `WaveFlux` containing the data to fit to the reference.
+
+        number_of_bands_to_omit : int, optional, default=0
+            The number of photometric bands to omit during the comparison process. Useful for handling
+            bands that might not be reliable or need to be excluded.
+
+        trim_wave : bool, optional, default=False
+            If True, trims the wavelength range to only include the region where both the reference and
+            templates overlap.
+
+        verbose : bool, optional, default=True
+            If True, prints detailed progress messages, including the number of iterations, execution time,
+            and estimated parameter errors.
+
+        multi_processing : bool, optional, default=True
+            If True, uses multiple processing (parallelization) to speed up the computation by distributing
+            the iterations across multiple CPU cores. If False, runs the iterations sequentially.
+
+        iterations : int, optional, default=100
+            The number of iterations to run for estimating the parameter errors. Each iteration involves
+            adding random noise to the reference flux based on the uncertainty and comparing it with the templates.
+
+        parameter_keys : list of str, optional, default=[]
+            A list of keys corresponding to model parameters that should be extracted from the template
+            parameters for error estimation. These parameters are printed with their mean value and standard
+            error after the comparison.
+
+        Returns:
+        --------
+        template : WaveFlux
+            The template with the updated flux, uncertainty, and estimated model parameters. The flux is
+            computed as the mean flux from all iterations, and the uncertainty is the standard deviation of
+            the flux. The model parameters are stored in the `model_params` attribute of the template, along
+            with their errors.
+
+        Notes:
+        ------
+        - This method performs a Monte Carlo simulation by adding random noise to the reference flux in each
+          iteration based on the uncertainty in the reference data. It then compares the noisy reference to
+          the provided templates.
+        - The method uses either parallel processing (multi-processing) or sequential execution to run the
+          iterations. Parallel processing speeds up the estimation of parameter errors by utilizing multiple
+          CPU cores.
+        - After all iterations, the method computes the mean flux and its uncertainty, and also extracts the
+          model parameters and their errors (mean and standard deviation).
+        - The method returns the template that has the updated flux, uncertainty, and model parameters.
+        """
         if verbose:
             start_time = time.time()
             print("Estimating parameter errors ...")
@@ -174,6 +233,63 @@ class SED:
         add_stat_to_template_label=False,
         normalize=True,
     ):
+        """
+        Compares the flux data of a reference object (WaveFlux) with a list of template objects (WaveFlux)
+        using a specified comparison metric. The method computes a statistic (e.g., reduced-chi2, delta, or chi2)
+        to quantify the similarity between the reference and each template. It provides options to omit certain bands,
+        normalize flux values, trim wavelength ranges, and display or print relevant information.
+
+        Parameters:
+        -----------
+        reference : WaveFlux
+            The reference object (WaveFlux) containing observed flux data to be compared with the templates.
+
+        templates : list of WaveFlux
+            A list of template objects (WaveFlux) to be compared with the reference.
+
+        number_of_matches : int, optional, default=1
+            The number of best matches to return based on the computed statistic.
+
+        number_of_bands_to_omit : int, optional, default=0
+            The number of photometric bands to omit during the comparison (applies if reference has photometric data).
+
+        metric : str, optional, default="reduced-chi2"
+            The metric used to compare the reference flux with the template flux. Options include "reduced-chi2",
+            "chi2", and "delta".
+
+        trim_wave : bool, optional, default=False
+            If True, trims the reference and template flux data to the overlapping wavelength range.
+
+        verbose : bool, optional, default=False
+            If True, prints detailed information about the comparison process.
+
+        plot : bool, optional, default=False
+            If True, generates a plot of the comparison results.
+
+        print_observed_photometry : bool, optional, default=False
+            If True, prints the photometric data of the reference object.
+
+        print_template_photometry : bool, optional, default=False
+            If True, prints the photometric data of the template objects.
+
+        add_stat_to_template_label : bool, optional, default=False
+            If True, appends the comparison statistic to the label of each template.
+
+        normalize : bool, optional, default=True
+            If True, normalizes the template flux to match the reference flux.
+
+        Returns:
+        --------
+        best_match : WaveFlux or None
+            The template with the best match to the reference based on the comparison metric. If no match is found,
+            returns None.
+
+        Notes:
+        ------
+        - The method creates copies of both the reference and template data to ensure the original objects remain unmodified.
+        - The statistic is computed based on the specified metric, and the results are sorted to find the best matches.
+        - The comparison includes an option to omit bands, normalize flux, trim the wavelength range, and print relevant information.
+        """
         if verbose:
             print("Comparing observed flux with templates ...")
 
@@ -402,6 +518,119 @@ class SED:
         label_position="left",
         additional_legend_text=None,
     ):
+        """
+        Plots the spectral energy distribution (SED) of the waveflux data, with various customization options
+        for visualizing fluxes, uncertainties, and annotations such as bands, spectral features, and legends.
+        The plot can include multiple curves corresponding to different waveflux data, each with options for
+        error bars, scaling, and various plot adjustments.
+
+        Parameters:
+        -----------
+        spec_uncertainty : bool, optional, default=False
+            If True, includes the spectral uncertainty (error bars) in the plot.
+
+        phot_uncertainty : bool, optional, default=False
+            If True, includes the photometric uncertainty (error bars) in the plot.
+
+        show_grid : bool, optional, default=False
+            If True, displays gridlines on the plot.
+
+        xscale : str, optional, default="linear"
+            The scale for the x-axis. Options are "linear" and "log".
+
+        yscale : str, optional, default="linear"
+            The scale for the y-axis. Options are "linear" and "log".
+
+        figure_size : tuple of float, optional, default=None
+            The size of the figure (width, height) in inches.
+
+        margins : tuple of float, optional, default=(0.02, 0.02)
+            The margins around the plot as a fraction of the axis range.
+
+        line_width : float, optional, default=1.0
+            The line width for the plotted curves.
+
+        open_plot : bool, optional, default=True
+            If True, the plot will be opened after being saved.
+
+        plot_format : str, optional, default="png"
+            The format of the saved plot file. Common options are "png", "jpg", or "pdf".
+
+        offset : float, optional, default=0
+            The vertical offset between the curves in the plot.
+
+        distinct_colors : int or None, optional, default=None
+            The number of distinct colors for the curves. If None, it is determined based on the number of waveflux data.
+
+        colors : list of str or None, optional, default=None
+            A list of specific colors to use for the curves.
+
+        label_bands : bool, optional, default=False
+            If True, labels the photometric bands used by the reference or template.
+
+        legend_below_plot : bool, optional, default=False
+            If True, the legend will be placed below the plot.
+
+        legend_beside_plot : bool, optional, default=False
+            If True, the legend will be placed beside the plot.
+
+        legend_anchor : tuple of float, optional, default=None
+            The anchor point for the legend's placement.
+
+        flat_legend : bool, optional, default=False
+            If True, places the legend items in a single row without wrapping.
+
+        legend_no_border : bool, optional, default=False
+            If True, removes the border from the legend.
+
+        spectral_features : list of dict, optional, default=None
+            A list of spectral feature dictionaries to annotate on the plot. Each dictionary should include:
+            - "label": The label for the feature (str)
+            - "type": The type of feature ("band" for range or "line" for single wavelength)
+            - "wavelengths": List of wavelengths defining the feature (for "band" type, a range of wavelengths; for "line" type, individual wavelengths)
+            - "offset": The vertical offset for the feature label.
+
+        feature_color : str, optional, default="black"
+            The color of the spectral feature annotations.
+
+        legend_location : str, optional, default="best"
+            The location of the legend on the plot. Options include "best", "upper right", "lower left", etc.
+
+        reference_on_top : bool, optional, default=True
+            If True, the reference curve is placed on top of other curves in the plot.
+
+        relative_flux : bool, optional, default=False
+            If True, the flux is normalized to the reference flux and plotted as relative flux.
+
+        x_limits : tuple of float, optional, default=None
+            The x-axis limits as (xmin, xmax).
+
+        y_limits : tuple of float, optional, default=None
+            The y-axis limits as (ymin, ymax).
+
+        label_aside_curve : bool, optional, default=False
+            If True, labels the curves at the side of the plot (left or right).
+
+        label_position : str, optional, default="left"
+            The position of the curve labels when `label_aside_curve` is True. Options are "left", "right", or "both".
+
+        additional_legend_text : tuple of (int, str), optional, default=None
+            Adds additional text to the legend at the specified index.
+
+        Returns:
+        --------
+        None
+
+        Notes:
+        ------
+        - This method generates a plot for the spectral energy distribution (SED) from the waveflux data, optionally
+          including uncertainties, labels, and spectral feature annotations.
+        - The plot is saved to a file, and if `open_plot` is True, it is opened for viewing.
+        - The plotting behavior can be customized with various optional parameters for axes scaling, figure size,
+          color schemes, and more.
+        - Spectral features can be annotated by providing a list of feature dictionaries. Each feature can be a band
+          (range of wavelengths) or a line (individual wavelength).
+        """
         number_of_waveflux = len(self.data)
         if figure_size:
             plt.figure(figsize=(figure_size))
@@ -848,7 +1077,6 @@ class WaveFlux:
         wave_flux.add('GAIA/GAIA3.Gbp/Vega', 12.0, 0.001, 'Gaia BP')
         ```
         """
-
         if np.isnan(magnitude):
             print(f"{filter_id} magnitude is NaN and has been skipped")
             return
