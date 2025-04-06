@@ -12,9 +12,9 @@ and compare it to predefined templates using the `fluxcomp` tool. The script per
 6. Plot the results for visual comparison.
 
 Dependencies:
-- `tools.esa_tools` (for retrieving catalog objects and spectra)
-- `fluxcomp.core` (for comparing the spectrum to templates using the `SED` and `WaveFlux` classes)
-- `tools.shared` (for utility functions such as object name creation)
+- `euclid_tools.esa_tools` (for retrieving catalog objects and spectra)
+- `flux_comp.core` (for comparing the spectrum to templates using the `SED` and `WaveFlux` classes)
+- `euclid_tools.shared` (for utility functions such as object name creation)
 
 Steps in the script:
 
@@ -47,10 +47,20 @@ Example Output:
 - The script will generate a plot comparing the retrieved spectrum with the selected template(s). The plot will show the spectrum and template(s) overlayed with uncertainties and the reduced chi-squared fit.
 """
 
+import warnings
 from astropy import units as u
+from astropy.utils.exceptions import AstropyWarning
+
 from euclid_tools.esa_tools import retrieve_objects, retrieve_spectrum
 from euclid_tools.shared import MaskType, create_object_name
 from flux_comp.core import SED, WaveFlux, TemplateProvider
+
+warnings.simplefilter("ignore", category=AstropyWarning)
+
+
+# ------------------------------
+# Compare spectrum to templates
+# ------------------------------
 
 # Coordinates for the object of interest
 ra, dec = 266.4850113, 64.9936424

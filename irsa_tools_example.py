@@ -13,10 +13,10 @@ The steps in the script are as follows:
 5. Plot the retrieved images in a multi-band format.
 
 Dependencies:
-- `tools.esa_tools` (for retrieving catalog objects, spectra, and image cutouts)
-- `tools.spectrum_plotter` (for spectrum plotting)
-- `tools.image_plotter` (for plotting images)
-- `tools.shared` (for utility functions like `MaskType`, `print_results`, and `print_message`)
+- `euclid_tools.esa_tools` (for retrieving catalog objects, spectra, and image cutouts)
+- `euclid_tools.spectrum_plotter` (for spectrum plotting)
+- `euclid_tools.image_plotter` (for plotting images)
+- `euclid_tools.shared` (for utility functions like `MaskType`, `print_results`, and `print_message`)
 - `astropy` (for units and warnings handling)
 
 Steps in the script:
@@ -59,12 +59,12 @@ from euclid_tools.spectrum_plotter import plot_spectrum
 from euclid_tools.image_plotter import plot_images
 from euclid_tools.shared import MaskType, print_results, print_message
 
+warnings.simplefilter("ignore", category=AstropyWarning)
+
 
 # ==============================
 # I R S A  tools example
 # ==============================
-
-warnings.simplefilter("ignore", category=AstropyWarning)
 
 # ------------------------------
 # Print catalog information
