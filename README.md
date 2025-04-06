@@ -173,7 +173,7 @@ if results:
 else:
     print("No object found for the given coordinates and radius.")
 ```
-![Spectrum](examples/J174556.40+645937.11_spectrum.png)
+![Spectrum](example_plots/J174556.40+645937.11_spectrum.png)
 
 ### Example 2: Retrieving and Plotting Image Cutouts
 
@@ -205,7 +205,7 @@ images = [
 # Plot the images in a single figure
 plot_images(ra, dec, images, cutout_size, plot_format="pdf")
 ```
-![Images](examples/J174556.40+645937.11_images.png)
+![Images](example_plots/J174556.40+645937.11_images.png)
 
 ### Example 3: Compare Spectrum to Template Using `flux_comp`
 
@@ -237,8 +237,8 @@ sed.compare(spectrum, templates, trim_wave=True, metric="reduced-chi2")
 sed.to_flux_lambda()
 sed.plot(reference_on_top=False, spec_uncertainty=True)
 ```
-![Comparison](examples/J174556.40+645937.11_vs._Theissen+2022.png)
-![Comparison](examples/J174556.40+645937.11_vs._Burgasser+2017.png)
+![Comparison](example_plots/J174556.40+645937.11_vs._Theissen+2022.png)
+![Comparison](example_plots/J174556.40+645937.11_vs._Burgasser+2017.png)
 
 ## Installation
 
