@@ -19,7 +19,7 @@ This toolkit provides the following core functionality:
   - Search for Euclid sources near specified sky coordinates.
   - Retrieve source metadata from the Euclid MER catalog.
 
-> **Note:** The Euclid MER catalog does **not include magnitudes for Euclid bands**. To address this, the toolkit calculates magnitudes with uncertainties from the available flux columns using appropriate zero-points. Magnitudes are computed in both **AB** and **Vega** systems, and added directly to the result table returned by `retrieve_objects()`. VIS magnitude is derived from `flux_vis_psf`, Y magnitude from `flux_y_templfit`, J magnitude from `flux_j_templfit` and H magnitude from `flux_h_templfit`.
+> **Note:** The Euclid MER catalog does **not include magnitudes for Euclid bands**. To address this, the toolkit calculates magnitudes with uncertainties from the available flux columns using appropriate zero-points. Magnitudes are computed in both **AB** and **Vega** systems, and added directly to the result table returned by `retrieve_objects()`. VIS magnitude is derived from `flux_vis_psf` and Y, J, H magnitudes from `flux_[band]_templfit`.
 
 - **Spectrum Retrieval and Visualization**
   - Retrieve NISP spectra (slitless grism) for individual sources.
