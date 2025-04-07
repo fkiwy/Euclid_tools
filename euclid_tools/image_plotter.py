@@ -67,14 +67,14 @@ def plot_images(
 
         ax = fig.add_subplot(rows, cols, img_idx, projection=wcs)
         x, y = wcs.world_to_pixel(position)
-        ax.plot(x, y, "ro", fillstyle="none", markersize=7, markeredgewidth=0.2)
-        ax.plot(x, y, "ro", fillstyle="none", markersize=0.2, markeredgewidth=0.2)
+        ax.plot(x, y, "ro", fillstyle="none", markersize=12, markeredgewidth=0.4)
+        ax.plot(x, y, "ro", fillstyle="none", markersize=0.4, markeredgewidth=0.4)
         ax.text(
-            0.04,
-            0.91,
+            0.03,
+            0.93,
             band,
             color="black",
-            fontsize=1.8,
+            fontsize=3.0,
             transform=ax.transAxes,
             bbox=dict(facecolor="white", alpha=0.5, linewidth=0.1, boxstyle=BoxStyle("Square", pad=0.3)),
         )
@@ -98,14 +98,14 @@ def plot_images(
         rgb = Image.merge("RGB", (r, g, b))
 
         ax = fig.add_subplot(rows, cols, img_idx)
-        ax.plot(x, y, "ro", fillstyle="none", markersize=7, markeredgewidth=0.2)
-        ax.plot(x, y, "ro", fillstyle="none", markersize=0.2, markeredgewidth=0.2)
+        ax.plot(x, y, "ro", fillstyle="none", markersize=12, markeredgewidth=0.4)
+        ax.plot(x, y, "ro", fillstyle="none", markersize=0.4, markeredgewidth=0.4)
         ax.text(
-            0.04,
-            0.91,
+            0.03,
+            0.93,
             band,
             color="black",
-            fontsize=1.8,
+            fontsize=3.0,
             transform=ax.transAxes,
             bbox=dict(facecolor="white", alpha=0.7, linewidth=0.1, boxstyle=BoxStyle("Square", pad=0.3)),
         )
@@ -130,13 +130,13 @@ def plot_images(
     warnings.simplefilter("ignore", category=AstropyWarning)
 
     img_idx = 1
-    fontsize = 2.4
-    rows, cols = 10, 5
+    fontsize = 4.5
+    rows, cols = 5, 6
 
     fig = plt.figure()
     fig.set_figheight(5)
     fig.set_figwidth(5)
-    plt.subplots_adjust(wspace=0, hspace=0.05, right=0.5)
+    plt.subplots_adjust(wspace=0, hspace=0.1, right=1.0)
     plt.rcParams.update({"font.family": "Arial"})
 
     for image in images:

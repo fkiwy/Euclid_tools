@@ -13,8 +13,8 @@ and compare it to predefined templates using the `fluxcomp` tool. The script per
 
 Dependencies:
 - `euclid_tools.esa_tools` (for retrieving catalog objects and spectra)
-- `flux_comp.core` (for comparing the spectrum to templates using the `SED` and `WaveFlux` classes)
 - `euclid_tools.shared` (for utility functions such as object name creation)
+- `flux_comp.core` (for comparing the spectrum to templates using the `SED` and `WaveFlux` classes)
 
 Steps in the script:
 
@@ -37,18 +37,16 @@ Steps in the script:
    - The script plots the comparison results using the `SED` object's `plot()` method. The plot shows the spectrum and template(s) for visual inspection of the fit.
 
 Notes for Users:
-- **Coordinates:** The script uses specific RA and Dec values for object retrieval. Users can modify these coordinates to query different objects.
 - **Template Selection:** This script uses templates from "Theissen+2022", but other templates (e.g., "Burgasser+2017") can be used by modifying the template name and retrieval method.
 - **Trimming the Spectrum:** The wavelength range for trimming the spectrum (1.22 to 1.88 µm) is hard-coded but can be adjusted to suit the needs of the user.
-- **Comparison Metric:** The script uses the reduced chi-squared method (`metric="reduced-chi2"`) for template comparison. Users can change the comparison metric depending on their needs (e.g., using other flux-based metrics).
-- **Plot Customization:** The plotting function visualizes the comparison between the spectrum and template. Users can adjust plotting parameters to customize the figure (e.g., axis labels, title).
+- **Comparison Metric:** The script uses the reduced chi-squared method (`metric="reduced-chi2"`) for template comparison. Users can change the comparison metric ("reduced-chi2","chi2", or "delta").
+- **Plot Customization:** The plotting function visualizes the comparison between the spectrum and template. Users can adjust plotting parameters to customize the figure (e.g., size, legend, title, etc.).
   
 Example Output:
 - The script will generate a plot comparing the retrieved spectrum with the selected template(s). The plot will show the spectrum and template(s) overlayed with uncertainties and the reduced chi-squared fit.
 """
 
 import warnings
-from astropy import units as u
 from astropy.utils.exceptions import AstropyWarning
 
 from euclid_tools.esa_tools import retrieve_objects, retrieve_spectrum
@@ -77,7 +75,7 @@ if results:
 
     print(f"Object found at RA: {round(ra, 7)}, Dec: {round(dec, 7)}")
 
-    # Retrieve the spectrum for the object (masking errors)
+    # Retrieve the spectrum for the object, masking bad error values to improve comparison results
     data = retrieve_spectrum(object_id, maskType=MaskType.ERROR)
 
     if data and len(data) > 0:
@@ -90,9 +88,9 @@ if results:
         # template_name = "Burgasser+2017"
         # templates = provider.get_Burgasser_2017_templates()
 
-        # Create a spectrum object for comparison
+        # Create a WaveFlux object for comparison
         spectrum = WaveFlux(
-            label="Spectrum", wavelength=data["WAVELENGTH"].to(u.um), flux=data["FLUX"], uncertainty=data["ERROR"]
+            label="Spectrum", wavelength=data["WAVELENGTH"], flux=data["FLUX"], uncertainty=data["ERROR"]
         )
         spectrum.trim(1.22, 1.88)  # Trim to a specific wavelength range
 
@@ -101,11 +99,22 @@ if results:
 
         # Set up the SED object and compare the spectrum to the templates
         sed = SED(object_name + " vs. " + template_name)
-        sed.compare(spectrum, templates, trim_wave=True, metric="reduced-chi2", add_stat_to_template_label=True)
+        sed.compare(
+            spectrum,
+            templates,
+            trim_wave=True,
+            number_of_matches=1,
+            metric="reduced-chi2",
+            add_stat_to_template_label=True,
+        )
 
         # Convert to flux lambda and plot the results
         sed.to_flux_lambda()
-        sed.plot(reference_on_top=False, spec_uncertainty=True, plot_format="pdf")
+        sed.plot(
+            reference_on_top=False,
+            spec_uncertainty=True,
+            plot_format="pdf",
+        )
     else:
         print("No spectrum found for the given object ID")
 else:
