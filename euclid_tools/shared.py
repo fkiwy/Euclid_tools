@@ -144,26 +144,17 @@ def convert_flux_to_mag(flux, flux_err, magnitude_system, band=None):
         - Magnitude errors (rounded to 3 decimal places)
     """
 
-    zero_points = {"VIS": 2835.34, "Y": 1916.10, "J": 1370.25, "H": 918.35}
-
-    def flux_to_mag(flux, zero_point):
-        return -2.5 * np.log10(flux) + 2.5 * np.log10(zero_point)
-
-    def flux_err_to_mag(flux, flux_err):
-        return 2.5 / np.log(10) * (flux_err / flux)
-
-    zero_point = None
-
     if magnitude_system == MagnitudeSystem.AB:
         zero_point = 3631
 
     if magnitude_system == MagnitudeSystem.Vega:
+        zero_points = {"VIS": 2835.34, "Y": 1916.10, "J": 1370.25, "H": 918.35}
         zero_point = zero_points[band]
 
     zero_point = (zero_point * u.Jy).to(u.uJy).value
 
-    mag = flux_to_mag(flux, zero_point)
-    mag_err = flux_err_to_mag(flux, flux_err)
+    mag = -2.5 * np.log10(flux) + 2.5 * np.log10(zero_point)
+    mag_err = 2.5 / np.log(10) * (flux_err / flux)
 
     return np.round(mag, 3), np.round(mag_err, 3)
 
