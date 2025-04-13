@@ -2282,13 +2282,11 @@ def curve_model(wavelength, a, b, c):
     spectral peaks, absorption lines, or emission lines in astronomy and physics.
 
     The model is given by the equation:
-    \[
-    f(\lambda) = a \cdot \exp\left(-\frac{(\lambda - b)^2}{2c^2}\right)
-    \]
+    f(lambda) = a * exp(-(lambda - b)^2 / (2 * c^2))
     where:
-    - \(a\) is the amplitude (peak value),
-    - \(b\) is the center of the peak (mean of the Gaussian),
-    - \(c\) is the standard deviation, which controls the width of the peak.
+    - a is the amplitude (peak value),
+    - b is the center of the peak (mean of the Gaussian),
+    - c is the standard deviation, which controls the width of the peak.
 
     Parameters
     ----------
@@ -2312,8 +2310,8 @@ def curve_model(wavelength, a, b, c):
     Notes
     -----
     - This model is typically used to fit spectral peaks or profiles in data.
-    - The Gaussian function is symmetric around the center \(b\), and the width of the peak is determined by \(c\).
-    - This function can be used in fitting routines like `curve_fit` from `scipy.optimize` to estimate the parameters \(a\), \(b\), and \(c\) from data.
+    - The Gaussian function is symmetric around the center b, and the width of the peak is determined by c.
+    - This function can be used in fitting routines like `curve_fit` from `scipy.optimize` to estimate the parameters a, b, and c from data.
     """
     return a * np.exp(-((wavelength - b) ** 2) / (2 * c**2))
 
@@ -2589,15 +2587,11 @@ def parallax_to_distance(plx, e_plx):
 
     This function computes the distance (in parsecs) from the parallax (in milliarcseconds)
     using the formula:
-    \[
-    d = \frac{1000}{p}
-    \]
-    where \(d\) is the distance in parsecs and \(p\) is the parallax in milliarcseconds.
+    d = 1000 / p
+    where d is the distance in parsecs and p is the parallax in milliarcseconds.
     It also computes the uncertainty in distance using error propagation:
-    \[
-    e_d = \sqrt{\left(\frac{1000}{p^2} \cdot e_p\right)^2}
-    \]
-    where \(e_p\) is the uncertainty in the parallax.
+    e_d = sqrt((1000 / p^2 * e_p)^2)
+    where e_p is the uncertainty in the parallax.
 
     Parameters
     ----------
