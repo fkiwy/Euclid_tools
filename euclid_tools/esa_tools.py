@@ -15,7 +15,7 @@ from euclid_tools.shared import MaskType, add_magnitude
 COLUMNS_TO_REMOVE = ["basic_download_data_oid", "to_be_published"]
 
 
-def retrieve_objects(ra: float, dec: float, radius: float) -> Table:
+def retrieve_objects(ra: float, dec: float, radius: float, limit: int = -1) -> Table:
     """
     Perform a cone search on the Euclid Q1 MER catalog and return nearby objects.
 
@@ -27,6 +27,8 @@ def retrieve_objects(ra: float, dec: float, radius: float) -> Table:
         Declination in degrees.
     radius : float
         Search radius in arcseconds.
+    limit : int, optional, default -1 (ESA defined limit)
+        The maximum number of rows to return
 
     Returns
     -------
@@ -43,6 +45,8 @@ def retrieve_objects(ra: float, dec: float, radius: float) -> Table:
 
     coord = SkyCoord(ra=ra, dec=dec, unit=(u.deg, u.deg), frame="icrs")
     radius = u.Quantity(radius, u.arcsec)
+
+    Euclid.ROW_LIMIT = limit
 
     job = Euclid.cone_search(
         coordinate=coord,
