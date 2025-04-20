@@ -46,8 +46,9 @@ def plot_spectrum(data, ra, dec, output_dir=tempfile.gettempdir(), open_plot=Tru
     plt.plot(wavelength, error, color="red", label="Error")
     plt.xlabel(f"Wavelength [{to_latex(wavelength.unit)}]")
     plt.ylabel(f"Flux [{to_latex(flux.unit)}]")
-    plt.legend(loc="best")
     plt.title(object_name)
+    legend =plt.legend(loc="best")
+    legend.get_frame().set_boxstyle('Square')
     plt.savefig(filename, dpi=300, bbox_inches="tight", format=plot_format)
     plt.close()
 
