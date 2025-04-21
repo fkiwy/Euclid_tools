@@ -1,5 +1,7 @@
 # Euclid Tools
 
+[![astropy](https://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat)](https://www.astropy.org/)
+
 A collection of tools to work with spectral and imaging data from the **ESA Euclid mission**, specifically tailored to handle data from the **Euclid Quick Release 1 (Q1)**. This package supports the retrieval, visualization, and comparison of Euclid spectra, as well as the retrieval and visualization of image cutouts.
 
 The toolkit is written in Python and is designed to be lightweight, modular, and extensible. It includes high-level convenience functions for accessing and processing data, making it suitable for both exploratory data analysis and more in-depth scientific research.
