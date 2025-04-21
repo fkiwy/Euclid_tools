@@ -101,6 +101,7 @@ def retrieve_spectrum(object_id: str, maskType: Enum = MaskType.NONE) -> QTable:
     QTable
         A table containing wavelength (microns), flux, and flux error.
         Flux and error are scaled using the FITS header FSCALE keyword.
+        Returns `None` if no spectrum is available for the given object ID.
 
     Notes
     -----
@@ -109,10 +110,17 @@ def retrieve_spectrum(object_id: str, maskType: Enum = MaskType.NONE) -> QTable:
     """
 
     filename = _generate_filename(tempfile.gettempdir(), object_id)
-    results = Euclid.get_spectrum(retrieval_type="SPECTRA_RGS", source_id=object_id, output_file=filename)
+    results = Euclid.get_spectrum(
+        retrieval_type="SPECTRA_RGS", source_id=object_id, output_file=filename
+    )
 
     if results and len(results) > 0:
-        hdu = fits.open(results[0])[1]
+        try:
+            hdu = fits.open(results[0])[1]
+        except OSError as e:
+            print(f"No spectrum available for given object ID")
+            return None
+
         spectrum = QTable.read(hdu, format="fits")
         spec_header = hdu.header
 
@@ -125,7 +133,9 @@ def retrieve_spectrum(object_id: str, maskType: Enum = MaskType.NONE) -> QTable:
 
         if maskType in [MaskType.FLUX, MaskType.ERROR, MaskType.BOTH]:
             # Use the MASK column to create a boolean mask for values to ignore
-            bad_mask = (spectrum["MASK"].value % 2 == 1) | (spectrum["MASK"].value >= 64)
+            bad_mask = (spectrum["MASK"].value % 2 == 1) | (
+                spectrum["MASK"].value >= 64
+            )
 
             if maskType in [MaskType.FLUX, MaskType.BOTH]:
                 # Apply the mask to the flux values
@@ -136,12 +146,16 @@ def retrieve_spectrum(object_id: str, maskType: Enum = MaskType.NONE) -> QTable:
                 error = MaskedColumn(error, mask=bad_mask)
 
         # Create a new QTable for the result
-        result = QTable([wavelength, flux, error], names=("WAVELENGTH", "FLUX", "ERROR"))
+        result = QTable(
+            [wavelength, flux, error], names=("WAVELENGTH", "FLUX", "ERROR")
+        )
 
     return result
 
 
-def retrieve_cutout(ra: float, dec: float, search_radius: float, cutout_size: float, band: str) -> fits.PrimaryHDU:
+def retrieve_cutout(
+    ra: float, dec: float, search_radius: float, cutout_size: float, band: str
+) -> fits.PrimaryHDU:
     """
     Retrieve an image cutout from Euclid imaging data.
 
@@ -216,7 +230,12 @@ def retrieve_cutout(ra: float, dec: float, search_radius: float, cutout_size: fl
 
     print(f"Downloading {band}-band cutout")
     cutout_url = Euclid.get_cutout(
-        file_path=file_path, instrument=instrument, id=obs_id, coordinate=coord, radius=radius, output_file=filename
+        file_path=file_path,
+        instrument=instrument,
+        id=obs_id,
+        coordinate=coord,
+        radius=radius,
+        output_file=filename,
     )
     hdul = fits.open(cutout_url[0])
 
@@ -271,7 +290,7 @@ def _generate_filename(working_dir: str, source_id: str) -> str:
     """
 
     # Get the current timestamp and format it
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S%f")
 
     # Construct the directory path
     directory_path = os.path.join(working_dir, f"temp_{timestamp}")
