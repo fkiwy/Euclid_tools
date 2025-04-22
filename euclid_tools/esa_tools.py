@@ -117,7 +117,7 @@ def retrieve_spectrum(object_id: str, maskType: Enum = MaskType.NONE) -> QTable:
     if results and len(results) > 0:
         try:
             hdu = fits.open(results[0])[1]
-        except OSError as e:
+        except:
             print(f"No spectrum available for given object ID")
             return None
 
