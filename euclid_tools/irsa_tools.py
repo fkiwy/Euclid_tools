@@ -10,7 +10,7 @@ from astropy.nddata import Cutout2D
 from astropy.wcs import WCS
 from astroquery.ipac.irsa import Irsa
 
-from euclid_tools.shared import MaskType, add_magnitude
+from euclid_tools.shared import add_magnitude
 
 
 COLUMNS_TO_REMOVE = ["tileid", "x", "y", "z", "spt_ind", "htm20", "cntr"]
@@ -80,7 +80,7 @@ def retrieve_objects(ra: float, dec: float, radius: float) -> Table:
     return table
 
 
-def retrieve_spectrum(object_id: str, maskType: Enum = MaskType.NONE) -> QTable:
+def retrieve_spectrum(object_id: str, mask_bad_values: bool = False) -> QTable:
     """
     Retrieve the 1D spectrum for a given object ID from the Euclid archive.
 
@@ -88,12 +88,8 @@ def retrieve_spectrum(object_id: str, maskType: Enum = MaskType.NONE) -> QTable:
     ----------
     object_id : str
         Unique identifier of the source.
-    maskType : MaskType, optional
-        Type of data masking to apply. Options:
-        - MaskType.NONE: No masking.
-        - MaskType.FLUX: Mask bad flux values.
-        - MaskType.ERROR: Mask bad error values.
-        - MaskType.BOTH: Mask both flux and error.
+    mask_bad_values : bool, default False
+        Whether to mask bad flux values.
 
     Returns
     -------
@@ -133,17 +129,16 @@ def retrieve_spectrum(object_id: str, maskType: Enum = MaskType.NONE) -> QTable:
         flux = spectrum["SIGNAL"] * spec_header["FSCALE"]
         error = np.sqrt(spectrum["VAR"]) * spec_header["FSCALE"]
 
-        if maskType in [MaskType.FLUX, MaskType.ERROR, MaskType.BOTH]:
+        if mask_bad_values:
             # Use the MASK column to create a boolean mask for values to ignore
-            bad_mask = (spectrum["MASK"].value % 2 == 1) | (spectrum["MASK"].value >= 64)
+            bad_mask = (spectrum["MASK"].value % 2 == 1) | (
+                spectrum["MASK"].value >= 64
+            )
 
-            if maskType in [MaskType.FLUX, MaskType.BOTH]:
-                # Apply the mask to the flux values
-                flux = MaskedColumn(flux, mask=bad_mask)
-
-            if maskType in [MaskType.ERROR, MaskType.BOTH]:
-                # Apply the mask to the error values
-                error = MaskedColumn(error, mask=bad_mask)
+            # Apply the mask to the spectrum data
+            wavelength = MaskedColumn(wavelength, mask=bad_mask)
+            flux = MaskedColumn(flux, mask=bad_mask)
+            error = MaskedColumn(error, mask=bad_mask)
 
         # Create a new QTable for the result
         result = QTable([wavelength, flux, error], names=("WAVELENGTH", "FLUX", "ERROR"))

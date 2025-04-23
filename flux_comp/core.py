@@ -15,6 +15,7 @@ import numpy as np
 from io import BytesIO
 from os.path import isfile, join
 import astropy.units as u
+from astropy.units import Quantity
 from astropy.io import ascii, fits
 from astropy.io.votable import parse, parse_single_table
 from astropy.table import Table
@@ -721,6 +722,8 @@ class SED:
                         zorder=zorder,
                     )
             else:
+                if np.ma.isMaskedArray(wavelength):
+                    wavelength = wavelength.filled(np.nan)
                 curves = plt.plot(wavelength, flux + delta, lw=line_width, label=label, zorder=zorder)
                 if spec_uncertainty:
                     color = curves[-1].get_color()
@@ -1018,6 +1021,14 @@ class WaveFlux:
         Vsa.REGION_URL = self.VSA_BASE_URL + "WSASQL"
 
         if wavelength is not None and flux is not None:
+            # Check if input data is of type astropy.units.Quantity
+            if not isinstance(wavelength, Quantity):
+                raise Exception("Wavelength must be of type astropy.units.Quantity")
+            if not isinstance(flux, Quantity):
+                raise Exception("Flux must be of type astropy.units.Quantity")
+            if uncertainty is not None and not isinstance(wavelength, Quantity):
+                raise Exception("Uncertainty must be of type astropy.units.Quantity")
+
             # Convert flux and uncertainty to Jansky
             flux = flux.to(u.Jy, equivalencies=u.spectral_density(wavelength))
             if uncertainty is None:

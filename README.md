@@ -73,7 +73,7 @@ This function retrieves the spectrum of a given object from the Euclid archive b
 
 #### Parameters:
 - `object_id`: The unique identifier of the object.
-- `maskType`: A type of mask to apply to the spectrum data (e.g., `MaskType.ERROR`).
+- `mask_bad_values`: Whether to mask bad flux values (default is False).
 
 #### Returns:
 - An Astropy QTable containing the spectrum data, including wavelength, flux, and error.
@@ -140,9 +140,8 @@ To compare an observed spectrum to a template, the `flux_comp` package is used. 
 1. Retrieve the catalog object based on RA, Dec.
 2. Retrieve the spectrum for the object.
 3. Retrieve template(s) for comparison (e.g., from "Theissen+2022").
-4. Trim the spectrum to a specific wavelength range (either specified by the user or automatically based on template overlaps).
-5. Compare the spectrum to the templates using the reduced chi-squared metric.
-6. Plot the comparison.
+4. Compare the spectrum to the templates using the reduced chi-squared metric.
+5. Plot the comparison.
 
 ## Example Usages
 
@@ -168,7 +167,7 @@ if results:
     object_id = str(result["object_id"])
 
     # Retrieve spectrum data
-    spectrum_data = retrieve_spectrum(object_id)
+    spectrum_data = retrieve_spectrum(object_id, mask_bad_values=True)
 
     # Plot the spectrum
     plot_spectrum(spectrum_data, ra, dec, output_dir=".", plot_format="pdf")
@@ -217,21 +216,19 @@ and compare it to predefined templates using the `flux_comp` tool. The full exam
 ```python
 from flux_comp.core import SED, WaveFlux, TemplateProvider
 from euclid_tools.esa_tools import retrieve_spectrum
-from euclid_tools.shared import MaskType
 
 # Retrieve spectrum for an object
-data = retrieve_spectrum(object_id, maskType=MaskType.ERROR)
+data = retrieve_spectrum(object_id, mask_bad_values=True)
 
 # Retrieve templates for comparison
 template_name = "Theissen+2022"
 provider = TemplateProvider()
 templates = provider.get_Theissen_2022_templates(smooth_window=10)
 
-# Create a WaveFlux object and trim the spectrum
+# Create a WaveFlux object
 spectrum = WaveFlux(
-    label="Spectrum", wavelength=data["WAVELENGTH"], flux=data["FLUX"], uncertainty=data["ERROR"]
+    label="Spectrum", wavelength=data["WAVELENGTH"].filled(np.nan), flux=data["FLUX"], uncertainty=data["ERROR"]
 )
-spectrum.trim(1.22, 1.88)  # Trim to a specific wavelength range
 
 # Compare the spectrum to the templates
 sed = SED("Object vs. " + template_name)
@@ -240,7 +237,6 @@ sed.to_flux_lambda()
 sed.plot(reference_on_top=False, spec_uncertainty=True)
 ```
 ![Comparison](example_plots/J174556.40+645937.11_vs._Theissen+2022.png)
-![Comparison](example_plots/J174556.40+645937.11_vs._Burgasser+2017.png)
 
 ## Installation
 

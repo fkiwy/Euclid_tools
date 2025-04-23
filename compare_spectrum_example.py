@@ -7,9 +7,8 @@ and compare it to predefined templates using the `fluxcomp` tool. The script per
 1. Retrieve an object catalog from the Euclid archive based on specified coordinates.
 2. Retrieve the spectrum for the object, masking bad error values.
 3. Select the appropriate template(s) for comparison (e.g., from "Theissen+2022").
-4. Trim the spectrum to a specific wavelength range.
-5. Compare the spectrum to the templates using the reduced chi-squared metric.
-6. Plot the results for visual comparison.
+4. Compare the spectrum to the templates using the reduced chi-squared metric.
+5. Plot the results for visual comparison.
 
 Dependencies:
 - `euclid_tools.esa_tools` (for retrieving catalog objects and spectra)
@@ -22,23 +21,19 @@ Steps in the script:
    - The script begins by performing a search around a given RA and Dec to retrieve catalog objects from the Euclid archive. The `retrieve_objects()` function is used, and results are filtered by a specified search radius.
 
 2. **Retrieve Spectrum:**
-   - Once an object is found, the script retrieves its spectrum using the `retrieve_spectrum()` function. This function retrieves the spectrum data and applies a mask (`MaskType.ERROR`) to remove bad data points.
+   - Once an object is found, the script retrieves its spectrum using the `retrieve_spectrum()` function. This function retrieves the spectrum data and applies a mask (`mask_bad_values`) to remove bad data points.
 
 3. **Template Selection:**
    - The script selects a set of templates for comparison. In this case, templates from "Theissen+2022" are used. These templates are retrieved using the `TemplateProvider()` and optionally smoothed (with a `smooth_window` parameter) before comparison.
 
-4. **Trimming the Spectrum:**
-   - The spectrum is trimmed to a specific wavelength range (from 1.22 µm to 1.88 µm). This step is particularly useful for narrowing the comparison to relevant parts of the spectrum.
-
-5. **Comparison Using Reduced Chi-Squared:**
+4. **Comparison Using Reduced Chi-Squared:**
    - The comparison between the spectrum and the templates is done using the reduced chi-squared metric (`metric="reduced-chi2"`). This metric quantifies the difference between the observed spectrum and the template.
 
-6. **Plotting the Results:**
+5. **Plotting the Results:**
    - The script plots the comparison results using the `SED` object's `plot()` method. The plot shows the spectrum and template(s) for visual inspection of the fit.
 
 Notes for Users:
 - **Template Selection:** This script uses templates from "Theissen+2022", but other templates (e.g., "Burgasser+2017") can be used by modifying the template name and retrieval method.
-- **Trimming the Spectrum:** The wavelength range for trimming the spectrum (1.22 to 1.88 µm) is hard-coded but can be adjusted to suit the needs of the user.
 - **Comparison Metric:** The script uses the reduced chi-squared method (`metric="reduced-chi2"`) for template comparison. Users can change the comparison metric ("reduced-chi2","chi2", or "delta").
 - **Plot Customization:** The plotting function visualizes the comparison between the spectrum and template. Users can adjust plotting parameters to customize the figure (e.g., size, legend, title, etc.).
   
@@ -47,10 +42,11 @@ Example Output:
 """
 
 import warnings
+import numpy as np
 from astropy.utils.exceptions import AstropyWarning
 
 from euclid_tools.esa_tools import retrieve_objects, retrieve_spectrum
-from euclid_tools.shared import MaskType, create_object_name
+from euclid_tools.shared import create_object_name
 from flux_comp.core import SED, WaveFlux, TemplateProvider
 
 warnings.simplefilter("ignore", category=AstropyWarning)
@@ -75,8 +71,8 @@ if results:
 
     print(f"Object found at RA: {round(ra, 7)}, Dec: {round(dec, 7)}")
 
-    # Retrieve the spectrum for the object, masking bad error values to improve comparison results
-    data = retrieve_spectrum(object_id, maskType=MaskType.ERROR)
+    # Retrieve the spectrum for the object, masking bad values to improve comparison results
+    data = retrieve_spectrum(object_id, mask_bad_values=True)
 
     if data and len(data) > 0:
         # Select template(s) for comparison (Theissen+2022)
@@ -92,7 +88,6 @@ if results:
         spectrum = WaveFlux(
             label="Spectrum", wavelength=data["WAVELENGTH"], flux=data["FLUX"], uncertainty=data["ERROR"]
         )
-        spectrum.trim(1.22, 1.88)  # Trim to a specific wavelength range
 
         # Create object name for plotting
         object_name = create_object_name(ra, dec, precision=2, shortform=False, prefix="J", decimal=False)

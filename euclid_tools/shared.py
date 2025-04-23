@@ -12,13 +12,6 @@ class MagnitudeSystem(Enum):
     Vega = 2
 
 
-class MaskType(Enum):
-    NONE = 0
-    FLUX = 1
-    ERROR = 2
-    BOTH = 3
-
-
 def open_file(filename):
     """
     Open a file using the default system application based on the platform.
