@@ -519,6 +519,7 @@ class SED:
         label_aside_curve=False,
         label_position="left",
         additional_legend_text=None,
+        detect_gaps=True,
     ):
         """
         Plots the spectral energy distribution (SED) of the waveflux data, with various customization options
@@ -622,6 +623,11 @@ class SED:
         additional_legend_text : tuple of (int, str), optional, default=None
             Adds additional text to the legend at the specified index.
 
+        detect_gaps : bool, optional, default=True
+            Enable automatic detection of gaps in the spectrum based on wavelength differences.
+            Gaps are identified where the difference between adjacent wavelengths exceeds a statistical threshold,
+            and the plot will break the line at those points.
+
         Returns:
         --------
         None
@@ -722,8 +728,32 @@ class SED:
                         zorder=zorder,
                     )
             else:
-                if np.ma.isMaskedArray(wavelength):
-                    wavelength = wavelength.filled(np.nan)
+                if detect_gaps:
+                    # Calculate the differences between adjacent wavelengths
+                    wavelength_diff = np.diff(wavelength)
+
+                    # Calculate the mean and standard deviation of the wavelength differences
+                    mean_diff = np.mean(wavelength_diff)
+                    std_diff = np.std(wavelength_diff)
+
+                    # Define a threshold as the mean difference plus 2 times the standard deviation
+                    threshold = mean_diff + 2 * std_diff
+
+                    # Print the threshold
+                    # print(f"Calculated threshold for detecting gaps: {threshold}")
+
+                    # Detect indices where the wavelength difference exceeds the threshold
+                    gap_indices = np.where(wavelength_diff > threshold)[0] + 1  # Adjust indices
+
+                    # Print gap positions
+                    # print(f"Indices of gaps: {gap_indices}")
+                    # print(f"Gap starts at wavelengths: {wavelength[gap_indices - 1]}")
+                    # print(f"Gap ends at wavelengths: {wavelength[gap_indices]}")
+
+                    flux_with_gaps = flux.copy()
+                    for idx in gap_indices:
+                        flux[idx] = np.nan  # Insert NaN values to create gaps
+
                 curves = plt.plot(wavelength, flux + delta, lw=line_width, label=label, zorder=zorder)
                 if spec_uncertainty:
                     color = curves[-1].get_color()

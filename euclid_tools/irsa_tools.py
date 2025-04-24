@@ -47,7 +47,9 @@ def retrieve_objects(ra: float, dec: float, radius: float) -> Table:
     position = SkyCoord(ra, dec, unit=(u.deg, u.deg), frame="icrs")
     radius = radius * u.arcsec
 
-    table = Irsa.query_region(coordinates=position, spatial="Cone", catalog=TABLE_MER, radius=radius)
+    table = Irsa.query_region(
+        coordinates=position, spatial="Cone", catalog=TABLE_MER, radius=radius
+    )
 
     if len(table) == 0:
         return None
@@ -63,7 +65,9 @@ def retrieve_objects(ra: float, dec: float, radius: float) -> Table:
     target_coord = SkyCoord(ra, dec, unit=(u.deg, u.deg), frame="icrs")
 
     # Create a SkyCoord object for the objects in the result table
-    object_coords = SkyCoord(table["ra"], table["dec"], unit=(u.deg, u.deg), frame="icrs")
+    object_coords = SkyCoord(
+        table["ra"], table["dec"], unit=(u.deg, u.deg), frame="icrs"
+    )
 
     # Calculate the angular separation between the target and each object in the result table
     separations = target_coord.separation(object_coords).value
@@ -141,12 +145,17 @@ def retrieve_spectrum(object_id: str, mask_bad_values: bool = False) -> QTable:
             error = MaskedColumn(error, mask=bad_mask)
 
         # Create a new QTable for the result
-        result = QTable([wavelength, flux, error], names=("WAVELENGTH", "FLUX", "ERROR"))
+        result = QTable(
+            [wavelength.filled(np.nan), flux.filled(np.nan), error.filled(np.nan)],
+            names=("WAVELENGTH", "FLUX", "ERROR"),
+        )
 
     return result
 
 
-def retrieve_cutout(ra: float, dec: float, search_radius: float, cutout_size: float, band: str) -> fits.PrimaryHDU:
+def retrieve_cutout(
+    ra: float, dec: float, search_radius: float, cutout_size: float, band: str
+) -> fits.PrimaryHDU:
     """
     Retrieve an image cutout from Euclid imaging data.
 
@@ -181,7 +190,9 @@ def retrieve_cutout(ra: float, dec: float, search_radius: float, cutout_size: fl
     position = SkyCoord(ra, dec, unit=(u.deg, u.deg), frame="icrs")
     search_radius *= u.arcsec
 
-    table = Irsa.query_sia(pos=(position, search_radius), collection="euclid_DpdMerBksMosaic")
+    table = Irsa.query_sia(
+        pos=(position, search_radius), collection="euclid_DpdMerBksMosaic"
+    )
 
     results = table[(table["dataproduct_subtype"] == "science")]
 
@@ -193,7 +204,9 @@ def retrieve_cutout(ra: float, dec: float, search_radius: float, cutout_size: fl
     print(f"Downloading {band}-band cutout")
     with fits.open(image_url, use_fsspec=True) as hdul:
         wcs = WCS(hdul[0].header)
-        cutout = Cutout2D(hdul[0].section, position=position, size=cutout_size * u.arcsec, wcs=wcs)
+        cutout = Cutout2D(
+            hdul[0].section, position=position, size=cutout_size * u.arcsec, wcs=wcs
+        )
         hdu = fits.PrimaryHDU(data=cutout.data, header=cutout.wcs.to_header())
 
     return hdu
