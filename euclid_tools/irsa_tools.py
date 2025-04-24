@@ -144,10 +144,14 @@ def retrieve_spectrum(object_id: str, mask_bad_values: bool = False) -> QTable:
             flux = MaskedColumn(flux, mask=bad_mask)
             error = MaskedColumn(error, mask=bad_mask)
 
+            # Replace masked values by NaN
+            wavelength = wavelength.filled(np.nan)
+            flux = flux.filled(np.nan)
+            error = error.filled(np.nan)
+
         # Create a new QTable for the result
         result = QTable(
-            [wavelength.filled(np.nan), flux.filled(np.nan), error.filled(np.nan)],
-            names=("WAVELENGTH", "FLUX", "ERROR"),
+            [wavelength, flux, error], names=("WAVELENGTH", "FLUX", "ERROR")
         )
 
     return result
