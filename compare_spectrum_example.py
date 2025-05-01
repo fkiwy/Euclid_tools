@@ -42,7 +42,6 @@ Example Output:
 """
 
 import warnings
-import numpy as np
 from astropy.utils.exceptions import AstropyWarning
 
 from euclid_tools.esa_tools import retrieve_objects, retrieve_spectrum

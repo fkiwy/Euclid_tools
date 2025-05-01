@@ -750,7 +750,6 @@ class SED:
                     # print(f"Gap starts at wavelengths: {wavelength[gap_indices - 1]}")
                     # print(f"Gap ends at wavelengths: {wavelength[gap_indices]}")
 
-                    flux_with_gaps = flux.copy()
                     for idx in gap_indices:
                         flux[idx] = np.nan  # Insert NaN values to create gaps
 

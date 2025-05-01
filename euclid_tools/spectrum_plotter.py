@@ -5,9 +5,7 @@ import matplotlib.pyplot as plt
 import euclid_tools.shared as shr
 
 
-def plot_spectrum(
-    data, ra, dec, output_dir=tempfile.gettempdir(), open_plot=True, plot_format="png"
-):
+def plot_spectrum(data, ra, dec, output_dir=tempfile.gettempdir(), open_plot=True, plot_format="png"):
     """
     Plot and save the spectrum of a source at given coordinates.
 
@@ -36,9 +34,7 @@ def plot_spectrum(
         - Assumes the "WAVELENGTH", "FLUX", and "ERROR" columns are available and properly formatted.
     """
 
-    object_name = shr.create_object_name(
-        ra, dec, precision=2, shortform=False, prefix="J", decimal=False
-    )
+    object_name = shr.create_object_name(ra, dec, precision=2, shortform=False, prefix="J", decimal=False)
     filename = os.path.join(output_dir, object_name + "_spectrum." + plot_format)
 
     wavelength = data["WAVELENGTH"]

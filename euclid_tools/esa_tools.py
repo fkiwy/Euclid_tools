@@ -1,7 +1,6 @@
 import os
 import tempfile
 import numpy as np
-from enum import Enum
 from datetime import datetime
 from astroquery.esa.euclid import Euclid
 from astropy.coordinates import SkyCoord
@@ -106,15 +105,13 @@ def retrieve_spectrum(object_id: str, mask_bad_values: bool = False) -> QTable:
     """
 
     filename = _generate_filename(tempfile.gettempdir(), object_id)
-    results = Euclid.get_spectrum(
-        retrieval_type="SPECTRA_RGS", source_id=object_id, output_file=filename
-    )
+    results = Euclid.get_spectrum(retrieval_type="SPECTRA_RGS", source_id=object_id, output_file=filename)
 
     if results and len(results) > 0:
         try:
             hdu = fits.open(results[0])[1]
         except:
-            print(f"No spectrum available for given object ID")
+            print("No spectrum available for given object ID")
             return None
 
         spectrum = QTable.read(hdu, format="fits")
@@ -129,9 +126,7 @@ def retrieve_spectrum(object_id: str, mask_bad_values: bool = False) -> QTable:
 
         if mask_bad_values:
             # Use the MASK column to create a boolean mask for values to ignore
-            bad_mask = (spectrum["MASK"].value % 2 == 1) | (
-                spectrum["MASK"].value >= 64
-            )
+            bad_mask = (spectrum["MASK"].value % 2 == 1) | (spectrum["MASK"].value >= 64)
 
             # Apply the mask to the spectrum data
             wavelength = MaskedColumn(wavelength, mask=bad_mask)
@@ -144,16 +139,12 @@ def retrieve_spectrum(object_id: str, mask_bad_values: bool = False) -> QTable:
             error = error.filled(np.nan)
 
         # Create a new QTable for the result
-        result = QTable(
-            [wavelength, flux, error], names=("WAVELENGTH", "FLUX", "ERROR")
-        )
+        result = QTable([wavelength, flux, error], names=("WAVELENGTH", "FLUX", "ERROR"))
 
     return result
 
 
-def retrieve_cutout(
-    ra: float, dec: float, search_radius: float, cutout_size: float, band: str
-) -> fits.PrimaryHDU:
+def retrieve_cutout(ra: float, dec: float, search_radius: float, cutout_size: float, band: str) -> fits.PrimaryHDU:
     """
     Retrieve an image cutout from Euclid imaging data.
 
