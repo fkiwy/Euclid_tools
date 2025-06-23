@@ -55,9 +55,13 @@ warnings.simplefilter("ignore", category=AstropyWarning)
 # Compare spectrum to templates
 # ------------------------------
 
-# Coordinates for the object of interest
+# Define object coordinates
+# ra, dec = 58.1332495, -49.1830038
+# ra, dec = 59.7913643, -47.6826163
 ra, dec = 266.4850113, 64.9936424
-search_radius = 5  # arcsec
+
+# Specify search radius in arcseconds
+search_radius = 5
 
 # Retrieve objects based on coordinates
 results = retrieve_objects(ra, dec, search_radius)
@@ -107,7 +111,7 @@ if results:
         sed.plot(
             reference_on_top=False,
             spec_uncertainty=True,
-            plot_format="pdf",
+            plot_format="png",
         )
     else:
         print("No spectrum found for the given object ID")

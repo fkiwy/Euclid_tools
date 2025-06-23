@@ -154,6 +154,8 @@ from euclid_tools.esa_tools import retrieve_objects, retrieve_spectrum
 from euclid_tools.spectrum_plotter import plot_spectrum
 
 # Define object coordinates
+# ra, dec = 58.1332495, -49.1830038
+# ra, dec = 59.7913643, -47.6826163
 ra, dec = 266.4850113, 64.9936424
 
 # Search radius (arcsec)
@@ -174,7 +176,9 @@ if results:
 else:
     print("No object found for the given coordinates and radius.")
 ```
-![Spectrum](example_plots/J174556.40+645937.11_spectrum.png)
+![Spectrum1](example_plots/J035231.98-491058.81_spectrum.png)
+![Spectrum2](example_plots/J035909.93-474057.42_spectrum.png)
+![Spectrum3](example_plots/J174556.40+645937.11_spectrum.png)
 
 ### Example 2: Retrieving and Plotting Image Cutouts
 
@@ -185,6 +189,8 @@ from euclid_tools.esa_tools import retrieve_cutout
 from euclid_tools.image_plotter import plot_images
 
 # Define object coordinates and cutout size (arcsec)
+# ra, dec = 58.1332495, -49.1830038
+# ra, dec = 59.7913643, -47.6826163
 ra, dec = 266.4850113, 64.9936424
 cutout_size = 20  # arcsec
 
@@ -206,7 +212,9 @@ images = [
 # Plot the images in a single figure
 plot_images(ra, dec, images, cutout_size, plot_format="pdf")
 ```
-![Images](example_plots/J174556.40+645937.11_images.png)
+![Images1](example_plots/J035231.98-491058.81_images.png)
+![Images2](example_plots/J035909.93-474057.42_images.png)
+![Images3](example_plots/J174556.40+645937.11_images.png)
 
 ### Example 3: Compare Spectrum to Template Using `flux_comp`
 
@@ -236,7 +244,9 @@ sed.compare(spectrum, templates, trim_wave=True, metric="reduced-chi2")
 sed.to_flux_lambda()
 sed.plot(reference_on_top=False, spec_uncertainty=True)
 ```
-![Comparison](example_plots/J174556.40+645937.11_vs._Theissen+2022.png)
+![Comparison1](example_plots/J035231.98-491058.81_vs._Theissen+2022.png)
+![Comparison2](example_plots/J035909.93-474057.42_vs._Theissen+2022.png)
+![Comparison3](example_plots/J174556.40+645937.11_vs._Theissen+2022.png)
 
 ## Installation
 

@@ -74,9 +74,13 @@ print_catalog_info()
 # Retrieve objects
 # ------------------------------
 
-# Specify coordinates (RA, Dec) and search radius (arcsec)
+# Define object coordinates
+# ra, dec = 58.1332495, -49.1830038
+# ra, dec = 59.7913643, -47.6826163
 ra, dec = 266.4850113, 64.9936424
-search_radius = 5  # arcsec
+
+# Specify search radius in arcseconds
+search_radius = 5
 
 # Perform cone search for objects
 results = retrieve_objects(ra, dec, search_radius)

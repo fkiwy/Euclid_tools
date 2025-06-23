@@ -74,9 +74,13 @@ print_catalog_info()
 # Retrieve objects
 # ------------------------------
 
-# Specify coordinates (RA, Dec) and search radius (arcsec)
+# Define object coordinates
+# ra, dec = 58.1332495, -49.1830038
+# ra, dec = 59.7913643, -47.6826163
 ra, dec = 266.4850113, 64.9936424
-search_radius = 5  # arcsec
+
+# Specify search radius in arcseconds
+search_radius = 5
 
 # Perform cone search for objects
 results = retrieve_objects(ra, dec, search_radius)
@@ -98,11 +102,11 @@ result = results[0]
 object_id = str(result["object_id"])
 
 # Retrieve the spectrum for the selected object
-table = retrieve_spectrum(object_id, mask_bad_values=True)
+table = retrieve_spectrum(object_id, mask_bad_values=False)
 
 if table and len(table) > 0:
     # Plot the spectrum if data is available
-    plot_spectrum(table, ra, dec, plot_format="pdf")
+    plot_spectrum(table, ra, dec, plot_format="png")
 
 # ------------------------------
 # Retrieve cutouts
@@ -125,4 +129,4 @@ images.append({"hdu": j_hdu, "band": "J", "rgb": None})
 images.append({"hdu": h_hdu, "band": "H", "rgb": "r"})
 
 # Plot the images in a multi-band format and save the plot as a PDF
-plot_images(ra, dec, images, cutout_size, plot_format="pdf")
+plot_images(ra, dec, images, cutout_size, plot_format="png")
