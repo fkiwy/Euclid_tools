@@ -76,6 +76,11 @@ def retrieve_objects(ra: float, dec: float, radius: float) -> Table:
     # Sort the result table on separation
     table.sort("separation")
 
+    # Replace masked values with NaN
+    for col in table.colnames:
+        if isinstance(table[col], np.ma.MaskedArray) and np.issubdtype(table[col].dtype, np.floating):  # Only for float-type columns
+            table[col] = table[col].filled(np.nan)
+
     return table
 
 
