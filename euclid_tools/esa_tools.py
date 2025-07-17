@@ -7,7 +7,7 @@ import astropy.units as u
 import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
-from astropy.table import Table, QTable
+from astropy.table import Table, QTable, MaskedColumn
 from astroquery.esa.euclid import Euclid
 
 from euclid_tools.shared import add_magnitude
