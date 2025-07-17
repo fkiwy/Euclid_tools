@@ -5,10 +5,11 @@ This example demonstrates how to use the Euclid tools to retrieve a spectrum for
 and compare it to predefined templates using the `fluxcomp` tool. The script performs the following steps:
 
 1. Retrieve an object catalog from the Euclid archive based on specified coordinates.
-2. Retrieve the spectrum for the object, masking bad error values.
-3. Select the appropriate template(s) for comparison (e.g., from "Theissen+2022").
-4. Compare the spectrum to the templates using the reduced chi-squared metric.
-5. Plot the results for visual comparison.
+2. Retrieve the spectrum for the object.
+3. Mask bad values in the spectrum data.
+4. Select the appropriate template(s) for comparison (e.g., from "Theissen+2022").
+5. Compare the spectrum to the templates using the reduced chi-squared metric.
+6. Plot the results for visual comparison.
 
 Dependencies:
 - `euclid_tools.esa_tools` (for retrieving catalog objects and spectra)
@@ -21,7 +22,10 @@ Steps in the script:
    - The script begins by performing a search around a given RA and Dec to retrieve catalog objects from the Euclid archive. The `retrieve_objects()` function is used, and results are filtered by a specified search radius.
 
 2. **Retrieve Spectrum:**
-   - Once an object is found, the script retrieves its spectrum using the `retrieve_spectrum()` function. This function retrieves the spectrum data and applies a mask (`mask_bad_values`) to remove bad data points.
+   - Once an object is found, the script retrieves its spectrum using the `retrieve_spectrum()` function.
+
+3. **Mask Bad Values:**
+    - The retrieved spectrum data is then masked for bad values to improve the comparison results.
 
 3. **Template Selection:**
    - The script selects a set of templates for comparison. In this case, templates from "Theissen+2022" are used. These templates are retrieved using the `TemplateProvider()` and optionally smoothed (with a `smooth_window` parameter) before comparison.
@@ -42,6 +46,7 @@ Example Output:
 """
 
 import warnings
+
 from astropy.utils.exceptions import AstropyWarning
 
 from euclid_tools.esa_tools import retrieve_objects, retrieve_spectrum
@@ -49,7 +54,6 @@ from euclid_tools.shared import create_object_name
 from flux_comp.core import SED, WaveFlux, TemplateProvider
 
 warnings.simplefilter("ignore", category=AstropyWarning)
-
 
 # ------------------------------
 # Compare spectrum to templates
@@ -74,8 +78,8 @@ if results:
 
     print(f"Object found at RA: {round(ra, 7)}, Dec: {round(dec, 7)}")
 
-    # Retrieve the spectrum for the object, masking bad values to improve comparison results
-    data = retrieve_spectrum(object_id, mask_bad_values=True)
+    # Retrieve the spectrum for the object
+    data = retrieve_spectrum(object_id)
 
     if data and len(data) > 0:
         # Select template(s) for comparison (Theissen+2022)
@@ -86,6 +90,9 @@ if results:
         # Alternative template set:
         # template_name = "Burgasser+2017"
         # templates = provider.get_Burgasser_2017_templates()
+
+        # Mask bad values in the spectrum to improve comparison results
+        data = mask_bad_values(data, mask_func=lambda mask: (mask % 2 == 1) | (mask >= 64))
 
         # Create a WaveFlux object for comparison
         spectrum = WaveFlux(

@@ -9,6 +9,7 @@ The toolkit is written in Python and is designed to be lightweight, modular, and
 > **Note:** The tools are designed to support both **ESA** and **IRSA** data access. While functionality is similar between the two, **ESA services are significantly faster** and are preferred for most use cases.
 
 The tools allow users to:
+
 - Retrieve catalog objects, spectra, and image cutouts.
 - Visualize spectra and images (RGB composites).
 - Compare observed spectra to predefined templates.
@@ -18,29 +19,31 @@ The tools allow users to:
 This toolkit provides the following core functionality:
 
 - **Object Search and Data Retrieval**
-  - Search for Euclid sources near specified sky coordinates.
-  - Retrieve source data from the Euclid MER catalog.
+    - Search for Euclid sources near specified sky coordinates.
+    - Retrieve source data from the Euclid MER catalog.
 
 > **Note:** The Euclid MER catalog does **not include magnitudes for Euclid bands**. To address this, the toolkit calculates magnitudes with uncertainties from the available flux columns using appropriate zero-points. Magnitudes are computed in both **AB** and **Vega** systems, and added directly to the result table returned by `retrieve_objects()`. VIS magnitude is derived from `flux_vis_psf` and Y, J, H magnitudes from `flux_[band]_templfit`.
 
 - **Spectrum Retrieval and Visualization**
-  - Retrieve NISP spectra (slitless grism) for individual sources.
-  - Automatically mask unreliable flux or error values.
-  - Plot flux and uncertainty versus wavelength.
+    - Retrieve NISP spectra (slitless grism) for individual sources.
+    - Plot flux and uncertainty versus wavelength.
 
 - **Image Cutout Retrieval**
-  - Retrieve image cutouts in VIS, Y, J, and H bands for any Euclid-detected source.
-  - Plot single- and multi-band image views (with customizable RGB assignments).
+    - Retrieve image cutouts in VIS, Y, J, and H bands for any Euclid-detected source.
+    - Plot single- and multi-band image views (with customizable RGB assignments).
 
 - **Spectral Comparison**
-  - Match retrieved Euclid spectra to template libraries (e.g., Burgasser+2017, Theissen+2022).
-  - Automatically evaluate fits using reduced χ² or other metrics.
-  - Generate labeled and customizable comparison plots.
+    - Mask unreliable flux or error values.
+    - Match Euclid spectra to template libraries (e.g., Burgasser+2017, Theissen+2022).
+    - Automatically evaluate fits using reduced χ² or other metrics.
+    - Generate labeled and customizable comparison plots.
 
 ## Detailed Description
 
 ### Folder Structure:
+
 The toolset consists of several scripts and modules:
+
 - **`compare_spectrum_example.py`**: Example script to compare a spectrum with template SEDs.
 - **`esa_tools_example.py`**: Example script for retrieving and plotting data from the ESA archive.
 - **`irsa_tools_example.py`**: Example script for retrieving and plotting data from the IRSA archive.
@@ -58,33 +61,55 @@ Located in `euclid_tools/esa_tools.py` or `euclid_tools/irsa_tools.py` depending
 This function allows users to retrieve catalog objects from the Euclid archive based on coordinates and a specified search radius.
 
 #### Parameters:
+
 - `ra`: Right Ascension of the target object.
 - `dec`: Declination of the target object.
 - `search_radius`: Radius (in arcseconds) around the target to search for objects.
 
 #### Returns:
+
 - An Astropy Table containing objects that are found within the specified search radius.
 
 ### 2. `retrieve_spectrum()`
 
 Located in `euclid_tools/esa_tools.py` or `euclid_tools/irsa_tools.py`.
 
-This function retrieves the spectrum of a given object from the Euclid archive based on the object ID. It also allows users to mask bad data points (e.g., those with erroneous error values) to improve the comparison accuracy.
+This function retrieves the spectrum of a given object from the Euclid archive based on the object ID.
 
 #### Parameters:
+
 - `object_id`: The unique identifier of the object.
-- `mask_bad_values`: Whether to mask bad flux values (default is False).
+- `save_spectrum`: If True, saves the spectrum to a FITS file in the specified output directory.
+- `output_dir`: Directory where the spectrum FITS file will be saved if `save_spectrum` is True.
+- `object_name`: Name of the object to use for the output file name. If not provided, defaults to 'E{object_id}'.
 
 #### Returns:
+
 - An Astropy QTable containing the spectrum data, including wavelength, flux, and error.
 
-### 3. `retrieve_cutout()`
+### 3. `mask_bad_values()`
+
+Located in `euclid_tools/esa_tools.py` or `euclid_tools/irsa_tools.py`.
+
+This function mask bad values in the spectrum data based on the MASK column.
+
+#### Parameters:
+
+- `spectrum`: The input spectrum table containing columns WAVELENGTH, FLUX, ERROR, and MASK.
+- `mask_func`: A function that takes the MASK column values and returns a boolean mask. Example: `lambda mask: (mask % 2 == 1) | (mask >= 64)`.
+
+#### Returns:
+
+- The modified spectrum data table with masked values replaced by NaN.
+
+### 4. `retrieve_cutout()`
 
 Located in `euclid_tools/esa_tools.py` or `euclid_tools/irsa_tools.py`.
 
 This function retrieves an image cutout for a given region around the target object and specified band (e.g., VIS, Y, J, H).
 
 #### Parameters:
+
 - `ra`: Right Ascension of the target object.
 - `dec`: Declination of the target object.
 - `search_radius`: Radius (in arcseconds) to define the region of interest.
@@ -92,15 +117,17 @@ This function retrieves an image cutout for a given region around the target obj
 - `band`: The band (e.g., "VIS", "Y", "J", "H") to retrieve.
 
 #### Returns:
+
 - A FITS HDU containing the image cutout for the specified band.
 
-### 4. `plot_spectrum()`
+### 5. `plot_spectrum()`
 
 Located in `euclid_tools/spectrum_plotter.py`.
 
 This function generates a plot of the observed spectrum for a given object. The plot includes both the flux and error values, allowing users to visualize the spectrum and uncertainties.
 
 #### Parameters:
+
 - `data`: The spectrum data (including wavelength, flux, and error).
 - `ra`: Right Ascension of the target object.
 - `dec`: Declination of the target object.
@@ -109,15 +136,17 @@ This function generates a plot of the observed spectrum for a given object. The 
 - `plot_format`: The format of the plot (e.g., "pdf", "png").
 
 #### Output:
+
 - A saved plot of the spectrum.
 
-### 5. `plot_images()`
+### 6. `plot_images()`
 
 Located in `euclid_tools/image_plotter.py`.
 
 This function generates plots for multiple images (cutouts) of the object in different bands (e.g., VIS, Y, J, H). The images can be combined into RGB composites.
 
 #### Parameters:
+
 - `ra`: Right Ascension of the target object.
 - `dec`: Declination of the target object.
 - `images`: A list of dictionaries containing image data for each band.
@@ -128,6 +157,7 @@ This function generates plots for multiple images (cutouts) of the object in dif
 - `plot_format`: The format of the plot (e.g., "pdf", "png").
 
 #### Output:
+
 - A saved plot of the RGB images.
 
 ### 6. Spectrum Comparison Using `flux_comp`
@@ -137,6 +167,7 @@ Located in `flux_comp/core.py`.
 To compare an observed spectrum to a template, the `flux_comp` package is used. The script leverages the `SED` and `WaveFlux` classes for the comparison, employing metrics such as reduced chi-squared.
 
 #### Key steps:
+
 1. Retrieve the catalog object based on RA, Dec.
 2. Retrieve the spectrum for the object.
 3. Retrieve template(s) for comparison (e.g., from "Theissen+2022").
@@ -169,13 +200,14 @@ if results:
     object_id = str(result["object_id"])
 
     # Retrieve spectrum data
-    spectrum_data = retrieve_spectrum(object_id, mask_bad_values=True)
+    spectrum_data = retrieve_spectrum(object_id)
 
     # Plot the spectrum
     plot_spectrum(spectrum_data, ra, dec, output_dir=".", plot_format="pdf")
 else:
     print("No object found for the given coordinates and radius.")
 ```
+
 ![Spectrum1](example_plots/J035231.98-491058.81_spectrum.png)
 ![Spectrum2](example_plots/J035909.93-474057.42_spectrum.png)
 ![Spectrum3](example_plots/J174556.40+645937.11_spectrum.png)
@@ -212,6 +244,7 @@ images = [
 # Plot the images in a single figure
 plot_images(ra, dec, images, cutout_size, plot_format="pdf")
 ```
+
 ![Images1](example_plots/J035231.98-491058.81_images.png)
 ![Images2](example_plots/J035909.93-474057.42_images.png)
 ![Images3](example_plots/J174556.40+645937.11_images.png)
@@ -223,10 +256,13 @@ and compare it to predefined templates using the `flux_comp` tool. The full exam
 
 ```python
 from flux_comp.core import SED, WaveFlux, TemplateProvider
-from euclid_tools.esa_tools import retrieve_spectrum
+from euclid_tools.esa_tools import retrieve_spectrum, mask_bad_values
 
 # Retrieve spectrum for an object
-data = retrieve_spectrum(object_id, mask_bad_values=True)
+data = retrieve_spectrum(object_id)
+
+# Mask bad values in the spectrum to improve comparison results
+data = mask_bad_values(data, mask_func=lambda mask: (mask % 2 == 1) | (mask >= 64))
 
 # Retrieve templates for comparison
 template_name = "Theissen+2022"
@@ -244,6 +280,7 @@ sed.compare(spectrum, templates, trim_wave=True, metric="reduced-chi2")
 sed.to_flux_lambda()
 sed.plot(reference_on_top=False, spec_uncertainty=True)
 ```
+
 ![Comparison1](example_plots/J035231.98-491058.81_vs._Theissen+2022.png)
 ![Comparison2](example_plots/J035909.93-474057.42_vs._Theissen+2022.png)
 ![Comparison3](example_plots/J174556.40+645937.11_vs._Theissen+2022.png)

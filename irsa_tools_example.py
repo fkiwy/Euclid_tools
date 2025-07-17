@@ -28,7 +28,7 @@ Steps in the script:
    - If objects are found, the first object is selected for further analysis. If no objects are found, the script will exit gracefully with a message.
 
 3. **Retrieve Spectrum:**
-   - The script retrieves the spectrum for the selected object using the `retrieve_spectrum()` function, with masking applied (`mask_bad_values=True`).
+   - The script retrieves the spectrum for the selected object using the `retrieve_spectrum()` function.
    - If a valid spectrum is retrieved, it will be plotted using the `plot_spectrum()` function.
 
 4. **Retrieve Cutouts:**
@@ -42,7 +42,6 @@ Notes for Users:
 - **Coordinates:** The script starts with a specific set of coordinates (RA, Dec). Users can modify these to retrieve data for different objects.
 - **Cutout Sizes:** The cutout size is defined in arcseconds, and users can adjust it based on their needs. For example, a `cutout_size` of 20 arcseconds is used in this script.
 - **Plot Format:** The resulting plot for images is saved in PDF format. Users can change this format (e.g., PNG, JPG) by modifying the `plot_format` argument.
-- **Masking Spectra:** Masking is applied to the spectrum retrieval in this example (`mask_bad_values=True`) to filter poor-quality data.
 - **Image Bands:** The bands (VIS, Y, J, H) are selected for cutout retrieval, but users can adjust this list to include other bands if needed.
 
 Example Output:
@@ -51,15 +50,15 @@ The script will generate a plot that shows the spectrum of the selected object, 
 
 import sys
 import warnings
+
 from astropy.utils.exceptions import AstropyWarning
 
-from euclid_tools.irsa_tools import retrieve_objects, retrieve_spectrum, retrieve_cutout, print_catalog_info
-from euclid_tools.spectrum_plotter import plot_spectrum
 from euclid_tools.image_plotter import plot_images
+from euclid_tools.irsa_tools import retrieve_objects, retrieve_spectrum, retrieve_cutout, print_catalog_info
 from euclid_tools.shared import print_results, print_message
+from euclid_tools.spectrum_plotter import plot_spectrum
 
 warnings.simplefilter("ignore", category=AstropyWarning)
-
 
 # ==============================
 # I R S A  tools example
@@ -102,7 +101,7 @@ result = results[0]
 object_id = str(result["object_id"])
 
 # Retrieve the spectrum for the selected object
-table = retrieve_spectrum(object_id, mask_bad_values=True)
+table = retrieve_spectrum(object_id)
 
 if table and len(table) > 0:
     # Plot the spectrum if data is available

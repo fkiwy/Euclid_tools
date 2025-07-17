@@ -1,16 +1,19 @@
+import os
+import tempfile
 import urllib
+from typing import Callable
+
+import astropy.units as u
 import numpy as np
 import pyvo as vo
-import astropy.units as u
-from astropy.io import fits
 from astropy.coordinates import SkyCoord
-from astropy.table import Table, QTable, MaskedColumn
+from astropy.io import fits
 from astropy.nddata import Cutout2D
+from astropy.table import Table, QTable, MaskedColumn
 from astropy.wcs import WCS
 from astroquery.ipac.irsa import Irsa
 
 from euclid_tools.shared import add_magnitude
-
 
 COLUMNS_TO_REMOVE = ["tileid", "x", "y", "z", "spt_ind", "htm20", "cntr"]
 
@@ -84,7 +87,7 @@ def retrieve_objects(ra: float, dec: float, radius: float) -> Table:
     return table
 
 
-def retrieve_spectrum(object_id: str, mask_bad_values: bool = False) -> QTable:
+def retrieve_spectrum(object_id: str, save_spectrum: bool = False, output_dir: str = tempfile.gettempdir(), object_name: str = None) -> QTable:
     """
     Retrieve the 1D spectrum for a given object ID from the Euclid archive.
 
@@ -92,19 +95,26 @@ def retrieve_spectrum(object_id: str, mask_bad_values: bool = False) -> QTable:
     ----------
     object_id : str
         Unique identifier of the source.
-    mask_bad_values : bool, default False
-        Whether to mask bad flux values.
+    save_spectrum : bool, optional
+        If True, saves the spectrum to a FITS file in the specified output directory.
+    output_dir : str, optional
+        Directory where the spectrum FITS file will be saved if `save_spectrum` is True.
+    object_name : str, optional
+        Name of the object to use for the output file name. If not provided, defaults to 'E{object_id}'.
 
     Returns
     -------
     QTable
-        A table containing wavelength (microns), flux, and flux error.
+        A table containing wavelength (microns), flux, flux error, and mask.
         Flux and error are scaled using the FITS header FSCALE keyword.
 
     Notes
     -----
     - Wavelength is converted to microns.
     - Data is masked based on the bitmask in the `MASK` column if requested.
+    - If no spectrum is found, returns `None`.
+    - The output FITS file is named using the object's RA and DEC coordinates, formatted as 'E{ra}{dec}_spectrum.fits'.
+    - The output directory defaults to a temporary directory if not specified.
     """
 
     adql = f"""
@@ -126,31 +136,74 @@ def retrieve_spectrum(object_id: str, mask_bad_values: bool = False) -> QTable:
         spectrum = QTable.read(hdu, format="fits")
         spec_header = hdu.header
 
+        # Check if the spectrum contains valid data
+        if np.isnan(spectrum["WAVELENGTH"]).all():
+            return None
+
         # Convert wavelength to microns
         wavelength = spectrum["WAVELENGTH"].to(u.micron)
 
         # Scale the flux and error using the scaling factor from the fits header
         flux = spectrum["SIGNAL"] * spec_header["FSCALE"]
         error = np.sqrt(spectrum["VAR"]) * spec_header["FSCALE"]
-
-        if mask_bad_values:
-            # Use the MASK column to create a boolean mask for values to ignore
-            bad_mask = (spectrum["MASK"].value % 2 == 1) | (spectrum["MASK"].value >= 64)
-
-            # Apply the mask to the spectrum data
-            wavelength = MaskedColumn(wavelength, mask=bad_mask)
-            flux = MaskedColumn(flux, mask=bad_mask)
-            error = MaskedColumn(error, mask=bad_mask)
-
-            # Replace masked values by NaN
-            wavelength = wavelength.filled(np.nan)
-            flux = flux.filled(np.nan)
-            error = error.filled(np.nan)
+        mask = spectrum["MASK"]
 
         # Create a new QTable for the result
-        result = QTable([wavelength, flux, error], names=("WAVELENGTH", "FLUX", "ERROR"))
+        result = QTable([wavelength, flux, error, mask], names=("WAVELENGTH", "FLUX", "ERROR", "MASK"))
+
+        if save_spectrum:
+            if not object_name:
+                # If no object name is provided, create one based on the object ID
+                object_name = f"E{object_id}"
+
+            # Create the full file path for the plot image
+            output_filename = os.path.join(output_dir, object_name + "_spectrum.fits")
+
+            # Save the spectrum to a FITS file
+            result.write(output_filename, format="fits", overwrite=True)
 
     return result
+
+
+def mask_bad_values(spectrum: QTable, mask_func: Callable[[np.ndarray], np.ndarray]) -> QTable:
+    """
+    Mask bad values in the spectrum data based on the MASK column.
+
+    Parameters
+    ----------
+    spectrum : QTable
+        The input spectrum table containing columns WAVELENGTH, FLUX, ERROR, and MASK.
+    mask_func : Callable[[np.ndarray], np.ndarray]
+        A function that takes the MASK column values and returns a boolean mask.
+        The function should return `True` for values to ignore (bad values) and `False` for good values.
+        example: `lambda mask: (mask % 2 == 1) | (mask >= 64)`.
+
+    Returns
+    -------
+    QTable
+        A new table with masked values replaced by NaN. The MASK column is not included in the output.
+
+    Notes
+    -----
+    - The MASK column is used to identify bad values.
+    - The WAVELENGTH, FLUX, and ERROR columns are masked based on the provided mask function.
+    - The output table contains the same columns but with masked values replaced by NaN.
+    """
+
+    # Use the MASK column to create a boolean mask for values to ignore
+    bad_mask = mask_func(spectrum["MASK"].value)
+
+    # Apply the mask to the spectrum data
+    wavelength = MaskedColumn(spectrum["WAVELENGTH"], mask=bad_mask)
+    flux = MaskedColumn(spectrum["FLUX"], mask=bad_mask)
+    error = MaskedColumn(spectrum["ERROR"], mask=bad_mask)
+
+    # Replace masked values by NaN
+    wavelength = wavelength.filled(np.nan)
+    flux = flux.filled(np.nan)
+    error = error.filled(np.nan)
+
+    return QTable([wavelength, flux, error], names=("WAVELENGTH", "FLUX", "ERROR"))
 
 
 def retrieve_cutout(ra: float, dec: float, search_radius: float, cutout_size: float, band: str) -> fits.PrimaryHDU:
