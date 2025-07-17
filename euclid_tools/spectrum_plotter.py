@@ -1,5 +1,6 @@
 import os
 import tempfile
+
 import matplotlib.pyplot as plt
 
 import euclid_tools.shared as shr

@@ -1,19 +1,18 @@
 import os
 import tempfile
 import warnings
+
+import PIL.ImageOps
+import matplotlib.pyplot as plt
 import numpy as np
+from PIL import Image
 from astropy import units as u
 from astropy.coordinates import SkyCoord
-
-# from astropy.nddata import Cutout2D
-from astropy.visualization import make_lupton_rgb
 from astropy.utils.exceptions import AstropyWarning
+from astropy.visualization import make_lupton_rgb
+from matplotlib.patches import BoxStyle, Rectangle
 from reproject import reproject_interp
 from reproject.mosaicking import find_optimal_celestial_wcs
-import matplotlib.pyplot as plt
-from matplotlib.patches import BoxStyle, Rectangle
-from PIL import Image
-import PIL.ImageOps
 
 import euclid_tools.shared as shr
 
@@ -59,11 +58,7 @@ def plot_images(
     def create_image(hdu, img_idx, band):
         wcs, shape = find_optimal_celestial_wcs([hdu], frame="icrs")
         data, _ = reproject_interp(hdu, wcs, shape_out=shape)
-
         position = SkyCoord(ra, dec, unit=(u.deg, u.deg), frame="icrs")
-        # cutout = Cutout2D(hdu.data, position, img_size*u.arcsec, wcs=wcs, mode='partial')
-        # data = cutout.data
-        # wcs = cutout.wcs
 
         ax = fig.add_subplot(rows, cols, img_idx, projection=wcs)
         x, y = wcs.world_to_pixel(position)
@@ -76,7 +71,7 @@ def plot_images(
             color="black",
             fontsize=3.0,
             transform=ax.transAxes,
-            bbox=dict(facecolor="white", alpha=0.5, linewidth=0.1, boxstyle=BoxStyle("Square", pad=0.3)),
+            bbox={"facecolor": "white", "alpha": 0.5, "linewidth": 0.1, "boxstyle": BoxStyle("Square", pad=0.3)},
         )
         ax.add_patch(Rectangle((0, 0), 1, 1, fill=False, lw=0.2, ec="black", transform=ax.transAxes))
 
@@ -107,7 +102,7 @@ def plot_images(
             color="black",
             fontsize=3.0,
             transform=ax.transAxes,
-            bbox=dict(facecolor="white", alpha=0.7, linewidth=0.1, boxstyle=BoxStyle("Square", pad=0.3)),
+            bbox={"facecolor": "white", "alpha": 0.7, "linewidth": 0.1, "boxstyle": BoxStyle("Square", pad=0.3)},
         )
         ax.add_patch(Rectangle((0, 0), 1, 1, fill=False, lw=0.2, ec="black", transform=ax.transAxes))
         ax.imshow(rgb, origin="lower")

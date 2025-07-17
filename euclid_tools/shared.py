@@ -1,10 +1,11 @@
 import os
-import sys
 import subprocess
-import numpy as np
-import astropy.units as u
-from astropy.coordinates import SkyCoord
+import sys
 from enum import Enum
+
+import astropy.units as u
+import numpy as np
+from astropy.coordinates import SkyCoord
 
 
 class MagnitudeSystem(Enum):
