@@ -121,7 +121,7 @@ def retrieve_spectrum(object_id: str, save_spectrum: bool = False, output_dir: s
     SELECT *
       FROM euclid.objectid_spectrafile_association_q1
      WHERE objectid = {object_id}
-       AND uri IS NOT NULL
+       AND path IS NOT NULL
     """
 
     table = Irsa.query_tap(adql).to_table()
@@ -129,38 +129,33 @@ def retrieve_spectrum(object_id: str, save_spectrum: bool = False, output_dir: s
     if len(table) == 0:
         return None
 
-    file_url = urllib.parse.urljoin(Irsa.tap_url, table["uri"][0])
+    file_url = urllib.parse.urljoin(Irsa.tap_url, table["path"][0])
+    spectrum = QTable.read(file_url, format="votable")
 
-    with fits.open(file_url) as hdul:
-        hdu = hdul[table["hdu"][0]]
-        spectrum = QTable.read(hdu, format="fits")
-        spec_header = hdu.header
+    # Check if the spectrum contains valid data
+    if np.isnan(spectrum["WAVELENGTH"]).all():
+        return None
 
-        # Check if the spectrum contains valid data
-        if np.isnan(spectrum["WAVELENGTH"]).all():
-            return None
+    # Convert wavelength to microns
+    wavelength = spectrum["WAVELENGTH"].to(u.micron)
 
-        # Convert wavelength to microns
-        wavelength = spectrum["WAVELENGTH"].to(u.micron)
+    flux = spectrum["SIGNAL"]
+    error = spectrum["UNCERTAINTY"]
+    mask = spectrum["MASK"]
 
-        # Scale the flux and error using the scaling factor from the fits header
-        flux = spectrum["SIGNAL"] * spec_header["FSCALE"]
-        error = np.sqrt(spectrum["VAR"]) * spec_header["FSCALE"]
-        mask = spectrum["MASK"]
+    # Create a new QTable for the result
+    result = QTable([wavelength, flux, error, mask], names=("WAVELENGTH", "FLUX", "ERROR", "MASK"))
 
-        # Create a new QTable for the result
-        result = QTable([wavelength, flux, error, mask], names=("WAVELENGTH", "FLUX", "ERROR", "MASK"))
+    if save_spectrum:
+        if not object_name:
+            # If no object name is provided, create one based on the object ID
+            object_name = f"E{object_id}"
 
-        if save_spectrum:
-            if not object_name:
-                # If no object name is provided, create one based on the object ID
-                object_name = f"E{object_id}"
+        # Create the full file path for the plot image
+        output_filename = os.path.join(output_dir, object_name + "_spectrum.fits")
 
-            # Create the full file path for the plot image
-            output_filename = os.path.join(output_dir, object_name + "_spectrum.fits")
-
-            # Save the spectrum to a FITS file
-            result.write(output_filename, format="fits", overwrite=True)
+        # Save the spectrum to a FITS file
+        result.write(output_filename, format="fits", overwrite=True)
 
     return result
 

@@ -49,7 +49,7 @@ import warnings
 
 from astropy.utils.exceptions import AstropyWarning
 
-from euclid_tools.esa_tools import retrieve_objects, retrieve_spectrum
+from euclid_tools.esa_tools import retrieve_objects, retrieve_spectrum, mask_bad_values
 from euclid_tools.shared import create_object_name
 from flux_comp.core import SED, WaveFlux, TemplateProvider
 
