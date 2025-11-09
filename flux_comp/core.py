@@ -725,9 +725,9 @@ class SED:
             else:
                 zorder = 0 if is_reference else 1
             data.sort("Wavelength")
-            wavelength = data["Wavelength"]
-            flux = data["Flux"]
-            uncertainty = data["Uncertainty"]
+            wavelength = np.array(data["Wavelength"])
+            flux = np.array(data["Flux"])
+            uncertainty = np.array(data["Uncertainty"])
             if relative_flux:
                 if is_reference:
                     exp = self.get_exponent(np.nanmean(flux))
