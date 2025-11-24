@@ -14,6 +14,7 @@ from io import BytesIO
 from os.path import isfile, join
 
 import astropy.units as u
+import flux_comp.uhs as uhs
 import matplotlib.pyplot as plt
 import numpy as np
 import requests
@@ -29,9 +30,60 @@ from astroquery.vsa import Vsa
 from matplotlib.ticker import FormatStrFormatter, ScalarFormatter
 from scipy.optimize import curve_fit
 
-import flux_comp.uhs as uhs
-
 SVO_URL = "http://svo2.cab.inta-csic.es/theory/fps3/fps.php"
+
+from enum import Enum
+
+
+class FilterID(Enum):
+    # Gaia DR3
+    GAIA_BP = "GAIA/GAIA3.Gbp/Vega"
+    GAIA_G = "GAIA/GAIA3.G/Vega"
+    GAIA_RP = "GAIA/GAIA3.Grp/Vega"
+
+    # Pan-STARRS PS1
+    PS1_G = "PAN-STARRS/PS1.g/AB"
+    PS1_R = "PAN-STARRS/PS1.r/AB"
+    PS1_I = "PAN-STARRS/PS1.i/AB"
+    PS1_Z = "PAN-STARRS/PS1.z/AB"
+    PS1_Y = "PAN-STARRS/PS1.y/AB"
+
+    # CTIO DECam
+    DECAM_G = "CTIO/DECam.g/AB"
+    DECAM_R = "CTIO/DECam.r/AB"
+    DECAM_I = "CTIO/DECam.i/AB"
+    DECAM_Z = "CTIO/DECam.z/AB"
+    DECAM_Y = "CTIO/DECam.y/AB"
+
+    # Sloan SDSS
+    SDSS_U = "SLOAN/SDSS.u/AB"
+    SDSS_G = "SLOAN/SDSS.g/AB"
+    SDSS_R = "SLOAN/SDSS.r/AB"
+    SDSS_I = "SLOAN/SDSS.i/AB"
+    SDSS_Z = "SLOAN/SDSS.z/AB"
+
+    # 2MASS
+    TWOMASS_J = "2MASS/2MASS.J/Vega"
+    TWOMASS_H = "2MASS/2MASS.H/Vega"
+    TWOMASS_K = "2MASS/2MASS.Ks/Vega"
+
+    # UKIRT UKIDSS
+    UKIRT_Y = "UKIRT/UKIDSS.Y/Vega"
+    UKIRT_J = "UKIRT/UKIDSS.J/Vega"
+    UKIRT_H = "UKIRT/UKIDSS.H/Vega"
+    UKIRT_K = "UKIRT/UKIDSS.K/Vega"
+
+    # Paranal VISTA
+    VISTA_Y = "Paranal/VISTA.Y/Vega"
+    VISTA_J = "Paranal/VISTA.J/Vega"
+    VISTA_H = "Paranal/VISTA.H/Vega"
+    VISTA_K = "Paranal/VISTA.Ks/Vega"
+
+    # WISE
+    W1 = "WISE/WISE.W1/Vega"
+    W2 = "WISE/WISE.W2/Vega"
+    W3 = "WISE/WISE.W3/Vega"
+    W4 = "WISE/WISE.W4/Vega"
 
 
 class Bucket:
@@ -157,7 +209,9 @@ class SED:
                 try:
                     print("  Number of CPUs available:", len(os.sched_getaffinity(0)))
                 except:
-                    print("  Number of CPUs in the system:", multiprocessing.cpu_count())
+                    print(
+                        "  Number of CPUs in the system:", multiprocessing.cpu_count()
+                    )
 
             pool = multiprocessing.Pool()
             results = pool.starmap(self.call_compare_method, tasks)
@@ -167,7 +221,9 @@ class SED:
             results = []
             for i, task in enumerate(tasks):
                 reference, templates, number_of_bands_to_omit, trim_wave = task
-                result = self.call_compare_method(reference, templates, number_of_bands_to_omit, trim_wave)
+                result = self.call_compare_method(
+                    reference, templates, number_of_bands_to_omit, trim_wave
+                )
                 results.append(result)
                 if verbose:
                     print(i, result.model_params)
@@ -214,9 +270,16 @@ class SED:
 
         return template
 
-    def call_compare_method(self, reference, templates, number_of_bands_to_omit, trim_wave):
+    def call_compare_method(
+        self, reference, templates, number_of_bands_to_omit, trim_wave
+    ):
         self.data = []
-        return self.compare(reference, templates, number_of_bands_to_omit=number_of_bands_to_omit, trim_wave=trim_wave)
+        return self.compare(
+            reference,
+            templates,
+            number_of_bands_to_omit=number_of_bands_to_omit,
+            trim_wave=trim_wave,
+        )
 
     def compare(
         self,
@@ -314,11 +377,21 @@ class SED:
             ref_uncertainty = data["Uncertainty"]
             used_photometry = list(reference.used_photometry.items())
             used_photometry = [Bucket(x) for x in used_photometry]
-            phot_combinations = self.calculate_combinations(used_photometry, number_of_bands_to_omit)
-            band_combinations = self.calculate_combinations(reference.used_bands, number_of_bands_to_omit)
-            wavelength_combinations = self.calculate_combinations(ref_wavelength, number_of_bands_to_omit)
-            flux_combinations = self.calculate_combinations(ref_flux, number_of_bands_to_omit)
-            uncertainty_combinations = self.calculate_combinations(ref_uncertainty, number_of_bands_to_omit)
+            phot_combinations = self.calculate_combinations(
+                used_photometry, number_of_bands_to_omit
+            )
+            band_combinations = self.calculate_combinations(
+                reference.used_bands, number_of_bands_to_omit
+            )
+            wavelength_combinations = self.calculate_combinations(
+                ref_wavelength, number_of_bands_to_omit
+            )
+            flux_combinations = self.calculate_combinations(
+                ref_flux, number_of_bands_to_omit
+            )
+            uncertainty_combinations = self.calculate_combinations(
+                ref_uncertainty, number_of_bands_to_omit
+            )
             for _, (phot, bands, wavelength, flux, uncertainty) in enumerate(
                 zip(
                     phot_combinations,
@@ -350,7 +423,9 @@ class SED:
                 # Clone the reference (the clone will be modified here after, the original must remain the same)
                 data = reference0.data
                 reference = WaveFlux()
-                reference.create_table(data["Wavelength"], data["Flux"], data["Uncertainty"])
+                reference.create_table(
+                    data["Wavelength"], data["Flux"], data["Uncertainty"]
+                )
                 reference.label = reference0.label
                 reference.used_bands = reference0.used_bands
                 reference.used_photometry = reference0.used_photometry
@@ -366,7 +441,9 @@ class SED:
                 # Clone the template (the clone will be modified here after, the original must remain the same)
                 data = template0.data
                 template = WaveFlux()
-                template.create_table(data["Wavelength"], data["Flux"], data["Uncertainty"])
+                template.create_table(
+                    data["Wavelength"], data["Flux"], data["Uncertainty"]
+                )
                 template.label = template0.label
                 template.used_bands = template0.used_bands
                 template.used_photometry = template0.used_photometry
@@ -382,7 +459,9 @@ class SED:
 
                 if trim_wave:
                     # Trim the reference and template based on the determined wavelength range
-                    min_wave, max_wave = determine_overlapping_wavelength_range(ref_wavelength, tpl_wavelength)
+                    min_wave, max_wave = determine_overlapping_wavelength_range(
+                        ref_wavelength, tpl_wavelength
+                    )
                     reference.trim(min_wave, max_wave)
                     template.trim(min_wave, max_wave)
 
@@ -403,23 +482,35 @@ class SED:
                 tpl_flux = data["Flux"]
 
                 # Trim reference and template data to their overlapping wavelength range
-                min_wave, max_wave = determine_overlapping_wavelength_range(tpl_wavelength, ref_wavelength)
-                tpl_wavelength, tpl_flux = trim(tpl_wavelength, tpl_flux, min_wave, max_wave)
+                min_wave, max_wave = determine_overlapping_wavelength_range(
+                    tpl_wavelength, ref_wavelength
+                )
+                tpl_wavelength, tpl_flux = trim(
+                    tpl_wavelength, tpl_flux, min_wave, max_wave
+                )
                 _, ref_flux = trim(ref_wavelength, ref_flux, min_wave, max_wave)
-                ref_wavelength, ref_uncertainty = trim(ref_wavelength, ref_uncertainty, min_wave, max_wave)
+                ref_wavelength, ref_uncertainty = trim(
+                    ref_wavelength, ref_uncertainty, min_wave, max_wave
+                )
 
                 # Interpolate the template flux onto the same wavelength grid as that of the reference
                 tpl_flux = np.interp(ref_wavelength, tpl_wavelength, tpl_flux)
 
                 # Compare the reference flux to the template flux
-                statistic = self.compare_fluxes(ref_flux, ref_uncertainty, tpl_flux, metric)
+                statistic = self.compare_fluxes(
+                    ref_flux, ref_uncertainty, tpl_flux, metric
+                )
 
                 results.append([statistic, reference, template])
 
                 if verbose:
-                    print(f"Compared {reference.label} with {template.label}, statistic = {statistic:e}")
+                    print(
+                        f"Compared {reference.label} with {template.label}, statistic = {statistic:e}"
+                    )
 
-        results.sort(key=lambda x: x[0], reverse=True if metric == "cosine-similarity" else False)
+        results.sort(
+            key=lambda x: x[0], reverse=True if metric == "cosine-similarity" else False
+        )
         self.results = results
         best_match = None
         number_of_results = 0
@@ -434,7 +525,9 @@ class SED:
                 if print_observed_photometry:
                     print("Observed photometry:")
                     [
-                        print(f'{key}: {value[0]:.3f}{"" if np.isnan(value[1]) else f" ± {value[1]:.3f}"} mag')
+                        print(
+                            f'{key}: {value[0]:.3f}{"" if np.isnan(value[1]) else f" ± {value[1]:.3f}"} mag'
+                        )
                         for key, value in reference.used_photometry.items()
                     ]
             template = result[2]
@@ -468,7 +561,9 @@ class SED:
             if print_template_photometry:
                 print("Template photometry:")
                 [
-                    print(f'{key}: {value[0]:.3f}{"" if np.isnan(value[1]) else f" ± {value[1]:.3f}"} mag')
+                    print(
+                        f'{key}: {value[0]:.3f}{"" if np.isnan(value[1]) else f" ± {value[1]:.3f}"} mag'
+                    )
                     for key, value in template.used_photometry.items()
                 ]
             number_of_results += 1
@@ -489,7 +584,9 @@ class SED:
         # Reduced Chi-squared metric
         if metric == "reduced-chi2":
             if np.isnan(ref_uncertainty).all():
-                ref_uncertainty[:] = np.nanmedian(ref_flux) * 0.2  # Default uncertainty if missing
+                ref_uncertainty[:] = (
+                    np.nanmedian(ref_flux) * 0.2
+                )  # Default uncertainty if missing
             dof = np.count_nonzero(~np.isnan(ref_flux)) - 1
             return np.sum((ref_flux - tpl_flux) ** 2 / ref_uncertainty ** 2) / dof
 
@@ -534,7 +631,9 @@ class SED:
         all_combinations = []
         number_of_bands = len(data)
         for i in range(1, number_of_bands_to_omit + 1, 1):
-            for combination in itertools.combinations(range(number_of_bands), number_of_bands - i):
+            for combination in itertools.combinations(
+                range(number_of_bands), number_of_bands - i
+            ):
                 combined_data = np.array(data)[list(combination)]
                 all_combinations.append(combined_data)
         return all_combinations
@@ -697,7 +796,14 @@ class SED:
         number_of_waveflux = len(self.data)
         if figure_size:
             plt.figure(figsize=(figure_size))
-        plt.rcParams.update({"font.size": 8, "font.family": "Arial", "axes.linewidth": 0.7, "axes.edgecolor": "silver"})
+        plt.rcParams.update(
+            {
+                "font.size": 8,
+                "font.family": "Arial",
+                "axes.linewidth": 0.7,
+                "axes.edgecolor": "silver",
+            }
+        )
         plt.rcParams["axes.formatter.use_mathtext"] = True
         if colors:
             plt.rcParams["axes.prop_cycle"] = plt.cycler("color", colors)
@@ -725,9 +831,9 @@ class SED:
             else:
                 zorder = 0 if is_reference else 1
             data.sort("Wavelength")
-            wavelength = np.array(data["Wavelength"])
-            flux = np.array(data["Flux"])
-            uncertainty = np.array(data["Uncertainty"])
+            wavelength = data["Wavelength"]
+            flux = data["Flux"]
+            uncertainty = data["Uncertainty"]
             if relative_flux:
                 if is_reference:
                     exp = self.get_exponent(np.nanmean(flux))
@@ -795,7 +901,9 @@ class SED:
                     # print(f"Calculated threshold for detecting gaps: {threshold}")
 
                     # Detect indices where the wavelength difference exceeds the threshold
-                    gap_indices = np.where(wavelength_diff > threshold)[0] + 1  # Adjust indices
+                    gap_indices = (
+                        np.nonzero(wavelength_diff > threshold)[0] + 1
+                    )  # Adjust indices
 
                     # Print gap positions
                     # print(f"Indices of gaps: {gap_indices}")
@@ -805,7 +913,9 @@ class SED:
                     for idx in gap_indices:
                         flux[idx] = np.nan  # Insert NaN values to create gaps
 
-                curves = plt.plot(wavelength, flux + delta, lw=line_width, label=label, zorder=zorder)
+                curves = plt.plot(
+                    wavelength, flux + delta, lw=line_width, label=label, zorder=zorder
+                )
                 if spec_uncertainty:
                     color = curves[-1].get_color()
                     flux_lower_bound = flux - uncertainty
@@ -851,11 +961,16 @@ class SED:
             formatter = ScalarFormatter(useMathText=True)
             formatter.set_scientific(True)
             plt.gca().yaxis.set_major_formatter(formatter)
-            # plt.gca().yaxis.set_minor_formatter(formatter)
-            # plt.gca().yaxis.set_minor_locator(plt.MaxNLocator(1))
 
         if show_grid:
-            plt.grid(color="grey", alpha=0.3, linestyle="-.", linewidth=0.2, axis="both", which="both")
+            plt.grid(
+                color="grey",
+                alpha=0.3,
+                linestyle="-.",
+                linewidth=0.2,
+                axis="both",
+                which="both",
+            )
             plt.gca().tick_params(axis="x", which="both", length=0)
             plt.gca().tick_params(axis="y", which="both", length=0)
         else:
@@ -899,22 +1014,40 @@ class SED:
             if legend_below_plot:
                 anchor = legend_anchor if legend_anchor else (0.5, -0.2)
                 if handles and labels:
-                    legend = plt.legend(handles, labels, bbox_to_anchor=anchor, loc="center", fontsize=legend_fontsize)
+                    legend = plt.legend(
+                        handles,
+                        labels,
+                        bbox_to_anchor=anchor,
+                        loc="center",
+                        fontsize=legend_fontsize,
+                    )
                 else:
-                    legend = plt.legend(bbox_to_anchor=anchor, loc="center", fontsize=legend_fontsize)
+                    legend = plt.legend(
+                        bbox_to_anchor=anchor, loc="center", fontsize=legend_fontsize
+                    )
                 legend.get_frame().set_facecolor("none")
                 legend.get_frame().set_linewidth(0)
             elif legend_beside_plot:
                 anchor = legend_anchor if legend_anchor else (1.1, 0.5)
                 if handles and labels:
-                    legend = plt.legend(handles, labels, bbox_to_anchor=anchor, loc="center", fontsize=legend_fontsize)
+                    legend = plt.legend(
+                        handles,
+                        labels,
+                        bbox_to_anchor=anchor,
+                        loc="center",
+                        fontsize=legend_fontsize,
+                    )
                 else:
-                    legend = plt.legend(bbox_to_anchor=anchor, loc="center", fontsize=legend_fontsize)
+                    legend = plt.legend(
+                        bbox_to_anchor=anchor, loc="center", fontsize=legend_fontsize
+                    )
                 legend.get_frame().set_facecolor("none")
                 legend.get_frame().set_linewidth(0)
             else:
                 if handles and labels:
-                    legend = plt.legend(handles, labels, loc=legend_location, fontsize=legend_fontsize)
+                    legend = plt.legend(
+                        handles, labels, loc=legend_location, fontsize=legend_fontsize
+                    )
                 else:
                     legend = plt.legend(loc=legend_location, fontsize=legend_fontsize)
                 if legend_no_border:
@@ -934,28 +1067,43 @@ class SED:
             features_matching_range = []
             min_wave, max_wave = np.nanmin(ref_wavelength), np.nanmax(ref_wavelength)
             for feature in spectral_features:
-                min_wave_feature, max_wave_feature = feature["wavelengths"][0], feature["wavelengths"][-1]
+                min_wave_feature, max_wave_feature = (
+                    feature["wavelengths"][0],
+                    feature["wavelengths"][-1],
+                )
                 if min_wave_feature > max_wave or max_wave_feature < min_wave:
                     continue
                 if min_wave_feature < min_wave and max_wave_feature > min_wave:
                     if feature["type"] == "band":
                         feature["wavelengths"][0] = min_wave
                     else:
-                        feature["wavelengths"] = [w for w in feature["wavelengths"] if w >= min_wave]
+                        feature["wavelengths"] = [
+                            w for w in feature["wavelengths"] if w >= min_wave
+                        ]
                 if max_wave_feature > max_wave and min_wave_feature < max_wave:
                     if feature["type"] == "band":
                         feature["wavelengths"][-1] = max_wave
                     else:
-                        feature["wavelengths"] = [w for w in feature["wavelengths"] if w <= max_wave]
+                        feature["wavelengths"] = [
+                            w for w in feature["wavelengths"] if w <= max_wave
+                        ]
                 features_matching_range.append(feature)
 
             # Find the highest flux value within each feature's wavelength range
             feature_flux_values = []
             for feature in features_matching_range:
-                min_wave_feature, max_wave_feature = feature["wavelengths"][0], feature["wavelengths"][-1]
-                indices = np.where((ref_wavelength >= min_wave_feature) & (ref_wavelength <= max_wave_feature))
+                min_wave_feature, max_wave_feature = (
+                    feature["wavelengths"][0],
+                    feature["wavelengths"][-1],
+                )
+                indices = np.nonzero(
+                    (ref_wavelength >= min_wave_feature)
+                    & (ref_wavelength <= max_wave_feature)
+                )
                 if len(indices[0]) == 0:
-                    indices = self.find_nearest(ref_wavelength, (min_wave_feature + max_wave_feature) / 2)
+                    indices = self.find_nearest(
+                        ref_wavelength, (min_wave_feature + max_wave_feature) / 2
+                    )
                 max_flux_value = np.nanmax(ref_flux[indices])
                 feature_flux_values.append(max_flux_value)
 
@@ -971,13 +1119,27 @@ class SED:
             # Plot lines for spectral features at the highest flux values
             y_offset = 10 ** exp
             for i, feature in enumerate(features_matching_range):
-                feature_label, feature_type, wavelengths = feature["label"], feature["type"], feature["wavelengths"]
+                feature_label, feature_type, wavelengths = (
+                    feature["label"],
+                    feature["type"],
+                    feature["wavelengths"],
+                )
                 offset = feature["offset"] if "offset" in feature else 1
                 max_flux_value = feature_flux_values[i]
                 if feature_type == "band":
-                    min_wave, max_wave = feature["wavelengths"][0], feature["wavelengths"][-1]
+                    min_wave, max_wave = (
+                        feature["wavelengths"][0],
+                        feature["wavelengths"][-1],
+                    )
                     y = max_flux_value + y_offset * offset
-                    plt.hlines(xmin=min_wave, xmax=max_wave, y=y, lw=0.5, color=feature_color, linestyle="-")
+                    plt.hlines(
+                        xmin=min_wave,
+                        xmax=max_wave,
+                        y=y,
+                        lw=0.5,
+                        color=feature_color,
+                        linestyle="-",
+                    )
                     plt.text(
                         (min_wave + max_wave) / 2,
                         y,
@@ -993,7 +1155,12 @@ class SED:
                         line_length = y_offset / 2
                         ymin = max_flux_value + line_offset * offset
                         plt.vlines(
-                            x=wavelength, ymin=ymin, ymax=ymin + line_length, lw=0.5, color=feature_color, linestyle="-"
+                            x=wavelength,
+                            ymin=ymin,
+                            ymax=ymin + line_length,
+                            lw=0.5,
+                            color=feature_color,
+                            linestyle="-",
                         )
                     plt.text(
                         np.nanmean(wavelengths),
@@ -1016,12 +1183,18 @@ class SED:
         if open_plot:
             self.start_file(filename)
 
-    def to_flux_lambda(self, density_unit=u.AA, normalize_at_wavelength=None, subtract_continuum=None):
+    def to_flux_lambda(
+        self, density_unit=u.AA, normalize_at_wavelength=None, subtract_continuum=None
+    ):
         for waveflux in self.data:
             data = waveflux.data
             wavelength = data["Wavelength"].value * u.um
-            data["Flux"] = flux_to_flux_lambda(wavelength, data["Flux"].value * u.Jy, density_unit)
-            data["Uncertainty"] = flux_to_flux_lambda(wavelength, data["Uncertainty"].value * u.Jy, density_unit)
+            data["Flux"] = flux_to_flux_lambda(
+                wavelength, data["Flux"].value * u.Jy, density_unit
+            )
+            data["Uncertainty"] = flux_to_flux_lambda(
+                wavelength, data["Uncertainty"].value * u.Jy, density_unit
+            )
             if normalize_at_wavelength:
                 waveflux.normalize_at_wavelength(normalize_at_wavelength)
             if subtract_continuum:
@@ -1053,7 +1226,15 @@ class SED:
 class WaveFlux:
     VSA_BASE_URL = "http://vsa.roe.ac.uk:8080/vdfs/"
 
-    def __init__(self, label="", wavelength=None, flux=None, uncertainty=None, spectrum=None, model_params=None):
+    def __init__(
+        self,
+        label="",
+        wavelength=None,
+        flux=None,
+        uncertainty=None,
+        spectrum=None,
+        model_params=None,
+    ):
         """
         Initialize a WaveFlux instance with spectral data.
 
@@ -1115,7 +1296,9 @@ class WaveFlux:
                 uncertainty = np.empty(len(flux))
                 uncertainty[:] = np.nan
             else:
-                uncertainty = uncertainty.to(u.Jy, equivalencies=u.spectral_density(wavelength))
+                uncertainty = uncertainty.to(
+                    u.Jy, equivalencies=u.spectral_density(wavelength)
+                )
 
             # Convert wavelength to micron
             wavelength = wavelength.to(u.um, equivalencies=u.spectral())
@@ -1132,14 +1315,18 @@ class WaveFlux:
                 uncertainty[:] = np.nan
             else:
                 uncertainty = uncertainty.array * u.Jy
-                uncertainty = uncertainty.to(u.Jy, equivalencies=u.spectral_density(wavelength))
+                uncertainty = uncertainty.to(
+                    u.Jy, equivalencies=u.spectral_density(wavelength)
+                )
 
             # Convert wavelength to micron
             wavelength = wavelength.to(u.um, equivalencies=u.spectral())
 
             self.create_table(wavelength, flux, uncertainty)
         else:
-            self.data = Table(names=["Wavelength", "Flux", "Uncertainty"], dtype=["f", "f", "f"])
+            self.data = Table(
+                names=["Wavelength", "Flux", "Uncertainty"], dtype=["f", "f", "f"]
+            )
             self.photometry = True
 
     def add(self, filter_id, magnitude, error=np.nan, band=None):
@@ -1166,7 +1353,7 @@ class WaveFlux:
         ```
         """
         if np.isnan(magnitude):
-            print(f"{filter_id} magnitude is NaN and has been skipped")
+            # print(f"{filter_id} magnitude is NaN and has been skipped")
             return
 
         file_path = join(tempfile.gettempdir(), "filter_info.json")
@@ -1199,7 +1386,9 @@ class WaveFlux:
 
     def create_table(self, wavelength, flux, uncertainty):
         columns = [wavelength, flux, uncertainty]
-        self.data = Table(columns, names=["Wavelength", "Flux", "Uncertainty"], dtype=["f", "f", "f"])
+        self.data = Table(
+            columns, names=["Wavelength", "Flux", "Uncertainty"], dtype=["f", "f", "f"]
+        )
 
     def signal_to_noise(self):
         """
@@ -1396,7 +1585,9 @@ class WaveFlux:
         wavelength = self.data["Wavelength"]
         flux = self.data["Flux"]
         uncertainty = self.data["Uncertainty"]
-        flux, uncertainty = normalize(ref_wavelength, ref_flux, wavelength, flux, uncertainty)
+        flux, uncertainty = normalize(
+            ref_wavelength, ref_flux, wavelength, flux, uncertainty
+        )
         self.create_table(wavelength, flux, uncertainty)
 
     def normalize_at_wavelength(self, value):
@@ -1454,7 +1645,9 @@ class WaveFlux:
         """
         data = reference.data
         wavelength = self.data["Wavelength"]
-        flux = shift(data["Wavelength"], data["Flux"], self.data["Wavelength"], self.data["Flux"])
+        flux = shift(
+            data["Wavelength"], data["Flux"], self.data["Wavelength"], self.data["Flux"]
+        )
         ratio = np.nanmean(flux) / np.nanmean(self.data["Flux"])
         uncertainty = ratio * self.data["Uncertainty"]
         self.create_table(wavelength, flux, uncertainty)
@@ -1510,7 +1703,9 @@ class WaveFlux:
         wavelength = self.data["Wavelength"]
         flux = self.data["Flux"]
         flux_error = self.data["Uncertainty"]
-        flux, uncertainty = scale_to_distance(flux, flux_error, distance, distance_error, new_distance)
+        flux, uncertainty = scale_to_distance(
+            flux, flux_error, distance, distance_error, new_distance
+        )
         self.create_table(wavelength, flux, uncertainty)
 
     def add_featured_photometry(self, ra, dec, radius=5):
@@ -1565,7 +1760,18 @@ class WaveFlux:
         """
         coords = SkyCoord(ra, dec, unit=u.deg)
         radius *= u.arcsec
-        v = Vizier(columns=["+_r", "Source", "BPmag", "e_BPmag", "Gmag", "e_Gmag", "RPmag", "e_RPmag"])
+        v = Vizier(
+            columns=[
+                "+_r",
+                "Source",
+                "BPmag",
+                "e_BPmag",
+                "Gmag",
+                "e_Gmag",
+                "RPmag",
+                "e_RPmag",
+            ]
+        )
         tables = v.query_region(coords, radius=radius, catalog="I/355/gaiadr3")
         if tables:
             table = tables[0]
@@ -1578,11 +1784,11 @@ class WaveFlux:
             e_rp = row["e_RPmag"]
             len1 = len(self.data)
             if ~np.isnan(e_bp) and "BP" not in omit_bands:
-                self.add("GAIA/GAIA3.Gbp/Vega", bp, e_bp, "Gaia BP")
+                self.add(FilterID.GAIA_BP.value, bp, e_bp, "Gaia BP")
             if ~np.isnan(e_g) and "G" not in omit_bands:
-                self.add("GAIA/GAIA3.G/Vega", g, e_g, "Gaia G")
+                self.add(FilterID.GAIA_G.value, g, e_g, "Gaia G")
             if ~np.isnan(e_rp) and "RP" not in omit_bands:
-                self.add("GAIA/GAIA3.Grp/Vega", rp, e_rp, "Gaia RP")
+                self.add(FilterID.GAIA_RP.value, rp, e_rp, "Gaia RP")
             len2 = len(self.data)
             if len2 > len1:
                 return True
@@ -1616,8 +1822,7 @@ class WaveFlux:
             "ra": ra,
             "dec": dec,
             "radius": radius.to(u.deg).value,
-            "nStackDetections.gte": 3,
-            "sort_by": [("distance", "desc")],
+            "nStackDetections.gte": 1,
         }
         response = requests.get(query_url, params=payload, timeout=300)
 
@@ -1627,6 +1832,7 @@ class WaveFlux:
             return False
 
         if len(table) > 0:
+            table.sort("distance")
             row = table[0]
             g = row["gMeanPSFMag"]
             r = row["rMeanPSFMag"]
@@ -1640,15 +1846,15 @@ class WaveFlux:
             e_y = row["yMeanPSFMagErr"]
             len1 = len(self.data)
             if e_g > -999 and "g" not in omit_bands:
-                self.add("PAN-STARRS/PS1.g/AB", g, e_g, "PS1 g")
+                self.add(FilterID.PS1_G.value, g, e_g, "PS1 g")
             if e_r > -999 and "r" not in omit_bands:
-                self.add("PAN-STARRS/PS1.r/AB", r, e_r, "PS1 r")
+                self.add(FilterID.PS1_R.value, r, e_r, "PS1 r")
             if e_i > -999 and "i" not in omit_bands:
-                self.add("PAN-STARRS/PS1.i/AB", i, e_i, "PS1 i")
+                self.add(FilterID.PS1_I.value, i, e_i, "PS1 i")
             if e_z > -999 and "z" not in omit_bands:
-                self.add("PAN-STARRS/PS1.z/AB", z, e_z, "PS1 z")
+                self.add(FilterID.PS1_Z.value, z, e_z, "PS1 z")
             if e_y > -999 and "y" not in omit_bands:
-                self.add("PAN-STARRS/PS1.y/AB", y, e_y, "PS1 y")
+                self.add(FilterID.PS1_Y.value, y, e_y, "PS1 y")
             len2 = len(self.data)
             if len2 > len1:
                 return True
@@ -1684,7 +1890,10 @@ class WaveFlux:
         response = requests.get(query_url, params=payload, timeout=300)
         table = ascii.read(response.text, format="csv")
         if table and len(table) > 0:
-            table.add_column(calculate_separation(ra, dec, table["ra"], table["dec"]), name="distance")
+            table.add_column(
+                calculate_separation(ra, dec, table["ra"], table["dec"]),
+                name="distance",
+            )
             table.sort("distance")
             row = table[0]
             g = row["gmag"]
@@ -1699,15 +1908,15 @@ class WaveFlux:
             e_y = row["yerr"]
             len1 = len(self.data)
             if e_g < 9.9 and "g" not in omit_bands:
-                self.add("CTIO/DECam.g/AB", g, e_g, "NSC g")
+                self.add(FilterID.DECAM_G.value, g, e_g, "NSC g")
             if e_r < 9.9 and "r" not in omit_bands:
-                self.add("CTIO/DECam.r/AB", r, e_r, "NSC r")
+                self.add(FilterID.DECAM_R.value, r, e_r, "NSC r")
             if e_i < 9.9 and "i" not in omit_bands:
-                self.add("CTIO/DECam.i/AB", i, e_i, "NSC i")
+                self.add(FilterID.DECAM_I.value, i, e_i, "NSC i")
             if e_z < 9.9 and "z" not in omit_bands:
-                self.add("CTIO/DECam.z/AB", z, e_z, "NSC z")
+                self.add(FilterID.DECAM_Z.value, z, e_z, "NSC z")
             if e_y < 9.9 and "y" not in omit_bands:
-                self.add("CTIO/DECam.Y/AB", y, e_y, "NSC y")
+                self.add(FilterID.DECAM_Y.value, y, e_y, "NSC y")
             len2 = len(self.data)
             if len2 > len1:
                 return True
@@ -1776,15 +1985,15 @@ class WaveFlux:
             e_y = row["e_Ymag"]
             len1 = len(self.data)
             if row["gFlag"] <= 3 and "g" not in omit_bands:
-                self.add("CTIO/DECam.g/AB", g, e_g, "DES g")
+                self.add(FilterID.DECAM_G.value, g, e_g, "DES g")
             if row["rFlag"] <= 3 and "r" not in omit_bands:
-                self.add("CTIO/DECam.r/AB", r, e_r, "DES r")
+                self.add(FilterID.DECAM_R.value, r, e_r, "DES r")
             if row["iFlag"] <= 3 and "i" not in omit_bands:
-                self.add("CTIO/DECam.i/AB", i, e_i, "DES i")
+                self.add(FilterID.DECAM_I.value, i, e_i, "DES i")
             if row["zFlag"] <= 3 and "z" not in omit_bands:
-                self.add("CTIO/DECam.z/AB", z, e_z, "DES z")
+                self.add(FilterID.DECAM_Z.value, z, e_z, "DES z")
             if row["yFlag"] <= 3 and "y" not in omit_bands:
-                self.add("CTIO/DECam.Y/AB", y, e_y, "DES Y")
+                self.add(FilterID.DECAM_Y.value, y, e_y, "DES Y")
             len2 = len(self.data)
             if len2 > len1:
                 return True
@@ -1815,10 +2024,26 @@ class WaveFlux:
             coords,
             radius=radius,
             data_release=17,
-            fields=["ra", "dec", "u", "g", "r", "i", "z", "Err_u", "Err_g", "Err_r", "Err_i", "Err_z"],
+            fields=[
+                "ra",
+                "dec",
+                "u",
+                "g",
+                "r",
+                "i",
+                "z",
+                "Err_u",
+                "Err_g",
+                "Err_r",
+                "Err_i",
+                "Err_z",
+            ],
         )
         if table and len(table) > 0:
-            table.add_column(calculate_separation(ra, dec, table["ra"], table["dec"]), name="distance")
+            table.add_column(
+                calculate_separation(ra, dec, table["ra"], table["dec"]),
+                name="distance",
+            )
             table.sort("distance")
             row = table[0]
             U = row["u"]
@@ -1833,15 +2058,15 @@ class WaveFlux:
             e_z = row["Err_z"]
             len1 = len(self.data)
             if "u" not in omit_bands:
-                self.add("SLOAN/SDSS.u/AB", U, e_u, "SDSS u")
+                self.add(FilterID.SDSS_U.value, U, e_u, "SDSS u")
             if "g" not in omit_bands:
-                self.add("SLOAN/SDSS.g/AB", g, e_g, "SDSS g")
+                self.add(FilterID.SDSS_G.value, g, e_g, "SDSS g")
             if "r" not in omit_bands:
-                self.add("SLOAN/SDSS.r/AB", r, e_r, "SDSS r")
+                self.add(FilterID.SDSS_R.value, r, e_r, "SDSS r")
             if "i" not in omit_bands:
-                self.add("SLOAN/SDSS.i/AB", i, e_i, "SDSS i")
+                self.add(FilterID.SDSS_I.value, i, e_i, "SDSS i")
             if "z" not in omit_bands:
-                self.add("SLOAN/SDSS.z/AB", z, e_z, "SDSS z")
+                self.add(FilterID.SDSS_Z.value, z, e_z, "SDSS z")
             len2 = len(self.data)
             if len2 > len1:
                 return True
@@ -1868,7 +2093,18 @@ class WaveFlux:
         """
         coords = SkyCoord(ra, dec, unit=u.deg)
         radius *= u.arcsec
-        v = Vizier(columns=["+_r", "2MASS", "Jmag", "e_Jmag", "Hmag", "e_Hmag", "Kmag", "e_Kmag"])
+        v = Vizier(
+            columns=[
+                "+_r",
+                "2MASS",
+                "Jmag",
+                "e_Jmag",
+                "Hmag",
+                "e_Hmag",
+                "Kmag",
+                "e_Kmag",
+            ]
+        )
         tables = v.query_region(coords, radius=radius, catalog="II/246/out")
         if tables:
             table = tables[0].filled(np.nan)
@@ -1881,17 +2117,19 @@ class WaveFlux:
             e_k = row["e_Kmag"]
             len1 = len(self.data)
             if ~np.isnan(e_j) and "J" not in omit_bands:
-                self.add("2MASS/2MASS.J/Vega", j, e_j, "2MASS J")
+                self.add(FilterID.TWOMASS_J.value, j, e_j, "2MASS J")
             if ~np.isnan(e_h) and "H" not in omit_bands:
-                self.add("2MASS/2MASS.H/Vega", h, e_h, "2MASS H")
+                self.add(FilterID.TWOMASS_H.value, h, e_h, "2MASS H")
             if ~np.isnan(e_k) and "K" not in omit_bands:
-                self.add("2MASS/2MASS.Ks/Vega", k, e_k, "2MASS Ks")
+                self.add(FilterID.TWOMASS_K.value, k, e_k, "2MASS Ks")
             len2 = len(self.data)
             if len2 > len1:
                 return True
         return False
 
-    def add_ukidss_photometry(self, ra, dec, radius=5, omit_bands=[], programme_id="LAS", dereddened=False):
+    def add_ukidss_photometry(
+        self, ra, dec, radius=5, omit_bands=[], programme_id="LAS", dereddened=False
+    ):
         """
         Add United Kingdom Infrared Telescope (UKIRT) Infrared Deep Sky Survey (UKIDSS) photometry to the WaveFlux instance
         based on the specified coordinates.
@@ -1916,7 +2154,9 @@ class WaveFlux:
             return
         coords = SkyCoord(ra, dec, unit=u.deg)
         radius *= u.arcsec
-        table = Ukidss.query_region(coords, radius, database="UKIDSSDR11PLUS", programme_id=programme_id)
+        table = Ukidss.query_region(
+            coords, radius=radius, database="UKIDSSDR11PLUS", programme_id=programme_id
+        )
         if table:
             table.sort("distance")
             row = table[0]
@@ -1925,19 +2165,18 @@ class WaveFlux:
             h = row["hAperMag3"] - row["aH"] if dereddened else row["hAperMag3"]
             k = row["kAperMag3"] - row["aK"] if dereddened else row["kAperMag3"]
             e_y = row["yAperMag3Err"]
-            e_h = row["hAperMag3Err"]
             e_j = row["jAperMag3Err"]
             e_h = row["hAperMag3Err"]
             e_k = row["kAperMag3Err"]
             len1 = len(self.data)
             if e_y > -999 and "Y" not in omit_bands:
-                self.add("UKIRT/UKIDSS.Y/Vega", y, e_y, "UKIDSS Y")
+                self.add(FilterID.UKIRT_Y.value, y, e_y, "UKIDSS Y")
             if e_j > -999 and "J" not in omit_bands:
-                self.add("UKIRT/UKIDSS.J/Vega", j, e_j, "UKIDSS J")
+                self.add(FilterID.UKIRT_J.value, j, e_j, "UKIDSS J")
             if e_h > -999 and "H" not in omit_bands:
-                self.add("UKIRT/UKIDSS.H/Vega", h, e_h, "UKIDSS H")
+                self.add(FilterID.UKIRT_H.value, h, e_h, "UKIDSS H")
             if e_k > -999 and "K" not in omit_bands:
-                self.add("UKIRT/UKIDSS.K/Vega", k, e_k, "UKIDSS K")
+                self.add(FilterID.UKIRT_K.value, k, e_k, "UKIDSS K")
             len2 = len(self.data)
             if len2 > len1:
                 return True
@@ -1948,7 +2187,7 @@ class WaveFlux:
         Add United Kingdom Infrared Telescope (UKIRT) Hemisphere Survey (UHS) photometry to the WaveFlux instance
         based on the specified coordinates.
 
-        This method queries the UHS DR2 catalog for infrared photometric data (J, K) based on the given celestial
+        This method queries the UHS DR3 catalog for infrared photometric data (J, H, K) based on the given celestial
         coordinates (RA, Dec) and a specified search radius. If the query returns valid photometric data, it adds the
         UKIDSS photometry to the WaveFlux instance for the specified bands. The method returns True if UHS photometry
         was successfully added, and False otherwise.
@@ -1957,7 +2196,7 @@ class WaveFlux:
         ra (float): The right ascension (RA) coordinate in degrees.
         dec (float): The declination (Dec) coordinate in degrees.
         radius (float, optional): The search radius in arcseconds (default is 5 arcseconds).
-        bands (str, optional): A string containing the desired photometric bands to retrieve ('JK' for all bands, or
+        bands (str, optional): A string containing the desired photometric bands to retrieve ('JHK' for all bands, or
             a subset of them, e.g., 'J' for J band).
 
         Returns:
@@ -1965,18 +2204,22 @@ class WaveFlux:
         """
         if dec < -5:
             return
-        table = uhs.query_region(ra, dec, radius, database="UHSDR2")
+        table = uhs.query_region(ra, dec, radius=radius, database="UHSDR3")
         if table:
             row = table[0]
             j = row["JAPERMAG3"] - row["AJ"] if dereddened else row["JAPERMAG3"]
+            h = row["HAPERMAG3"] - row["AH"] if dereddened else row["HAPERMAG3"]
             k = row["KAPERMAG3"] - row["AK"] if dereddened else row["KAPERMAG3"]
             e_j = row["JAPERMAG3ERR"]
+            e_h = row["HAPERMAG3ERR"]
             e_k = row["KAPERMAG3ERR"]
             len1 = len(self.data)
             if e_j > -999 and "J" not in omit_bands:
-                self.add("UKIRT/UKIDSS.J/Vega", j, e_j, "UHS J")
+                self.add(FilterID.UKIRT_J.value, j, e_j, "UHS J")
+            if e_h > -999 and "H" not in omit_bands:
+                self.add(FilterID.UKIRT_H.value, h, e_h, "UHS H")
             if e_k > -999 and "K" not in omit_bands:
-                self.add("UKIRT/UKIDSS.K/Vega", k, e_k, "UHS K")
+                self.add(FilterID.UKIRT_K.value, k, e_k, "UHS K")
             len2 = len(self.data)
             if len2 > len1:
                 return True
@@ -1986,7 +2229,7 @@ class WaveFlux:
         """
         Add VISTA Hemisphere Survey (VHS) photometry to the WaveFlux instance based on the specified coordinates.
 
-        This method queries the VHS DR6 catalog for infrared photometric data (Y, J, H, Ks) based on the given celestial
+        This method queries the VHS DR7 catalog for infrared photometric data (Y, J, H, Ks) based on the given celestial
         coordinates (RA, Dec) and a specified search radius. If the query returns valid photometric data, it adds
         the VHS photometry to the WaveFlux instance for the specified bands. The method returns True if VHS
         photometry was successfully added, and False otherwise.
@@ -2006,7 +2249,9 @@ class WaveFlux:
         coords = SkyCoord(ra, dec, unit=u.deg)
         radius *= u.arcsec
         Vsa.TIMEOUT = 3000
-        table = Vsa.query_region(coords, radius, database="VHSDR6", programme_id="VHS")
+        table = Vsa.query_region(
+            coords, radius=radius, database="VHSDR7", programme_id="VHS"
+        )
         if table:
             table.sort("distance")
             row = table[0]
@@ -2020,13 +2265,13 @@ class WaveFlux:
             e_k = row["ksAperMag3Err"]
             len1 = len(self.data)
             if e_y > -999 and "Y" not in omit_bands:
-                self.add("Paranal/VISTA.Y/Vega", y, e_y, "VHS Y")
+                self.add(FilterID.VISTA_Y.value, y, e_y, "VHS Y")
             if e_j > -999 and "J" not in omit_bands:
-                self.add("Paranal/VISTA.J/Vega", j, e_j, "VHS J")
+                self.add(FilterID.VISTA_J.value, j, e_j, "VHS J")
             if e_h > -999 and "H" not in omit_bands:
-                self.add("Paranal/VISTA.H/Vega", h, e_h, "VHS H")
+                self.add(FilterID.VISTA_H.value, h, e_h, "VHS H")
             if e_k > -999 and "K" not in omit_bands:
-                self.add("Paranal/VISTA.Ks/Vega", k, e_k, "VHS Ks")
+                self.add(FilterID.VISTA_K.value, k, e_k, "VHS Ks")
             len2 = len(self.data)
             if len2 > len1:
                 return True
@@ -2056,7 +2301,9 @@ class WaveFlux:
         coords = SkyCoord(ra, dec, unit=u.deg)
         radius *= u.arcsec
         Vsa.TIMEOUT = 3000
-        table = Vsa.query_region(coords, radius, database="VIKINGDR5", programme_id="VIKING")
+        table = Vsa.query_region(
+            coords, radius=radius, database="VIKINGDR5", programme_id="VIKING"
+        )
         if table:
             table.sort("distance")
             row = table[0]
@@ -2070,13 +2317,13 @@ class WaveFlux:
             e_k = row["ksAperMag3Err"]
             len1 = len(self.data)
             if e_y > -999 and "Y" not in omit_bands:
-                self.add("Paranal/VISTA.Y/Vega", y, e_y, "VIKING Y")
+                self.add(FilterID.VISTA_Y.value, y, e_y, "VIKING Y")
             if e_j > -999 and "J" not in omit_bands:
-                self.add("Paranal/VISTA.J/Vega", j, e_j, "VIKING J")
+                self.add(FilterID.VISTA_J.value, j, e_j, "VIKING J")
             if e_h > -999 and "H" not in omit_bands:
-                self.add("Paranal/VISTA.H/Vega", h, e_h, "VIKING H")
+                self.add(FilterID.VISTA_H.value, h, e_h, "VIKING H")
             if e_k > -999 and "K" not in omit_bands:
-                self.add("Paranal/VISTA.Ks/Vega", k, e_k, "VIKING Ks")
+                self.add(FilterID.VISTA_K.value, k, e_k, "VIKING Ks")
             len2 = len(self.data)
             if len2 > len1:
                 return True
@@ -2106,7 +2353,9 @@ class WaveFlux:
         coords = SkyCoord(ra, dec, unit=u.deg)
         radius *= u.arcsec
         Vsa.TIMEOUT = 3000
-        table = Vsa.query_region(coords, radius, database="VVVDR5", programme_id="VVV")
+        table = Vsa.query_region(
+            coords, radius=radius, database="VVVDR5", programme_id="VVV"
+        )
         if table:
             table.sort("distance")
             row = table[0]
@@ -2120,13 +2369,13 @@ class WaveFlux:
             e_k = row["ksAperMag3Err"]
             len1 = len(self.data)
             if e_y > -999 and "Y" not in omit_bands:
-                self.add("Paranal/VISTA.Y/Vega", y, e_y, "VVV Y")
+                self.add(FilterID.VISTA_Y.value, y, e_y, "VVV Y")
             if e_j > -999 and "J" not in omit_bands:
-                self.add("Paranal/VISTA.J/Vega", j, e_j, "VVV J")
+                self.add(FilterID.VISTA_J.value, j, e_j, "VVV J")
             if e_h > -999 and "H" not in omit_bands:
-                self.add("Paranal/VISTA.H/Vega", h, e_h, "VVV H")
+                self.add(FilterID.VISTA_H.value, h, e_h, "VVV H")
             if e_k > -999 and "K" not in omit_bands:
-                self.add("Paranal/VISTA.Ks/Vega", k, e_k, "VVV Ks")
+                self.add(FilterID.VISTA_K.value, k, e_k, "VVV Ks")
             len2 = len(self.data)
             if len2 > len1:
                 return True
@@ -2187,13 +2436,13 @@ class WaveFlux:
             e_w4 = row["e_W4mag"]
             len1 = len(self.data)
             if ~np.isnan(e_w1) and "W1" not in omit_bands:
-                self.add("WISE/WISE.W1/Vega", w1, e_w1, "W1")
+                self.add(FilterID.W1.value, w1, e_w1, "W1")
             if ~np.isnan(e_w2) and "W2" not in omit_bands:
-                self.add("WISE/WISE.W2/Vega", w2, e_w2, "W2")
+                self.add(FilterID.W2.value, w2, e_w2, "W2")
             if ~np.isnan(e_w3) and "W3" not in omit_bands:
-                self.add("WISE/WISE.W3/Vega", w3, e_w3, "W3")
+                self.add(FilterID.W3.value, w3, e_w3, "W3")
             if ~np.isnan(e_w4) and "W4" not in omit_bands:
-                self.add("WISE/WISE.W4/Vega", w4, e_w4, "W4")
+                self.add(FilterID.W4.value, w4, e_w4, "W4")
             len2 = len(self.data)
             if len2 > len1:
                 return True
@@ -2220,7 +2469,9 @@ class WaveFlux:
         """
         coords = SkyCoord(ra, dec, unit=u.deg)
         radius *= u.arcsec
-        v = Vizier(columns=["+_r", "Name", "W1mproPM", "e_W1mproPM", "W2mproPM", "e_W2mproPM"])
+        v = Vizier(
+            columns=["+_r", "Name", "W1mproPM", "e_W1mproPM", "W2mproPM", "e_W2mproPM"]
+        )
         tables = v.query_region(coords, radius=radius, catalog="II/365/catwise")
         if tables:
             table = tables[0].filled(np.nan)
@@ -2231,9 +2482,9 @@ class WaveFlux:
             e_w2 = row["e_W2mproPM"]
             len1 = len(self.data)
             if ~np.isnan(e_w1) and "W1" not in omit_bands:
-                self.add("WISE/WISE.W1/Vega", w1, e_w1, "CW1")
+                self.add(FilterID.W1.value, w1, e_w1, "CW1")
             if ~np.isnan(e_w2) and "W2" not in omit_bands:
-                self.add("WISE/WISE.W2/Vega", w2, e_w2, "CW2")
+                self.add(FilterID.W2.value, w2, e_w2, "CW2")
             len2 = len(self.data)
             if len2 > len1:
                 return True
@@ -2243,7 +2494,9 @@ class WaveFlux:
 def create_obj_name(ra_deg, dec_deg):
     coord = SkyCoord(ra=ra_deg, dec=dec_deg, unit="deg", frame="icrs")
     ra_str = coord.ra.to_string(unit="hour", sep="", precision=2, pad=True)[:4]
-    dec_str = coord.dec.to_string(unit="deg", sep="", precision=2, alwayssign=True, pad=True)[:5]
+    dec_str = coord.dec.to_string(
+        unit="deg", sep="", precision=2, alwayssign=True, pad=True
+    )[:5]
     return f"J{ra_str}{dec_str}"
 
 
@@ -2263,7 +2516,10 @@ def flux_to_flux_lambda(wavelength, flux, density_unit):
     Returns:
     astropy.units.quantity.Quantity: The flux density per unit wavelength in erg/s/cm^2/Ångstrom.
     """
-    return flux.to(u.erg / u.s / u.cm ** 2 / density_unit, equivalencies=u.spectral_density(wavelength))
+    return flux.to(
+        u.erg / u.s / u.cm ** 2 / density_unit,
+        equivalencies=u.spectral_density(wavelength),
+    )
 
 
 def magnitude_to_flux_lambda(zeropoint, wavelength, magnitude, density_unit=u.AA):
@@ -2434,7 +2690,11 @@ def align_flux(wavelength, flux):
     """
 
     # Initial guesses for the parameters based on the data
-    initial_guess = [np.max(flux), wavelength[np.argmax(flux)], (np.max(wavelength) - np.min(wavelength)) / 4]
+    initial_guess = [
+        np.max(flux),
+        wavelength[np.argmax(flux)],
+        (np.max(wavelength) - np.min(wavelength)) / 4,
+    ]
 
     # Fit the model to each spectrum
     popt, _ = curve_fit(curve_model, wavelength, flux, p0=initial_guess)
@@ -2572,7 +2832,9 @@ def normalize(ref_wavelength, ref_flux, wavelength, flux, uncertainty):
     Returns:
     tuple: A tuple containing the normalized flux values and uncertainties.
     """
-    min_wave, max_wave = determine_overlapping_wavelength_range(wavelength, ref_wavelength)
+    min_wave, max_wave = determine_overlapping_wavelength_range(
+        wavelength, ref_wavelength
+    )
     this_wave, this_flux = trim(wavelength, flux, min_wave, max_wave)
     other_wave, other_flux = trim(ref_wavelength, ref_flux, min_wave, max_wave)
     interp_flux = np.interp(other_wave, this_wave, this_flux)
@@ -2800,11 +3062,15 @@ class TemplateProvider:
     def __init__(self):
         self.module_path = os.path.dirname(inspect.getfile(inspect.currentframe()))
 
-    def get_Kesseli_2017_templates(self, wave_range=None, spt=None, smooth_window=None, print_template_info=True):
+    def get_Kesseli_2017_templates(
+        self, wave_range=None, spt=None, smooth_window=None, print_template_info=True
+    ):
         print("Loading Kesseli+2017 templates ...")
         template_dir = join(self.module_path, "templates/Kesseli+2017/")
         template_paths = [
-            template_dir + f for f in os.listdir(template_dir) if f.endswith(".fits") and isfile(join(template_dir, f))
+            template_dir + f
+            for f in os.listdir(template_dir)
+            if f.endswith(".fits") and isfile(join(template_dir, f))
         ]
         templates = []
         for template_path in template_paths:
@@ -2846,11 +3112,15 @@ class TemplateProvider:
             else:
                 return ""
 
-    def get_Theissen_2022_templates(self, wave_range=None, spt=None, smooth_window=None, print_template_info=True):
+    def get_Theissen_2022_templates(
+        self, wave_range=None, spt=None, smooth_window=None, print_template_info=True
+    ):
         print("Loading Theissen+2022 templates ...")
         template_dir = join(self.module_path, "templates/Theissen+2022/")
         template_paths = [
-            template_dir + f for f in os.listdir(template_dir) if f.endswith(".fits") and isfile(join(template_dir, f))
+            template_dir + f
+            for f in os.listdir(template_dir)
+            if f.endswith(".fits") and isfile(join(template_dir, f))
         ]
         templates = []
         for template_path in template_paths:
@@ -2876,7 +3146,13 @@ class TemplateProvider:
             wavelength = np.concatenate([wave0, wave1, wave2, wave3]) * u.um
             flux = np.concatenate([flux0, flux1, flux2, flux3]) * u.Jy
             uncertainty = np.concatenate([unc0, unc1, unc2, unc3]) * u.Jy
-            wf = WaveFlux(template_info, wavelength, flux, uncertainty, model_params={"spt": template_info})
+            wf = WaveFlux(
+                template_info,
+                wavelength,
+                flux,
+                uncertainty,
+                model_params={"spt": template_info},
+            )
             if wave_range:
                 wf.trim(wave_range[0], wave_range[1])
             if smooth_window:
@@ -2893,11 +3169,15 @@ class TemplateProvider:
         else:
             return ""
 
-    def get_Burgasser_2017_templates(self, wave_range=None, spt=None, smooth_window=None, print_template_info=True):
+    def get_Burgasser_2017_templates(
+        self, wave_range=None, spt=None, smooth_window=None, print_template_info=True
+    ):
         print("Loading Burgasser+2017 templates ...")
         template_dir = join(self.module_path, "templates/Burgasser+2017/")
         template_paths = [
-            template_dir + f for f in os.listdir(template_dir) if f.endswith(".fits") and isfile(join(template_dir, f))
+            template_dir + f
+            for f in os.listdir(template_dir)
+            if f.endswith(".fits") and isfile(join(template_dir, f))
         ]
         templates = []
         for template_path in template_paths:
@@ -2911,7 +3191,13 @@ class TemplateProvider:
             wavelength = data[0] * u.um
             flux = data[1] * u.Jy
             uncertainty = data[2] * u.Jy
-            wf = WaveFlux(template_info, wavelength, flux, uncertainty, model_params={"spt": template_info})
+            wf = WaveFlux(
+                template_info,
+                wavelength,
+                flux,
+                uncertainty,
+                model_params={"spt": template_info},
+            )
             if wave_range:
                 wf.trim(wave_range[0], wave_range[1])
             if smooth_window:
@@ -2933,26 +3219,106 @@ class Features:
 
     def __init__(self):
         self.features = [
-            {"id": "h2o", "label": "H$_2$O", "type": "band", "wavelengths": [0.925, 0.95]},
-            {"id": "h2o", "label": "H$_2$O", "type": "band", "wavelengths": [1.08, 1.2]},
-            {"id": "h2o", "label": "H$_2$O", "type": "band", "wavelengths": [1.325, 1.55]},
-            {"id": "h2o", "label": "H$_2$O", "type": "band", "wavelengths": [1.72, 2.14]},
-            {"id": "ch4", "label": "CH$_4$", "type": "band", "wavelengths": [1.1, 1.24]},
-            {"id": "ch4", "label": "CH$_4$", "type": "band", "wavelengths": [1.28, 1.44]},
-            {"id": "ch4", "label": "CH$_4$", "type": "band", "wavelengths": [1.6, 1.76]},
-            {"id": "ch4", "label": "CH$_4$", "type": "band", "wavelengths": [2.2, 2.35]},
+            {
+                "id": "h2o",
+                "label": "H$_2$O",
+                "type": "band",
+                "wavelengths": [0.925, 0.95],
+            },
+            {
+                "id": "h2o",
+                "label": "H$_2$O",
+                "type": "band",
+                "wavelengths": [1.08, 1.2],
+            },
+            {
+                "id": "h2o",
+                "label": "H$_2$O",
+                "type": "band",
+                "wavelengths": [1.325, 1.55],
+            },
+            {
+                "id": "h2o",
+                "label": "H$_2$O",
+                "type": "band",
+                "wavelengths": [1.72, 2.14],
+            },
+            {
+                "id": "ch4",
+                "label": "CH$_4$",
+                "type": "band",
+                "wavelengths": [1.1, 1.24],
+            },
+            {
+                "id": "ch4",
+                "label": "CH$_4$",
+                "type": "band",
+                "wavelengths": [1.28, 1.44],
+            },
+            {
+                "id": "ch4",
+                "label": "CH$_4$",
+                "type": "band",
+                "wavelengths": [1.6, 1.76],
+            },
+            {
+                "id": "ch4",
+                "label": "CH$_4$",
+                "type": "band",
+                "wavelengths": [2.2, 2.35],
+            },
             {"id": "co", "label": "CO", "type": "band", "wavelengths": [2.29, 2.39]},
-            {"id": "tio", "label": "TiO", "type": "band", "wavelengths": [0.6569, 0.6852]},
-            {"id": "tio", "label": "TiO", "type": "band", "wavelengths": [0.705, 0.727]},
+            {
+                "id": "tio",
+                "label": "TiO",
+                "type": "band",
+                "wavelengths": [0.6569, 0.6852],
+            },
+            {
+                "id": "tio",
+                "label": "TiO",
+                "type": "band",
+                "wavelengths": [0.705, 0.727],
+            },
             {"id": "tio", "label": "TiO", "type": "band", "wavelengths": [0.76, 0.8]},
-            {"id": "tio", "label": "TiO", "type": "band", "wavelengths": [0.825, 0.831]},
+            {
+                "id": "tio",
+                "label": "TiO",
+                "type": "band",
+                "wavelengths": [0.825, 0.831],
+            },
             {"id": "tio", "label": "TiO", "type": "band", "wavelengths": [0.845, 0.86]},
             {"id": "vo", "label": "VO", "type": "band", "wavelengths": [1.04, 1.08]},
-            {"id": "young vo", "label": "VO", "type": "band", "wavelengths": [1.17, 1.2]},
-            {"id": "cah", "label": "CaH", "type": "band", "wavelengths": [0.6346, 0.639]},
-            {"id": "cah", "label": "CaH", "type": "band", "wavelengths": [0.675, 0.705]},
-            {"id": "crh", "label": "CrH", "type": "band", "wavelengths": [0.8611, 0.8681]},
-            {"id": "feh", "label": "FeH", "type": "band", "wavelengths": [0.8692, 0.875]},
+            {
+                "id": "young vo",
+                "label": "VO",
+                "type": "band",
+                "wavelengths": [1.17, 1.2],
+            },
+            {
+                "id": "cah",
+                "label": "CaH",
+                "type": "band",
+                "wavelengths": [0.6346, 0.639],
+            },
+            {
+                "id": "cah",
+                "label": "CaH",
+                "type": "band",
+                "wavelengths": [0.675, 0.705],
+            },
+            {
+                "id": "crh",
+                "label": "CrH",
+                "type": "band",
+                "wavelengths": [0.8611, 0.8681],
+            },
+            {
+                "id": "feh",
+                "label": "FeH",
+                "type": "band",
+                "wavelengths": [0.8692, 0.875],
+            },
             {"id": "feh", "label": "FeH", "type": "band", "wavelengths": [0.98, 1.03]},
             {"id": "feh", "label": "FeH", "type": "band", "wavelengths": [1.19, 1.25]},
             {"id": "feh", "label": "FeH", "type": "band", "wavelengths": [1.57, 1.64]},
@@ -2963,27 +3329,127 @@ class Features:
             {"id": "h", "label": "H I", "type": "line", "wavelengths": [1.281, 1.282]},
             {"id": "h", "label": "H I", "type": "line", "wavelengths": [1.944, 1.945]},
             {"id": "h", "label": "H I", "type": "line", "wavelengths": [2.166, 2.166]},
-            {"id": "na", "label": "Na I", "type": "line", "wavelengths": [0.8186, 0.8195]},
-            {"id": "na", "label": "Na I", "type": "line", "wavelengths": [1.136, 1.137]},
-            {"id": "na", "label": "Na I", "type": "line", "wavelengths": [2.206, 2.209]},
-            {"id": "cs", "label": "Cs I", "type": "line", "wavelengths": [0.8521, 0.8521]},
-            {"id": "cs", "label": "Cs I", "type": "line", "wavelengths": [0.8943, 0.8943]},
+            {
+                "id": "na",
+                "label": "Na I",
+                "type": "line",
+                "wavelengths": [0.8186, 0.8195],
+            },
+            {
+                "id": "na",
+                "label": "Na I",
+                "type": "line",
+                "wavelengths": [1.136, 1.137],
+            },
+            {
+                "id": "na",
+                "label": "Na I",
+                "type": "line",
+                "wavelengths": [2.206, 2.209],
+            },
+            {
+                "id": "cs",
+                "label": "Cs I",
+                "type": "line",
+                "wavelengths": [0.8521, 0.8521],
+            },
+            {
+                "id": "cs",
+                "label": "Cs I",
+                "type": "line",
+                "wavelengths": [0.8943, 0.8943],
+            },
             {"id": "rb", "label": "Rb I", "type": "line", "wavelengths": [0.78, 0.78]},
-            {"id": "rb", "label": "Rb I", "type": "line", "wavelengths": [0.7948, 0.7948]},
-            {"id": "mg", "label": "Mg I", "type": "line", "wavelengths": [1.7113336, 1.7113336]},
-            {"id": "mg", "label": "Mg I", "type": "line", "wavelengths": [1.5745017, 1.577015]},
-            {"id": "mg", "label": "Mg I", "type": "line", "wavelengths": [1.4881595, 1.4881847, 1.5029098, 1.5044356]},
-            {"id": "mg", "label": "Mg I", "type": "line", "wavelengths": [1.1831422, 1.2086969]},
-            {"id": "ca", "label": "Ca I", "type": "line", "wavelengths": [0.6573, 0.6573]},
-            {"id": "ca", "label": "Ca I", "type": "line", "wavelengths": [2.26311, 2.265741]},
-            {"id": "ca", "label": "Ca I", "type": "line", "wavelengths": [1.978219, 1.985852, 1.986764]},
-            {"id": "ca", "label": "Ca I", "type": "line", "wavelengths": [1.931447, 1.94583, 1.951105]},
-            {"id": "caii", "label": "Ca II", "type": "line", "wavelengths": [1.184224, 1.195301]},
-            {"id": "caii", "label": "Ca II", "type": "line", "wavelengths": [0.985746, 0.993409]},
-            {"id": "al", "label": "Al I", "type": "line", "wavelengths": [1.672351, 1.675511]},
-            {"id": "al", "label": "Al I", "type": "line", "wavelengths": [1.3127006, 1.3154345]},
-            {"id": "fe", "label": "Fe I", "type": "line", "wavelengths": [1.5081407, 1.549457]},
-            {"id": "fe", "label": "Fe I", "type": "line", "wavelengths": [1.25604314, 1.28832892]},
+            {
+                "id": "rb",
+                "label": "Rb I",
+                "type": "line",
+                "wavelengths": [0.7948, 0.7948],
+            },
+            {
+                "id": "mg",
+                "label": "Mg I",
+                "type": "line",
+                "wavelengths": [1.7113336, 1.7113336],
+            },
+            {
+                "id": "mg",
+                "label": "Mg I",
+                "type": "line",
+                "wavelengths": [1.5745017, 1.577015],
+            },
+            {
+                "id": "mg",
+                "label": "Mg I",
+                "type": "line",
+                "wavelengths": [1.4881595, 1.4881847, 1.5029098, 1.5044356],
+            },
+            {
+                "id": "mg",
+                "label": "Mg I",
+                "type": "line",
+                "wavelengths": [1.1831422, 1.2086969],
+            },
+            {
+                "id": "ca",
+                "label": "Ca I",
+                "type": "line",
+                "wavelengths": [0.6573, 0.6573],
+            },
+            {
+                "id": "ca",
+                "label": "Ca I",
+                "type": "line",
+                "wavelengths": [2.26311, 2.265741],
+            },
+            {
+                "id": "ca",
+                "label": "Ca I",
+                "type": "line",
+                "wavelengths": [1.978219, 1.985852, 1.986764],
+            },
+            {
+                "id": "ca",
+                "label": "Ca I",
+                "type": "line",
+                "wavelengths": [1.931447, 1.94583, 1.951105],
+            },
+            {
+                "id": "caii",
+                "label": "Ca II",
+                "type": "line",
+                "wavelengths": [1.184224, 1.195301],
+            },
+            {
+                "id": "caii",
+                "label": "Ca II",
+                "type": "line",
+                "wavelengths": [0.985746, 0.993409],
+            },
+            {
+                "id": "al",
+                "label": "Al I",
+                "type": "line",
+                "wavelengths": [1.672351, 1.675511],
+            },
+            {
+                "id": "al",
+                "label": "Al I",
+                "type": "line",
+                "wavelengths": [1.3127006, 1.3154345],
+            },
+            {
+                "id": "fe",
+                "label": "Fe I",
+                "type": "line",
+                "wavelengths": [1.5081407, 1.549457],
+            },
+            {
+                "id": "fe",
+                "label": "Fe I",
+                "type": "line",
+                "wavelengths": [1.25604314, 1.28832892],
+            },
             {
                 "id": "fe",
                 "label": "Fe I",
@@ -2999,7 +3465,12 @@ class Features:
                     1.19763233,
                 ],
             },
-            {"id": "k", "label": "K I", "type": "line", "wavelengths": [0.7699, 0.7665]},
+            {
+                "id": "k",
+                "label": "K I",
+                "type": "line",
+                "wavelengths": [0.7699, 0.7665],
+            },
             {"id": "k", "label": "K I", "type": "line", "wavelengths": [1.169, 1.177]},
             {"id": "k", "label": "K I", "type": "line", "wavelengths": [1.244, 1.252]},
         ]

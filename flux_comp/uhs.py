@@ -1,5 +1,6 @@
-import requests
 from io import BytesIO
+
+import requests
 from astropy.io import fits
 from astropy.table import Table, TableColumns
 from bs4 import BeautifulSoup
@@ -81,7 +82,9 @@ def download_fits_file(fits_url):
             flattened_table = TableColumns()
             for col_name in table.colnames:
                 if table[col_name].ndim > 1:
-                    flattened_columns = [f"{col_name}" for i in range(table[col_name].shape[1])]
+                    flattened_columns = [
+                        f"{col_name}" for i in range(table[col_name].shape[1])
+                    ]
                     for i, flattened_col_name in enumerate(flattened_columns):
                         flattened_table[flattened_col_name] = table[col_name][:, i]
                 else:
