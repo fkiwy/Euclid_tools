@@ -294,3 +294,9 @@ git clone https://github.com/fkiwy/Euclid_tools.git
 cd Euclid_tools
 pip install .
 ```
+
+## Citation
+
+If you use `Euclid_tools` in your work, please cite it using the following:
+
+[![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.17846221.svg)](https://doi.org/10.5281/zenodo.17846221)
