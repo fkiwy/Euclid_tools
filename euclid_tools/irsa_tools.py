@@ -136,11 +136,10 @@ def retrieve_spectrum(object_id: str, save_spectrum: bool = False, output_dir: s
     if np.isnan(spectrum["WAVELENGTH"]).all():
         return None
 
-    # Convert wavelength to microns
-    wavelength = spectrum["WAVELENGTH"].to(u.micron)
-
-    flux = spectrum["SIGNAL"]
-    error = spectrum["UNCERTAINTY"]
+    # Convert wavelength to microns and replace masked values by NaN
+    wavelength = spectrum["WAVELENGTH"].to(u.micron).filled(np.nan)
+    flux = spectrum["SIGNAL"].filled(np.nan)
+    error = spectrum["UNCERTAINTY"].filled(np.nan)
     mask = spectrum["MASK"]
 
     # Create a new QTable for the result
