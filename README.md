@@ -2,11 +2,16 @@
 
 [![astropy](https://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat)](https://www.astropy.org/)
 
-A collection of tools to work with spectral and imaging data from the **ESA Euclid mission**, specifically tailored to handle data from the **Euclid Quick Release 1 (Q1)**. This package supports the retrieval, visualization, and comparison of Euclid spectra, as well as the retrieval and visualization of image cutouts.
+A collection of tools to work with spectral and imaging data from the **ESA Euclid mission**, specifically tailored to
+handle data from the **Euclid Quick Release 1 (Q1)**. This package supports the retrieval, visualization, and comparison
+of Euclid spectra, as well as the retrieval and visualization of image cutouts.
 
-The toolkit is written in Python and is designed to be lightweight, modular, and extensible. It includes high-level convenience functions for accessing and processing data, making it suitable for both exploratory data analysis and more in-depth scientific research.
+The toolkit is written in Python and is designed to be lightweight, modular, and extensible. It includes high-level
+convenience functions for accessing and processing data, making it suitable for both exploratory data analysis and more
+in-depth scientific research.
 
-> **Note:** The tools are designed to support both **ESA** and **IRSA** data access. While functionality is similar between the two, **ESA services are significantly faster** and are preferred for most use cases.
+> **Note:** The tools are designed to support both **ESA** and **IRSA** data access. While functionality is similar
+> between the two, **ESA services are significantly faster** and are preferred for most use cases.
 
 The tools allow users to:
 
@@ -22,7 +27,10 @@ This toolkit provides the following core functionality:
     - Search for Euclid sources near specified sky coordinates.
     - Retrieve source data from the Euclid MER catalog.
 
-> **Note:** The Euclid MER catalog does **not include magnitudes for Euclid bands**. To address this, the toolkit calculates magnitudes with uncertainties from the available flux columns using appropriate zero-points. Magnitudes are computed in both **AB** and **Vega** systems, and added directly to the result table returned by `retrieve_objects()`. VIS magnitude is derived from `flux_vis_psf` and Y, J, H magnitudes from `flux_[band]_templfit`.
+> **Note:** The Euclid MER catalog does **not include magnitudes for Euclid bands**. To address this, the toolkit
+> calculates magnitudes with uncertainties from the available flux columns using appropriate zero-points. Magnitudes are
+> computed in both **AB** and **Vega** systems, and added directly to the result table returned by `retrieve_objects()`.
+> VIS magnitude is derived from `flux_vis_psf` and Y, J, H magnitudes from `flux_[band]_templfit`.
 
 - **Spectrum Retrieval and Visualization**
     - Retrieve NISP spectra (slitless grism) for individual sources.
@@ -58,7 +66,8 @@ The toolset consists of several scripts and modules:
 
 Located in `euclid_tools/esa_tools.py` or `euclid_tools/irsa_tools.py` depending on which version is used.
 
-This function allows users to retrieve catalog objects from the Euclid archive based on coordinates and a specified search radius.
+This function allows users to retrieve catalog objects from the Euclid archive based on coordinates and a specified
+search radius.
 
 #### Parameters:
 
@@ -96,7 +105,8 @@ This function mask bad values in the spectrum data based on the MASK column.
 #### Parameters:
 
 - `spectrum`: The input spectrum table containing columns WAVELENGTH, FLUX, ERROR, and MASK.
-- `mask_func`: A function that takes the MASK column values and returns a boolean mask. Example: `lambda mask: (mask % 2 == 1) | (mask >= 64)`.
+- `mask_func`: A function that takes the MASK column values and returns a boolean mask. Example:
+  `lambda mask: (mask % 2 == 1) | (mask >= 64)`.
 
 #### Returns:
 
@@ -106,7 +116,8 @@ This function mask bad values in the spectrum data based on the MASK column.
 
 Located in `euclid_tools/esa_tools.py` or `euclid_tools/irsa_tools.py`.
 
-This function retrieves an image cutout for a given region around the target object and specified band (e.g., VIS, Y, J, H).
+This function retrieves an image cutout for a given region around the target object and specified band (e.g., VIS, Y, J,
+H).
 
 #### Parameters:
 
@@ -124,7 +135,8 @@ This function retrieves an image cutout for a given region around the target obj
 
 Located in `euclid_tools/spectrum_plotter.py`.
 
-This function generates a plot of the observed spectrum for a given object. The plot includes both the flux and error values, allowing users to visualize the spectrum and uncertainties.
+This function generates a plot of the observed spectrum for a given object. The plot includes both the flux and error
+values, allowing users to visualize the spectrum and uncertainties.
 
 #### Parameters:
 
@@ -132,7 +144,8 @@ This function generates a plot of the observed spectrum for a given object. The 
 - `ra`: Right Ascension of the target object.
 - `dec`: Declination of the target object.
 - `output_dir`: Directory where the plot will be saved.
-- `open_plot`: Whether to open the plot file immediately after saving. Default is `False`. If set to `True`, the plot will be opened using the default system viewer.
+- `open_plot`: Whether to open the plot file immediately after saving. Default is `False`. If set to `True`, the plot
+  will be opened using the default system viewer.
 - `plot_format`: The format of the plot (e.g., "pdf", "png").
 
 #### Output:
@@ -143,7 +156,8 @@ This function generates a plot of the observed spectrum for a given object. The 
 
 Located in `euclid_tools/image_plotter.py`.
 
-This function generates plots for multiple images (cutouts) of the object in different bands (e.g., VIS, Y, J, H). The images can be combined into RGB composites.
+This function generates plots for multiple images (cutouts) of the object in different bands (e.g., VIS, Y, J, H). The
+images can be combined into RGB composites.
 
 #### Parameters:
 
@@ -164,7 +178,8 @@ This function generates plots for multiple images (cutouts) of the object in dif
 
 Located in `flux_comp/core.py`.
 
-To compare an observed spectrum to a template, the `flux_comp` package is used. The script leverages the `SED` and `WaveFlux` classes for the comparison, employing metrics such as reduced chi-squared.
+To compare an observed spectrum to a template, the `flux_comp` package is used. The script leverages the `SED` and
+`WaveFlux` classes for the comparison, employing metrics such as reduced chi-squared.
 
 #### Key steps:
 
@@ -178,7 +193,8 @@ To compare an observed spectrum to a template, the `flux_comp` package is used. 
 
 ### Example 1: Retrieving and Plotting a Spectrum
 
-This example demonstrates how to retrieve a spectrum for an object and plot it using the `plot_spectrum` function. The full example code can be found in `esa_tools_example.py`.
+This example demonstrates how to retrieve a spectrum for an object and plot it using the `plot_spectrum` function. The
+full example code can be found in `esa_tools_example.py`.
 
 ```python
 from euclid_tools.esa_tools import retrieve_objects, retrieve_spectrum
@@ -214,7 +230,8 @@ else:
 
 ### Example 2: Retrieving and Plotting Image Cutouts
 
-This example shows how to retrieve image cutouts for a given object using different bands, and plot them using the `plot_images` function. The full example code can be found in `esa_tools_example.py`.
+This example shows how to retrieve image cutouts for a given object using different bands, and plot them using the
+`plot_images` function. The full example code can be found in `esa_tools_example.py`.
 
 ```python
 from euclid_tools.esa_tools import retrieve_cutout
@@ -252,7 +269,8 @@ plot_images(ra, dec, images, cutout_size, plot_format="pdf")
 ### Example 3: Compare Spectrum to Template Using `flux_comp`
 
 This example demonstrates how to use the Euclid tools to retrieve a spectrum for a given object
-and compare it to predefined templates using the `flux_comp` tool. The full example code can be found in `compare_spectrum_example.py`.
+and compare it to predefined templates using the `flux_comp` tool. The full example code can be found in
+`compare_spectrum_example.py`.
 
 ```python
 from flux_comp.core import SED, WaveFlux, TemplateProvider
@@ -299,4 +317,4 @@ pip install .
 
 If you use `Euclid_tools` in your work, please cite it using the following:
 
-[![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.17846221.svg)](https://doi.org/10.5281/zenodo.17846221)
+[![DOI](https://img.shields.io/badge/DOI-10.5281/zenodo.17846221-blue)](https://doi.org/10.5281/zenodo.17846221)
