@@ -60,6 +60,22 @@ class ApiContractTests(unittest.TestCase):
         self.assertTrue(np.isnan(cleaned["FLUX"][1]))
         self.assertEqual(cleaned["WAVELENGTH"].unit, u.micron)
 
+    def test_normalize_spectrum_table_handles_integer_mask_columns(self):
+        masked_mask = np.ma.array(np.array([0, 64, 0], dtype=int), mask=[False, True, False])
+        table = QTable(
+            [
+                np.array([1.0, 2.0, 3.0]) * u.micron,
+                np.array([10.0, 20.0, 30.0]) * u.Jy,
+                np.array([1.0, 2.0, 3.0]) * u.Jy,
+                masked_mask,
+            ],
+            names=("WAVELENGTH", "FLUX", "ERROR", "MASK"),
+        )
+
+        normalized = normalize_spectrum_table(table, include_mask=True)
+        self.assertEqual(normalized["MASK"][1], 0)
+        self.assertEqual(normalized["WAVELENGTH"].unit, u.micron)
+
 
 if __name__ == "__main__":
     unittest.main()

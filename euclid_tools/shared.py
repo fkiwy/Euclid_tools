@@ -198,7 +198,10 @@ def print_results(results):
 
 def _filled_column(value):
     if hasattr(value, "filled"):
-        return value.filled(np.nan)
+        try:
+            return value.filled(np.nan)
+        except TypeError:
+            return value.filled(0)
     return value
 
 
