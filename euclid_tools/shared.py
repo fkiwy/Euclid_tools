@@ -196,10 +196,10 @@ def print_results(results):
     table.pprint_all()
 
 
-def _as_filled_array(value):
+def _filled_column(value):
     if hasattr(value, "filled"):
-        return np.asarray(value.filled(np.nan))
-    return np.asarray(value)
+        return value.filled(np.nan)
+    return value
 
 
 def normalize_spectrum_table(spectrum, *, include_mask=False):
@@ -212,18 +212,16 @@ def normalize_spectrum_table(spectrum, *, include_mask=False):
     if missing:
         raise ValueError(f"Spectrum is missing required columns: {sorted(missing)}")
 
-    wavelength = _as_filled_array(spectrum["WAVELENGTH"])
-    flux = _as_filled_array(spectrum["FLUX"])
-    error = _as_filled_array(spectrum["ERROR"])
+    result = {
+        "WAVELENGTH": _filled_column(spectrum["WAVELENGTH"]),
+        "FLUX": _filled_column(spectrum["FLUX"]),
+        "ERROR": _filled_column(spectrum["ERROR"]),
+    }
 
-    cols = [wavelength, flux, error]
-    names = ["WAVELENGTH", "FLUX", "ERROR"]
     if include_mask and "MASK" in spectrum.colnames:
-        mask = _as_filled_array(spectrum["MASK"])
-        cols.append(mask)
-        names.append("MASK")
+        result["MASK"] = _filled_column(spectrum["MASK"])
 
-    return QTable(cols, names=names)
+    return QTable(result)
 
 
 def mask_bad_values(spectrum, mask_func):
@@ -243,11 +241,11 @@ def mask_bad_values(spectrum, mask_func):
     flux = MaskedColumn(spectrum["FLUX"], mask=bad_mask)
     error = MaskedColumn(spectrum["ERROR"], mask=bad_mask)
 
-    return QTable([
-        np.asarray(wavelength.filled(np.nan)),
-        np.asarray(flux.filled(np.nan)),
-        np.asarray(error.filled(np.nan)),
-    ], names=("WAVELENGTH", "FLUX", "ERROR"))
+    return QTable({
+        "WAVELENGTH": wavelength.filled(np.nan),
+        "FLUX": flux.filled(np.nan),
+        "ERROR": error.filled(np.nan),
+    })
 
 
 def print_message(ra, dec, search_radius):

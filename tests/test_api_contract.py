@@ -1,6 +1,7 @@
 import unittest
 
 import numpy as np
+from astropy import units as u
 from astropy.table import QTable
 
 from euclid_tools.backends import get_backend, resolve_radius
@@ -29,9 +30,9 @@ class ApiContractTests(unittest.TestCase):
     def test_normalize_spectrum_table_uses_canonical_columns(self):
         table = QTable(
             [
-                np.array([1.0, 2.0, 3.0]) * 1e-6,
-                np.array([10.0, 20.0, 30.0]),
-                np.array([1.0, 2.0, 3.0]),
+                np.array([1.0, 2.0, 3.0]) * u.micron,
+                np.array([10.0, 20.0, 30.0]) * u.Jy,
+                np.array([1.0, 2.0, 3.0]) * u.Jy,
                 np.array([0, 64, 0], dtype=int),
             ],
             names=("WAVELENGTH", "FLUX", "ERROR", "MASK"),
@@ -40,14 +41,15 @@ class ApiContractTests(unittest.TestCase):
         normalized = normalize_spectrum_table(table, include_mask=True)
         self.assertEqual(list(normalized.colnames), ["WAVELENGTH", "FLUX", "ERROR", "MASK"])
         self.assertEqual(normalized["MASK"][1], 64)
-        self.assertEqual(float(normalized["FLUX"][1]), 20.0)
+        self.assertEqual(float(normalized["FLUX"][1].value), 20.0)
+        self.assertEqual(normalized["WAVELENGTH"].unit, u.micron)
 
     def test_mask_bad_values_filters_bitmask(self):
         table = QTable(
             [
-                np.array([1.0, 2.0, 3.0]) * 1e-6,
-                np.array([10.0, 20.0, 30.0]),
-                np.array([1.0, 2.0, 3.0]),
+                np.array([1.0, 2.0, 3.0]) * u.micron,
+                np.array([10.0, 20.0, 30.0]) * u.Jy,
+                np.array([1.0, 2.0, 3.0]) * u.Jy,
                 np.array([0, 64, 0], dtype=int),
             ],
             names=("WAVELENGTH", "FLUX", "ERROR", "MASK"),
@@ -56,6 +58,7 @@ class ApiContractTests(unittest.TestCase):
         cleaned = mask_bad_values(table, lambda mask: (mask % 2 == 1) | (mask >= 64))
         self.assertEqual(list(cleaned.colnames), ["WAVELENGTH", "FLUX", "ERROR"])
         self.assertTrue(np.isnan(cleaned["FLUX"][1]))
+        self.assertEqual(cleaned["WAVELENGTH"].unit, u.micron)
 
 
 if __name__ == "__main__":

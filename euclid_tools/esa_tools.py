@@ -197,7 +197,7 @@ def mask_bad_values(spectrum: QTable, mask_func: Callable[[np.ndarray], np.ndarr
     return QTable([wavelength, flux, error], names=("WAVELENGTH", "FLUX", "ERROR"))
 
 
-def retrieve_cutout(ra: float, dec: float, radius: float = None, search_radius: float = None, cutout_size: float = None, band: str = None) -> fits.PrimaryHDU:
+def retrieve_cutout(ra: float, dec: float, search_radius: float = None, cutout_size: float = None, band: str = None, radius: float = None) -> fits.PrimaryHDU:
     """
     Retrieve an image cutout from Euclid imaging data.
 
@@ -231,6 +231,8 @@ def retrieve_cutout(ra: float, dec: float, radius: float = None, search_radius: 
     if cutout_size is None:
         raise TypeError("'cutout_size' is required")
 
+    search_radius = resolve_radius(radius=radius, search_radius=search_radius)
+
     if band == "VIS":
         instrument_name = "VIS"
         filter_name = "VIS"
@@ -238,7 +240,7 @@ def retrieve_cutout(ra: float, dec: float, radius: float = None, search_radius: 
         instrument_name = "NISP"
         filter_name = "NIR_" + band
 
-    radius = resolve_radius(radius=radius, search_radius=search_radius) * u.arcsec.to(u.deg)
+    radius_deg = search_radius * u.arcsec.to(u.deg)
 
     query = f"""
     SELECT file_name, 
@@ -253,7 +255,7 @@ def retrieve_cutout(ra: float, dec: float, radius: float = None, search_radius: 
       FROM sedm.mosaic_product 
      WHERE (instrument_name='{instrument_name}') 
        AND (filter_name='{filter_name}') 
-       AND (((mosaic_product.fov IS NOT NULL AND INTERSECTS(CIRCLE('ICRS', {ra}, {dec},{radius}), mosaic_product.fov)=1))) 
+       AND (((mosaic_product.fov IS NOT NULL AND INTERSECTS(CIRCLE('ICRS', {ra}, {dec},{radius_deg}), mosaic_product.fov)=1))) 
      ORDER BY mosaic_product.tile_index ASC
     """
     job_async = Euclid.launch_job(query)

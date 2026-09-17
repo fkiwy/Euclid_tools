@@ -202,7 +202,7 @@ def mask_bad_values(spectrum: QTable, mask_func: Callable[[np.ndarray], np.ndarr
     return QTable([wavelength, flux, error], names=("WAVELENGTH", "FLUX", "ERROR"))
 
 
-def retrieve_cutout(ra: float, dec: float, radius: float = None, search_radius: float = None, cutout_size: float = None, band: str = None) -> fits.PrimaryHDU:
+def retrieve_cutout(ra: float, dec: float, search_radius: float = None, cutout_size: float = None, band: str = None, radius: float = None) -> fits.PrimaryHDU:
     """
     Retrieve an image cutout from Euclid imaging data.
 
