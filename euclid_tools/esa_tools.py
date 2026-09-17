@@ -10,12 +10,13 @@ from astropy.io import fits
 from astropy.table import Table, QTable, MaskedColumn
 from astroquery.esa.euclid import Euclid
 
-from euclid_tools.shared import add_magnitude
+from euclid_tools.backends import resolve_radius
+from euclid_tools.shared import add_magnitude, normalize_spectrum_table
 
 COLUMNS_TO_REMOVE = ["basic_download_data_oid", "to_be_published"]
 
 
-def retrieve_objects(ra: float, dec: float, radius: float, limit: int = -1) -> Table:
+def retrieve_objects(ra: float, dec: float, radius: float = None, search_radius: float = None, limit: int = -1) -> Table:
     """
     Perform a cone search on the Euclid Q1 MER catalog and return nearby objects.
 
@@ -43,8 +44,8 @@ def retrieve_objects(ra: float, dec: float, radius: float, limit: int = -1) -> T
     - Results are sorted by angular separation in arcseconds.
     """
 
+    radius = u.Quantity(resolve_radius(radius=radius, search_radius=search_radius), u.arcsec)
     coord = SkyCoord(ra=ra, dec=dec, unit=(u.deg, u.deg), frame="icrs")
-    radius = u.Quantity(radius, u.arcsec)
 
     Euclid.ROW_LIMIT = limit
 
@@ -139,6 +140,7 @@ def retrieve_spectrum(object_id: str, save_spectrum: bool = False, output_dir: s
 
         # Create a new QTable for the result
         result = QTable([wavelength, flux, error, mask], names=("WAVELENGTH", "FLUX", "ERROR", "MASK"))
+        result = normalize_spectrum_table(result, include_mask=True)
 
         if save_spectrum:
             if not object_name:
@@ -195,7 +197,7 @@ def mask_bad_values(spectrum: QTable, mask_func: Callable[[np.ndarray], np.ndarr
     return QTable([wavelength, flux, error], names=("WAVELENGTH", "FLUX", "ERROR"))
 
 
-def retrieve_cutout(ra: float, dec: float, search_radius: float, cutout_size: float, band: str) -> fits.PrimaryHDU:
+def retrieve_cutout(ra: float, dec: float, radius: float = None, search_radius: float = None, cutout_size: float = None, band: str = None) -> fits.PrimaryHDU:
     """
     Retrieve an image cutout from Euclid imaging data.
 
@@ -226,6 +228,8 @@ def retrieve_cutout(ra: float, dec: float, search_radius: float, cutout_size: fl
 
     if band not in ["VIS", "Y", "J", "H"]:
         raise ValueError("Invalid band. Choose from 'VIS', 'Y', 'J', or 'H'.")
+    if cutout_size is None:
+        raise TypeError("'cutout_size' is required")
 
     if band == "VIS":
         instrument_name = "VIS"
@@ -234,7 +238,7 @@ def retrieve_cutout(ra: float, dec: float, search_radius: float, cutout_size: fl
         instrument_name = "NISP"
         filter_name = "NIR_" + band
 
-    radius = search_radius * u.arcsec.to(u.deg)
+    radius = resolve_radius(radius=radius, search_radius=search_radius) * u.arcsec.to(u.deg)
 
     query = f"""
     SELECT file_name, 

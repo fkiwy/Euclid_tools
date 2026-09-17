@@ -1,13 +1,15 @@
-from setuptools import setup
+from setuptools import find_packages, setup
 
 setup(
     name="Euclid_tools",
     version="0.1.0",
-    description="A package of tools related to ESA's Euclid mission",
+    description="Package for Euclid Q1 spectra, catalog queries, and image cutouts.",
     url="https://github.com/fkiwy/Euclid_tools",
     author="Frank Kiwy",
     author_email="frank.kiwy@outlook.com",
     license="MIT",
+    packages=find_packages(),
+    include_package_data=True,
     install_requires=[
         "aiohttp",
         "astropy",
@@ -19,15 +21,12 @@ setup(
         "scipy",
         "Pillow",
     ],
-    packages=["euclid_tools", "flux_comp"],
-    package_dir={"euclid_tools": "euclid_tools", "flux_comp": "flux_comp"},
     package_data={
         "flux_comp": [
-            "flux_comp/templates/Burgasser+2017/*.fits",
-            "flux_comp/templates/Kesseli+2017/*.fits",
-            "flux_comp/templates/Theissen+2022/*.fits",
+            "templates/Burgasser+2017/*.fits",
+            "templates/Kesseli+2017/*.fits",
+            "templates/Theissen+2022/*.fits",
         ]
     },
     zip_safe=False,
-    include_package_data=True,
 )

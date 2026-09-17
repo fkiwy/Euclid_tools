@@ -6,6 +6,7 @@ from enum import Enum
 import astropy.units as u
 import numpy as np
 from astropy.coordinates import SkyCoord
+from astropy.table import MaskedColumn, QTable
 
 
 class MagnitudeSystem(Enum):
@@ -193,6 +194,60 @@ def print_results(results):
         "separation",
     ]
     table.pprint_all()
+
+
+def _as_filled_array(value):
+    if hasattr(value, "filled"):
+        return np.asarray(value.filled(np.nan))
+    return np.asarray(value)
+
+
+def normalize_spectrum_table(spectrum, *, include_mask=False):
+    """Return a spectrum QTable with canonical column names and NaN-filled masked values."""
+    if spectrum is None:
+        return None
+
+    required = {"WAVELENGTH", "FLUX", "ERROR"}
+    missing = required - set(spectrum.colnames)
+    if missing:
+        raise ValueError(f"Spectrum is missing required columns: {sorted(missing)}")
+
+    wavelength = _as_filled_array(spectrum["WAVELENGTH"])
+    flux = _as_filled_array(spectrum["FLUX"])
+    error = _as_filled_array(spectrum["ERROR"])
+
+    cols = [wavelength, flux, error]
+    names = ["WAVELENGTH", "FLUX", "ERROR"]
+    if include_mask and "MASK" in spectrum.colnames:
+        mask = _as_filled_array(spectrum["MASK"])
+        cols.append(mask)
+        names.append("MASK")
+
+    return QTable(cols, names=names)
+
+
+def mask_bad_values(spectrum, mask_func):
+    """Apply a bitmask function to the spectrum and return a cleaned QTable."""
+    if spectrum is None:
+        return None
+
+    if "MASK" not in spectrum.colnames:
+        return normalize_spectrum_table(spectrum)
+
+    mask_array = np.asarray(spectrum["MASK"])
+    if hasattr(spectrum["MASK"], "filled"):
+        mask_array = np.asarray(spectrum["MASK"].filled(0))
+
+    bad_mask = np.asarray(mask_func(mask_array), dtype=bool)
+    wavelength = MaskedColumn(spectrum["WAVELENGTH"], mask=bad_mask)
+    flux = MaskedColumn(spectrum["FLUX"], mask=bad_mask)
+    error = MaskedColumn(spectrum["ERROR"], mask=bad_mask)
+
+    return QTable([
+        np.asarray(wavelength.filled(np.nan)),
+        np.asarray(flux.filled(np.nan)),
+        np.asarray(error.filled(np.nan)),
+    ], names=("WAVELENGTH", "FLUX", "ERROR"))
 
 
 def print_message(ra, dec, search_radius):

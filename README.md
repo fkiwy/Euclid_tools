@@ -6,6 +6,10 @@ A collection of tools to work with spectral and imaging data from the **ESA Eucl
 handle data from the **Euclid Quick Release 1 (Q1)**. This package supports the retrieval, visualization, and comparison
 of Euclid spectra, as well as the retrieval and visualization of image cutouts.
 
+The archive-facing API is intentionally backend-agnostic: both the ESA and IRSA implementations share the same public
+contract, with `radius` and `search_radius` accepted as equivalent aliases for search size. This keeps code portable
+across archive backends while preserving the underlying data access implementation details.
+
 The toolkit is written in Python and is designed to be lightweight, modular, and extensible. It includes high-level
 convenience functions for accessing and processing data, making it suitable for both exploratory data analysis and more
 in-depth scientific research.

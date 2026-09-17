@@ -13,14 +13,15 @@ from astropy.table import Table, QTable, MaskedColumn
 from astropy.wcs import WCS
 from astroquery.ipac.irsa import Irsa
 
-from euclid_tools.shared import add_magnitude
+from euclid_tools.backends import resolve_radius
+from euclid_tools.shared import add_magnitude, normalize_spectrum_table
 
 COLUMNS_TO_REMOVE = ["tileid", "x", "y", "z", "spt_ind", "htm20", "cntr"]
 
 TABLE_MER = "euclid_q1_mer_catalogue"
 
 
-def retrieve_objects(ra: float, dec: float, radius: float) -> Table:
+def retrieve_objects(ra: float, dec: float, radius: float = None, search_radius: float = None) -> Table:
     """
     Perform a cone search on the Euclid Q1 MER catalog and return nearby objects.
 
@@ -46,8 +47,8 @@ def retrieve_objects(ra: float, dec: float, radius: float) -> Table:
     - Results are sorted by angular separation in arcseconds.
     """
 
+    radius = resolve_radius(radius=radius, search_radius=search_radius) * u.arcsec
     position = SkyCoord(ra, dec, unit=(u.deg, u.deg), frame="icrs")
-    radius = radius * u.arcsec
 
     table = Irsa.query_region(coordinates=position, spatial="Cone", catalog=TABLE_MER, radius=radius)
 
@@ -144,6 +145,7 @@ def retrieve_spectrum(object_id: str, save_spectrum: bool = False, output_dir: s
 
     # Create a new QTable for the result
     result = QTable([wavelength, flux, error, mask], names=("WAVELENGTH", "FLUX", "ERROR", "MASK"))
+    result = normalize_spectrum_table(result, include_mask=True)
 
     if save_spectrum:
         if not object_name:
@@ -200,7 +202,7 @@ def mask_bad_values(spectrum: QTable, mask_func: Callable[[np.ndarray], np.ndarr
     return QTable([wavelength, flux, error], names=("WAVELENGTH", "FLUX", "ERROR"))
 
 
-def retrieve_cutout(ra: float, dec: float, search_radius: float, cutout_size: float, band: str) -> fits.PrimaryHDU:
+def retrieve_cutout(ra: float, dec: float, radius: float = None, search_radius: float = None, cutout_size: float = None, band: str = None) -> fits.PrimaryHDU:
     """
     Retrieve an image cutout from Euclid imaging data.
 
@@ -231,9 +233,11 @@ def retrieve_cutout(ra: float, dec: float, search_radius: float, cutout_size: fl
 
     if band not in ["VIS", "Y", "J", "H"]:
         raise ValueError("Invalid band. Choose from 'VIS', 'Y', 'J', or 'H'.")
+    if cutout_size is None:
+        raise TypeError("'cutout_size' is required")
 
     position = SkyCoord(ra, dec, unit=(u.deg, u.deg), frame="icrs")
-    search_radius *= u.arcsec
+    search_radius = resolve_radius(radius=radius, search_radius=search_radius) * u.arcsec
 
     table = Irsa.query_sia(pos=(position, search_radius), collection="euclid_DpdMerBksMosaic")
 
