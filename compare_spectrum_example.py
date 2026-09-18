@@ -40,7 +40,7 @@ Notes for Users:
 - **Template Selection:** This script uses templates from "Theissen+2022", but other templates (e.g., "Burgasser+2017") can be used by modifying the template name and retrieval method.
 - **Comparison Metric:** The script uses the reduced chi-squared method (`metric="reduced-chi2"`) for template comparison. Users can change the comparison metric ("reduced-chi2","chi2", or "delta").
 - **Plot Customization:** The plotting function visualizes the comparison between the spectrum and template. Users can adjust plotting parameters to customize the figure (e.g., size, legend, title, etc.).
-  
+
 Example Output:
 - The script will generate a plot comparing the retrieved spectrum with the selected template(s). The plot will show the spectrum and template(s) overlayed with uncertainties and the reduced chi-squared fit.
 """
@@ -118,7 +118,8 @@ if results:
         sed.plot(
             reference_on_top=False,
             spec_uncertainty=True,
-            plot_format="png",
+            colors=["tab:blue", "tab:orange"],
+            plot_format="pdf",
         )
     else:
         print("No spectrum found for the given object ID")
