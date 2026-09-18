@@ -1,7 +1,6 @@
 import os
 import tempfile
 import urllib
-from typing import Callable
 
 import astropy.units as u
 import numpy as np
@@ -137,15 +136,35 @@ def retrieve_spectrum(object_id: str, save_spectrum: bool = False, output_dir: s
     if np.isnan(spectrum["WAVELENGTH"]).all():
         return None
 
-    # Convert wavelength to microns and replace masked values by NaN
-    wavelength = spectrum["WAVELENGTH"].to(u.micron).filled(np.nan)
-    flux = spectrum["SIGNAL"].filled(np.nan)
-    error = spectrum["UNCERTAINTY"].filled(np.nan)
+    # Extract the data and create an Astropy QTable
+    wavelength = spectrum["WAVELENGTH"].to(u.micron)
+    flux = spectrum["SIGNAL"]
+    error = spectrum["UNCERTAINTY"]
     mask = spectrum["MASK"]
 
-    # Create a new QTable for the result
-    result = QTable([wavelength, flux, error, mask], names=("WAVELENGTH", "FLUX", "ERROR", "MASK"))
-    result = normalize_spectrum_table(result, include_mask=True)
+    columns = [
+        wavelength,
+        flux,
+        error,
+        mask,
+    ]
+    names = [
+        "WAVELENGTH",
+        "FLUX",
+        "ERROR",
+        "MASK",
+    ]
+
+    if "QUALITY" in spectrum.colnames:
+        columns.append(spectrum["QUALITY"])
+        names.append("QUALITY")
+
+    if "NDITH" in spectrum.colnames:
+        columns.append(spectrum["NDITH"])
+        names.append("NDITH")
+
+    result = QTable(columns, names=names)
+    result = normalize_spectrum_table(result)
 
     if save_spectrum:
         if not object_name:
@@ -159,8 +178,6 @@ def retrieve_spectrum(object_id: str, save_spectrum: bool = False, output_dir: s
         result.write(output_filename, format="fits", overwrite=True)
 
     return result
-
-
 
 
 def retrieve_cutout(ra: float, dec: float, search_radius: float = None, cutout_size: float = None, band: str = None, radius: float = None) -> fits.PrimaryHDU:

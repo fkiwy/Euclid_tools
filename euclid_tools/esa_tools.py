@@ -1,7 +1,6 @@
 import os
 import tempfile
 from datetime import datetime
-from typing import Callable
 
 import astropy.units as u
 import numpy as np
@@ -124,23 +123,46 @@ def retrieve_spectrum(object_id: str, save_spectrum: bool = False, output_dir: s
             return None
 
         spectrum = QTable.read(hdu, format="fits")
-        spec_header = hdu.header
 
         # Check if the spectrum contains valid data
         if np.isnan(spectrum["WAVELENGTH"]).all():
             return None
 
-        # Convert wavelength to microns
+        # Extract the data and create an Astropy QTable
         wavelength = spectrum["WAVELENGTH"].to(u.micron)
 
-        # Scale the flux and error using the scaling factor from the fits header
-        flux = spectrum["SIGNAL"] * spec_header["FSCALE"]
-        error = np.sqrt(spectrum["VAR"]) * spec_header["FSCALE"]
+        fscale = hdu.header.get("FSCALE", 1.0)
+
+        flux = spectrum["SIGNAL"] * fscale
+        error = np.sqrt(
+            np.clip(spectrum["VAR"], 0, None)
+        ) * fscale
+
         mask = spectrum["MASK"]
 
-        # Create a new QTable for the result
-        result = QTable([wavelength, flux, error, mask], names=("WAVELENGTH", "FLUX", "ERROR", "MASK"))
-        result = normalize_spectrum_table(result, include_mask=True)
+        columns = [
+            wavelength,
+            flux,
+            error,
+            mask,
+        ]
+        names = [
+            "WAVELENGTH",
+            "FLUX",
+            "ERROR",
+            "MASK",
+        ]
+
+        if "QUALITY" in spectrum.colnames:
+            columns.append(spectrum["QUALITY"])
+            names.append("QUALITY")
+
+        if "NDITH" in spectrum.colnames:
+            columns.append(spectrum["NDITH"])
+            names.append("NDITH")
+
+        result = QTable(columns, names=names)
+        result = normalize_spectrum_table(result)
 
         if save_spectrum:
             if not object_name:
@@ -154,8 +176,6 @@ def retrieve_spectrum(object_id: str, save_spectrum: bool = False, output_dir: s
             result.write(output_filename, format="fits", overwrite=True)
 
     return result
-
-
 
 
 def retrieve_cutout(ra: float, dec: float, search_radius: float = None, cutout_size: float = None, band: str = None, radius: float = None) -> fits.PrimaryHDU:

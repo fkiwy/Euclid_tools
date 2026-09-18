@@ -205,12 +205,12 @@ def _filled_column(value):
     return value
 
 
-def normalize_spectrum_table(spectrum, *, include_mask=False):
+def normalize_spectrum_table(spectrum):
     """Return a spectrum QTable with canonical column names and NaN-filled masked values."""
     if spectrum is None:
         return None
 
-    required = {"WAVELENGTH", "FLUX", "ERROR"}
+    required = {"WAVELENGTH", "FLUX", "ERROR", "MASK"}
     missing = required - set(spectrum.colnames)
     if missing:
         raise ValueError(f"Spectrum is missing required columns: {sorted(missing)}")
@@ -219,10 +219,14 @@ def normalize_spectrum_table(spectrum, *, include_mask=False):
         "WAVELENGTH": _filled_column(spectrum["WAVELENGTH"]),
         "FLUX": _filled_column(spectrum["FLUX"]),
         "ERROR": _filled_column(spectrum["ERROR"]),
+        "MASK": _filled_column(spectrum["MASK"]),
     }
 
-    if include_mask and "MASK" in spectrum.colnames:
-        result["MASK"] = _filled_column(spectrum["MASK"])
+    if "QUALITY" in spectrum.colnames:
+        result["QUALITY"] = _filled_column(spectrum["QUALITY"])
+
+    if "NDITH" in spectrum.colnames:
+        result["NDITH"] = _filled_column(spectrum["NDITH"])
 
     return QTable(result)
 

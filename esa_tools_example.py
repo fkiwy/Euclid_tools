@@ -55,7 +55,7 @@ from astropy.utils.exceptions import AstropyWarning
 from euclid_tools import get_backend
 from euclid_tools.esa_tools import print_catalog_info
 from euclid_tools.image_plotter import plot_images
-from euclid_tools.shared import print_results, print_message, create_object_name, remove_bad_values
+from euclid_tools.shared import print_results, print_message, create_object_name
 from flux_comp.core import SED, WaveFlux
 
 backend = get_backend('esa')
@@ -107,13 +107,13 @@ data = backend.retrieve_spectrum(object_id)
 
 # Plot the spectrum if data is available
 if data and len(data) > 0:
-    # Mask bad values in the spectrum to improve comparison results
-    data = remove_bad_values(data, mask_func=lambda mask: (mask % 2 == 1) | (mask >= 64))
-
     # Create a WaveFlux object for comparison
     spectrum = WaveFlux(
         label="Spectrum", wavelength=data["WAVELENGTH"], flux=data["FLUX"], uncertainty=data["ERROR"]
     )
+
+    # Trim spectrum to remove excessive noise at the edges
+    spectrum.trim(1.21, 1.89)
 
     # Create object name for plotting
     object_name = create_object_name(ra, dec, precision=2, shortform=False, prefix="J", decimal=False)
@@ -126,7 +126,7 @@ if data and len(data) > 0:
     sed.to_flux_lambda()
     sed.plot(
         spec_uncertainty=True,
-        plot_format="pdf",
+        plot_format="png",
     )
 
 # ------------------------------
