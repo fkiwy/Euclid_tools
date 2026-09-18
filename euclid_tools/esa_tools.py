@@ -99,7 +99,7 @@ def retrieve_spectrum(object_id: str, save_spectrum: bool = False, output_dir: s
     Returns
     -------
     QTable
-        A table containing wavelength (microns), flux, flux error, and mask.
+        A table containing wavelength (microns), flux, flux error, mask, quality flags, and number of dither positions.
         Flux and error are scaled using the FITS header FSCALE keyword.
         Returns `None` if no spectrum is available for the given object ID.
 

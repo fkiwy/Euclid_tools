@@ -98,11 +98,13 @@ This function retrieves the spectrum of a given object from the Euclid archive b
 
 #### Returns:
 
-- An Astropy QTable containing the spectrum data, including wavelength, flux, and error.
+- An Astropy QTable containing the spectrum data, including wavelength, flux, error, mask, quality flags, and number of
+  dither positions.
 
 ### 3. `remove_bad_values()`
 
-Access via `get_backend('esa')` or `get_backend('irsa')` — backends implement this method (helper function is provided in `euclid_tools.shared`).
+Access via `get_backend('esa')` or `get_backend('irsa')` — backends implement this method (helper function is provided
+in `euclid_tools.shared`).
 
 This function mask bad values in the spectrum data based on the MASK column.
 
@@ -143,10 +145,10 @@ visualization logic in `flux_comp` rather than a separate local plotting helper.
 
 #### Typical workflow:
 
-- Build a WaveFlux object: WaveFlux(label, wavelength, flux, uncertainty)
-- Create an SED and add the spectrum: sed = SED(name); sed.add(waveflux)
-- Convert units if needed: sed.to_flux_lambda()
-- Plot using sed.plot(...), with options such as spec_uncertainty and plot_format
+- Build a WaveFlux object: WaveFlux (label, wavelength, flux, uncertainty)
+- Create an SED and add the spectrum: sed = SED (name); sed.add (waveflux)
+- Convert units if needed: sed.to_flux_lambda ()
+- Plot using sed.plot (...), with options such as spec_uncertainty and plot_format
 
 #### Output:
 
@@ -218,7 +220,8 @@ if results:
     spectrum_data = backend.retrieve_spectrum(object_id)
 
     # Build a WaveFlux and SED and plot
-    wf = WaveFlux(label="Spectrum", wavelength=spectrum_data["WAVELENGTH"], flux=spectrum_data["FLUX"], uncertainty=spectrum_data["ERROR"])
+    wf = WaveFlux(label="Spectrum", wavelength=spectrum_data["WAVELENGTH"], flux=spectrum_data["FLUX"],
+                  uncertainty=spectrum_data["ERROR"])
     sed = SED("Object")
     sed.add(wf)
     sed.to_flux_lambda()
