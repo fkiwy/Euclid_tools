@@ -7,7 +7,7 @@ import astropy.units as u
 import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
-from astropy.table import Table, QTable, MaskedColumn, Column
+from astropy.table import Table, QTable
 from astroquery.esa.euclid import Euclid
 
 from euclid_tools.backends import resolve_radius
@@ -156,7 +156,7 @@ def retrieve_spectrum(object_id: str, save_spectrum: bool = False, output_dir: s
     return result
 
 
-def mask_bad_values(spectrum: QTable, mask_func: Callable[[np.ndarray], np.ndarray]) -> QTable:
+def remove_bad_values(spectrum: QTable, mask_func: Callable[[np.ndarray], np.ndarray]) -> QTable:
     """
     Remove bad values in the spectrum data based on the MASK column.
 

@@ -5,7 +5,7 @@ from astropy import units as u
 from astropy.table import QTable
 
 from euclid_tools.backends import get_backend, resolve_radius
-from euclid_tools.shared import mask_bad_values, normalize_spectrum_table
+from euclid_tools.shared import remove_bad_values, normalize_spectrum_table
 
 
 class ApiContractTests(unittest.TestCase):
@@ -44,7 +44,7 @@ class ApiContractTests(unittest.TestCase):
         self.assertEqual(float(normalized["FLUX"][1].value), 20.0)
         self.assertEqual(normalized["WAVELENGTH"].unit, u.micron)
 
-    def test_mask_bad_values_filters_bitmask(self):
+    def test_remove_bad_values_filters_bitmask(self):
         table = QTable(
             [
                 np.array([1.0, 2.0, 3.0]) * u.micron,
@@ -55,7 +55,7 @@ class ApiContractTests(unittest.TestCase):
             names=("WAVELENGTH", "FLUX", "ERROR", "MASK"),
         )
 
-        cleaned = mask_bad_values(table, lambda mask: (mask % 2 == 1) | (mask >= 64))
+        cleaned = remove_bad_values(table, lambda mask: (mask % 2 == 1) | (mask >= 64))
         self.assertEqual(list(cleaned.colnames), ["WAVELENGTH", "FLUX", "ERROR"])
         self.assertTrue(np.isnan(cleaned["FLUX"][1]))
         self.assertEqual(cleaned["WAVELENGTH"].unit, u.micron)

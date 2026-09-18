@@ -53,7 +53,7 @@ import warnings
 
 from astropy.utils.exceptions import AstropyWarning
 
-from euclid_tools.esa_tools import retrieve_objects, retrieve_spectrum, print_catalog_info, mask_bad_values
+from euclid_tools.esa_tools import retrieve_objects, retrieve_spectrum, print_catalog_info, remove_bad_values
 from euclid_tools.shared import print_results, print_message, create_object_name
 from flux_comp.core import SED, WaveFlux
 
@@ -105,7 +105,7 @@ data = retrieve_spectrum(object_id)
 # Plot the spectrum if data is available
 if data and len(data) > 0:
     # Mask bad values in the spectrum to improve comparison results
-    data = mask_bad_values(data, mask_func=lambda mask: (mask % 2 == 1) | (mask >= 64))
+    data = remove_bad_values(data, mask_func=lambda mask: (mask % 2 == 1) | (mask >= 64))
 
     # Create a WaveFlux object for comparison
     spectrum = WaveFlux(

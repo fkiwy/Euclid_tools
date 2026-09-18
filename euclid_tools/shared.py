@@ -6,7 +6,7 @@ from enum import Enum
 import astropy.units as u
 import numpy as np
 from astropy.coordinates import SkyCoord
-from astropy.table import MaskedColumn, QTable
+from astropy.table import QTable
 
 
 class MagnitudeSystem(Enum):
@@ -227,28 +227,60 @@ def normalize_spectrum_table(spectrum, *, include_mask=False):
     return QTable(result)
 
 
-def mask_bad_values(spectrum, mask_func):
-    """Apply a bitmask function to the spectrum and return a cleaned QTable."""
-    if spectrum is None:
-        return None
+def remove_bad_values(spectrum, mask_func):
+    # Use the MASK column to create a boolean mask for values to ignore
+    bad_mask = mask_func(spectrum["MASK"].value)
 
-    if "MASK" not in spectrum.colnames:
-        return normalize_spectrum_table(spectrum)
+    # Keep only rows that are not flagged as bad
+    good_mask = ~np.array(bad_mask, dtype=bool)
 
-    mask_array = np.asarray(spectrum["MASK"])
-    if hasattr(spectrum["MASK"], "filled"):
-        mask_array = np.asarray(spectrum["MASK"].filled(0))
+    # Also ensure wavelength and flux are finite for safety
+    try:
+        wl = spectrum["WAVELENGTH"].quantity if hasattr(spectrum["WAVELENGTH"], 'quantity') else spectrum["WAVELENGTH"]
+    except Exception:
+        wl = spectrum["WAVELENGTH"]
 
-    bad_mask = np.asarray(mask_func(mask_array), dtype=bool)
-    wavelength = MaskedColumn(spectrum["WAVELENGTH"], mask=bad_mask)
-    flux = MaskedColumn(spectrum["FLUX"], mask=bad_mask)
-    error = MaskedColumn(spectrum["ERROR"], mask=bad_mask)
+    # Build final mask: good and finite wavelength and flux
+    finite_mask = np.isfinite(np.array(wl))
+    combined_mask = good_mask & finite_mask
 
-    return QTable({
-        "WAVELENGTH": wavelength.filled(np.nan),
-        "FLUX": flux.filled(np.nan),
-        "ERROR": error.filled(np.nan),
-    })
+    # Slice the original table to keep only good rows (slice the table to drop rows)
+    # Prefer explicit indexing to avoid returning MaskedColumns filled with NaN
+    indices = np.nonzero(combined_mask)[0]
+
+    # Extract wavelength preserving Quantity when available
+    col_wl = spectrum["WAVELENGTH"]
+    # Extract raw data and unit (if present on the column)
+    wl_unit = getattr(col_wl, 'unit', None)
+    wl_data = np.array(col_wl)[indices]
+
+    col_flux = spectrum["FLUX"]
+    fl_unit = getattr(col_flux, 'unit', None)
+    fl_data = np.array(col_flux)[indices]
+
+    col_err = spectrum["ERROR"]
+    err_unit = getattr(col_err, 'unit', None)
+    err_data = np.array(col_err)[indices]
+
+    # Construct columns explicitly to preserve units when present
+    from astropy.table import Column as _Column
+
+    if wl_unit is not None:
+        wl_col = _Column(data=wl_data, unit=wl_unit, name="WAVELENGTH")
+    else:
+        wl_col = _Column(data=wl_data, name="WAVELENGTH")
+
+    if fl_unit is not None:
+        fl_col = _Column(data=fl_data, unit=fl_unit, name="FLUX")
+    else:
+        fl_col = _Column(data=fl_data, name="FLUX")
+
+    if err_unit is not None:
+        err_col = _Column(data=err_data, unit=err_unit, name="ERROR")
+    else:
+        err_col = _Column(data=err_data, name="ERROR")
+
+    return QTable([wl_col, fl_col, err_col])
 
 
 def print_message(ra, dec, search_radius):

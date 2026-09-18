@@ -49,7 +49,7 @@ import warnings
 
 from astropy.utils.exceptions import AstropyWarning
 
-from euclid_tools.esa_tools import retrieve_objects, retrieve_spectrum, mask_bad_values
+from euclid_tools.esa_tools import retrieve_objects, retrieve_spectrum, remove_bad_values
 from euclid_tools.shared import create_object_name
 from flux_comp.core import SED, WaveFlux, TemplateProvider
 
@@ -92,7 +92,7 @@ if results:
         # templates = provider.get_Burgasser_2017_templates()
 
         # Mask bad values in the spectrum to improve comparison results
-        data = mask_bad_values(data, mask_func=lambda mask: (mask % 2 == 1) | (mask >= 64))
+        data = remove_bad_values(data, mask_func=lambda mask: (mask % 2 == 1) | (mask >= 64))
 
         # Create a WaveFlux object for comparison
         spectrum = WaveFlux(

@@ -100,7 +100,7 @@ This function retrieves the spectrum of a given object from the Euclid archive b
 
 - An Astropy QTable containing the spectrum data, including wavelength, flux, and error.
 
-### 3. `mask_bad_values()`
+### 3. `remove_bad_values()`
 
 Located in `euclid_tools/esa_tools.py` or `euclid_tools/irsa_tools.py`.
 
@@ -189,7 +189,7 @@ To compare an observed spectrum to a template, the `flux_comp` package is used. 
 
 1. Retrieve the catalog object based on RA, Dec.
 2. Retrieve the spectrum for the object.
-3. Retrieve template(s) for comparison (e.g., from "Theissen+2022").
+3. Retrieve template (s) for comparison (e.g., from "Theissen+2022").
 4. Compare the spectrum to the templates using the reduced chi-squared metric.
 5. Plot the comparison.
 
@@ -278,13 +278,13 @@ and compare it to predefined templates using the `flux_comp` tool. The full exam
 
 ```python
 from flux_comp.core import SED, WaveFlux, TemplateProvider
-from euclid_tools.esa_tools import retrieve_spectrum, mask_bad_values
+from euclid_tools.esa_tools import retrieve_spectrum, remove_bad_values
 
 # Retrieve spectrum for an object
 data = retrieve_spectrum(object_id)
 
-# Mask bad values in the spectrum to improve comparison results
-data = mask_bad_values(data, mask_func=lambda mask: (mask % 2 == 1) | (mask >= 64))
+# Remove bad values from the spectrum to improve comparison results
+data = remove_bad_values(data, mask_func=lambda mask: (mask % 2 == 1) | (mask >= 64))
 
 # Retrieve templates for comparison
 template_name = "Theissen+2022"
