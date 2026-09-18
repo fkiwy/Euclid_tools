@@ -1,8 +1,5 @@
-from io import BytesIO
-
 import requests
-from astropy.io import fits
-from astropy.table import Table, TableColumns
+from astropy.table import Table
 from bs4 import BeautifulSoup
 
 
@@ -14,7 +11,7 @@ def download_html(ra, dec, radius, database):
         ra (str): Right Ascension coordinate in degrees.
         dec (str): Declination coordinate in degrees.
         radius (int): Radius of the region in arcminutes.
-        database (str): Name of the database (e.g., 'UHSDR2').
+        database (str): Name of the database (e.g., 'UHSDR3').
 
     Returns:
         str: HTML content if the download is successful, None otherwise.
@@ -32,7 +29,7 @@ def download_html(ra, dec, radius, database):
         "xSize": "",
         "ySize": "",
         "boxAlignment": "RADec",
-        "format": "FITS",
+        "format": "CSV",
         "select": "default",
         "where": "",
     }
@@ -45,15 +42,15 @@ def download_html(ra, dec, radius, database):
         return None
 
 
-def extract_fits_url(html_content):
+def extract_url(html_content):
     """
-    Extracts the FITS file URL from the HTML content.
+    Extracts the CSV file URL from the HTML content.
 
     Parameters:
         html_content (str): HTML content obtained from the WSA database.
 
     Returns:
-        str: FITS file URL if found, None otherwise.
+        str: File URL if found, None otherwise.
     """
     soup = BeautifulSoup(html_content, "html.parser")
     download_link = soup.find("a", class_="dl")
@@ -63,42 +60,33 @@ def extract_fits_url(html_content):
         return None
 
 
-def download_fits_file(fits_url):
+def download_file(url):
     """
-    Downloads and converts the FITS file to an Astropy table.
+    Downloads and converts the CSV file to an Astropy table.
 
     Parameters:
-        fits_url (str): URL of the FITS file.
+        url (str): URL of the CSV file.
 
     Returns:
         astropy.table.Table: Astropy table if successful, None otherwise.
     """
-    response = requests.get(fits_url)
+    response = requests.get(url)
     if response.status_code == 200:
-        fits_data = fits.open(BytesIO(response.content))
-        table = Table(fits_data[1].data)
-        if table:
-            # Flatten multidimensional columns
-            flattened_table = TableColumns()
-            for col_name in table.colnames:
-                if table[col_name].ndim > 1:
-                    flattened_columns = [
-                        f"{col_name}" for i in range(table[col_name].shape[1])
-                    ]
-                    for i, flattened_col_name in enumerate(flattened_columns):
-                        flattened_table[flattened_col_name] = table[col_name][:, i]
-                else:
-                    flattened_table[col_name] = table[col_name]
-            return Table(flattened_table)
-        else:
+        try:
+            return Table.read(
+                response.text,
+                format="ascii",
+                comment="#"
+            )
+        except IndexError:
             return None
     else:
-        print(f"Failed to download FITS file. Status code: {response.status_code}")
+        print(f"Failed to download CSV file. Status code: {response.status_code}")
         print(response.text)
         return None
 
 
-def query_region(ra, dec, radius=5, database="UHSDR2"):
+def query_region(ra, dec, radius=5, database="UHSDR3"):
     """
     Queries the WSA database for a specific region and returns the results as an Astropy table.
 
@@ -106,7 +94,7 @@ def query_region(ra, dec, radius=5, database="UHSDR2"):
         ra (str): Right Ascension coordinate in degrees.
         dec (str): Declination coordinate in degrees.
         radius (int): Radius of the region in arcminutes (default is 5 arcminutes).
-        database (str): Name of the database (default is 'UHSDR2').
+        database (str): Name of the database (default is 'UHSDR3').
 
     Returns:
         astropy.table.Table: Astropy table containing the query results, or None if unsuccessful.
@@ -114,9 +102,9 @@ def query_region(ra, dec, radius=5, database="UHSDR2"):
     table = None
     html_content = download_html(ra, dec, radius, database)
     if html_content:
-        fits_url = extract_fits_url(html_content)
-        if fits_url:
-            table = download_fits_file(fits_url)
+        url = extract_url(html_content)
+        if url:
+            table = download_file(url)
             if table:
-                table.sort("DISTANCE")
+                table.sort("distance")
     return table

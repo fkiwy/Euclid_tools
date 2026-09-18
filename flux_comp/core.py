@@ -28,6 +28,7 @@ from astroquery.ukidss import Ukidss
 from astroquery.vizier import Vizier
 from astroquery.vsa import Vsa
 from matplotlib.ticker import FormatStrFormatter, ScalarFormatter
+from scipy.interpolate import PchipInterpolator
 from scipy.optimize import curve_fit
 
 SVO_URL = "http://svo2.cab.inta-csic.es/theory/fps3/fps.php"
@@ -105,17 +106,7 @@ class SED:
         waveflux.data.sort("Wavelength")
         self.data.append(waveflux)
 
-    def compare_with_uncertainties(
-        self,
-        reference,
-        templates,
-        number_of_bands_to_omit=0,
-        trim_wave=False,
-        verbose=True,
-        multi_processing=True,
-        iterations=100,
-        parameter_keys=[],
-    ):
+    def compare_with_uncertainties(self, reference, templates, number_of_bands_to_omit=0, trim_wave=False, verbose=True, multi_processing=True, iterations=100, parameter_keys=[]):
         """
         Compares the reference data with the provided templates, estimating parameter errors by introducing
         random noise based on uncertainties. This method runs multiple iterations to compute the uncertainty
@@ -209,9 +200,7 @@ class SED:
                 try:
                     print("  Number of CPUs available:", len(os.sched_getaffinity(0)))
                 except:
-                    print(
-                        "  Number of CPUs in the system:", multiprocessing.cpu_count()
-                    )
+                    print("  Number of CPUs in the system:", multiprocessing.cpu_count())
 
             pool = multiprocessing.Pool()
             results = pool.starmap(self.call_compare_method, tasks)
@@ -221,9 +210,7 @@ class SED:
             results = []
             for i, task in enumerate(tasks):
                 reference, templates, number_of_bands_to_omit, trim_wave = task
-                result = self.call_compare_method(
-                    reference, templates, number_of_bands_to_omit, trim_wave
-                )
+                result = self.call_compare_method(reference, templates, number_of_bands_to_omit, trim_wave)
                 results.append(result)
                 if verbose:
                     print(i, result.model_params)
@@ -270,32 +257,12 @@ class SED:
 
         return template
 
-    def call_compare_method(
-        self, reference, templates, number_of_bands_to_omit, trim_wave
-    ):
+    def call_compare_method(self, reference, templates, number_of_bands_to_omit, trim_wave):
         self.data = []
-        return self.compare(
-            reference,
-            templates,
-            number_of_bands_to_omit=number_of_bands_to_omit,
-            trim_wave=trim_wave,
-        )
+        return self.compare(reference, templates, number_of_bands_to_omit=number_of_bands_to_omit, trim_wave=trim_wave)
 
-    def compare(
-        self,
-        reference,
-        templates,
-        number_of_matches=1,
-        number_of_bands_to_omit=0,
-        metric="reduced-chi2",
-        trim_wave=False,
-        verbose=False,
-        plot=False,
-        print_observed_photometry=False,
-        print_template_photometry=False,
-        add_stat_to_template_label=False,
-        normalize=True,
-    ):
+    def compare(self, reference, templates, number_of_matches=1, number_of_bands_to_omit=0, metric="reduced-chi2", trim_wave=False, verbose=False, plot=False, print_observed_photometry=False, print_template_photometry=False,
+                add_stat_to_template_label=False, normalize=True):
         """
         Compares the flux data of a reference object (WaveFlux) with a list of template objects (WaveFlux)
         using a specified comparison metric. The method computes a statistic (e.g., reduced-chi2, delta, or chi2)
@@ -327,7 +294,7 @@ class SED:
             - "euclidean-distance" : Measures the straight-line (Euclidean) distance between the reference and template flux
               vectors, considering them as points in a multi-dimensional space.
             - "mean-absolute-error" : Computes the mean of the absolute differences between the reference and template flux values.
-            - "mean-squared-error" : Computes the mean of the squared differences between the reference and template flux values.
+            - "root-mean-squared-error" : Computes the mean of the squared differences between the reference and template flux values.
 
         trim_wave : bool, optional, default=False
             If True, trims the reference and template flux data to the overlapping wavelength range.
@@ -377,30 +344,12 @@ class SED:
             ref_uncertainty = data["Uncertainty"]
             used_photometry = list(reference.used_photometry.items())
             used_photometry = [Bucket(x) for x in used_photometry]
-            phot_combinations = self.calculate_combinations(
-                used_photometry, number_of_bands_to_omit
-            )
-            band_combinations = self.calculate_combinations(
-                reference.used_bands, number_of_bands_to_omit
-            )
-            wavelength_combinations = self.calculate_combinations(
-                ref_wavelength, number_of_bands_to_omit
-            )
-            flux_combinations = self.calculate_combinations(
-                ref_flux, number_of_bands_to_omit
-            )
-            uncertainty_combinations = self.calculate_combinations(
-                ref_uncertainty, number_of_bands_to_omit
-            )
-            for _, (phot, bands, wavelength, flux, uncertainty) in enumerate(
-                zip(
-                    phot_combinations,
-                    band_combinations,
-                    wavelength_combinations,
-                    flux_combinations,
-                    uncertainty_combinations,
-                )
-            ):
+            phot_combinations = self.calculate_combinations(used_photometry, number_of_bands_to_omit)
+            band_combinations = self.calculate_combinations(reference.used_bands, number_of_bands_to_omit)
+            wavelength_combinations = self.calculate_combinations(ref_wavelength, number_of_bands_to_omit)
+            flux_combinations = self.calculate_combinations(ref_flux, number_of_bands_to_omit)
+            uncertainty_combinations = self.calculate_combinations(ref_uncertainty, number_of_bands_to_omit)
+            for _, (phot, bands, wavelength, flux, uncertainty) in enumerate(zip(phot_combinations, band_combinations, wavelength_combinations, flux_combinations, uncertainty_combinations)):
                 wf = WaveFlux()
                 wf.create_table(wavelength, flux, uncertainty)
                 wf.label = reference.label
@@ -423,9 +372,7 @@ class SED:
                 # Clone the reference (the clone will be modified here after, the original must remain the same)
                 data = reference0.data
                 reference = WaveFlux()
-                reference.create_table(
-                    data["Wavelength"], data["Flux"], data["Uncertainty"]
-                )
+                reference.create_table(data["Wavelength"], data["Flux"], data["Uncertainty"])
                 reference.label = reference0.label
                 reference.used_bands = reference0.used_bands
                 reference.used_photometry = reference0.used_photometry
@@ -441,9 +388,7 @@ class SED:
                 # Clone the template (the clone will be modified here after, the original must remain the same)
                 data = template0.data
                 template = WaveFlux()
-                template.create_table(
-                    data["Wavelength"], data["Flux"], data["Uncertainty"]
-                )
+                template.create_table(data["Wavelength"], data["Flux"], data["Uncertainty"])
                 template.label = template0.label
                 template.used_bands = template0.used_bands
                 template.used_photometry = template0.used_photometry
@@ -459,9 +404,7 @@ class SED:
 
                 if trim_wave:
                     # Trim the reference and template based on the determined wavelength range
-                    min_wave, max_wave = determine_overlapping_wavelength_range(
-                        ref_wavelength, tpl_wavelength
-                    )
+                    min_wave, max_wave = determine_overlapping_wavelength_range(ref_wavelength, tpl_wavelength)
                     reference.trim(min_wave, max_wave)
                     template.trim(min_wave, max_wave)
 
@@ -482,35 +425,23 @@ class SED:
                 tpl_flux = data["Flux"]
 
                 # Trim reference and template data to their overlapping wavelength range
-                min_wave, max_wave = determine_overlapping_wavelength_range(
-                    tpl_wavelength, ref_wavelength
-                )
-                tpl_wavelength, tpl_flux = trim(
-                    tpl_wavelength, tpl_flux, min_wave, max_wave
-                )
+                min_wave, max_wave = determine_overlapping_wavelength_range(tpl_wavelength, ref_wavelength)
+                tpl_wavelength, tpl_flux = trim(tpl_wavelength, tpl_flux, min_wave, max_wave)
                 _, ref_flux = trim(ref_wavelength, ref_flux, min_wave, max_wave)
-                ref_wavelength, ref_uncertainty = trim(
-                    ref_wavelength, ref_uncertainty, min_wave, max_wave
-                )
+                ref_wavelength, ref_uncertainty = trim(ref_wavelength, ref_uncertainty, min_wave, max_wave)
 
                 # Interpolate the template flux onto the same wavelength grid as that of the reference
                 tpl_flux = np.interp(ref_wavelength, tpl_wavelength, tpl_flux)
 
                 # Compare the reference flux to the template flux
-                statistic = self.compare_fluxes(
-                    ref_flux, ref_uncertainty, tpl_flux, metric
-                )
+                statistic = self.compare_fluxes(ref_flux, ref_uncertainty, tpl_flux, metric)
 
                 results.append([statistic, reference, template])
 
                 if verbose:
-                    print(
-                        f"Compared {reference.label} with {template.label}, statistic = {statistic:e}"
-                    )
+                    print(f"Compared {reference.label} with {template.label}, statistic = {statistic:e}")
 
-        results.sort(
-            key=lambda x: x[0], reverse=True if metric == "cosine-similarity" else False
-        )
+        results.sort(key=lambda x: x[0], reverse=True if metric == "cosine-similarity" else False)
         self.results = results
         best_match = None
         number_of_results = 0
@@ -524,17 +455,15 @@ class SED:
                 best_match = result[2]
                 if print_observed_photometry:
                     print("Observed photometry:")
-                    [
-                        print(
-                            f'{key}: {value[0]:.3f}{"" if np.isnan(value[1]) else f" ± {value[1]:.3f}"} mag'
-                        )
-                        for key, value in reference.used_photometry.items()
-                    ]
+                    [print(f'{key}: {value[0]:.3f}{"" if np.isnan(value[1]) else f" ± {value[1]:.3f}"} mag') for key, value in reference.used_photometry.items()]
             template = result[2]
             template.statistic = statistic
             if add_stat_to_template_label:
                 if metric == "reduced-chi2":
                     stat_symbol = r"$\chi_{\nu}^{2}$"
+                    stat_value = "{:.3f}".format(statistic)
+                elif metric == "student-t":
+                    stat_symbol = r"$t$"
                     stat_value = "{:.3f}".format(statistic)
                 elif metric == "cosine-similarity":
                     stat_symbol = r"$\cos(\theta)$"
@@ -548,8 +477,8 @@ class SED:
                 elif metric == "mean-absolute-error":
                     stat_symbol = r"$\overline{\text{MAE}}$"
                     stat_value = self.as_si(statistic, 3)
-                elif metric == "mean-squared-error":
-                    stat_symbol = r"$\overline{\text{MSE}}$"
+                elif metric == "root-mean-squared-error":
+                    stat_symbol = r"$\overline{\text{RMSE}}$"
                     stat_value = self.as_si(statistic, 3)
                 else:
                     raise Exception(f"No such metric: {metric}")
@@ -560,12 +489,7 @@ class SED:
                 print(f"Best match : {template.label}, statistic = {statistic:e}")
             if print_template_photometry:
                 print("Template photometry:")
-                [
-                    print(
-                        f'{key}: {value[0]:.3f}{"" if np.isnan(value[1]) else f" ± {value[1]:.3f}"} mag'
-                    )
-                    for key, value in template.used_photometry.items()
-                ]
+                [print(f'{key}: {value[0]:.3f}{"" if np.isnan(value[1]) else f" ± {value[1]:.3f}"} mag') for key, value in template.used_photometry.items()]
             number_of_results += 1
             if number_of_results == number_of_matches:
                 break
@@ -584,11 +508,49 @@ class SED:
         # Reduced Chi-squared metric
         if metric == "reduced-chi2":
             if np.isnan(ref_uncertainty).all():
-                ref_uncertainty[:] = (
-                    np.nanmedian(ref_flux) * 0.2
-                )  # Default uncertainty if missing
+                ref_uncertainty[:] = (np.nanmedian(ref_flux) * 0.2)  # Default uncertainty if missing
             dof = np.count_nonzero(~np.isnan(ref_flux)) - 1
             return np.sum((ref_flux - tpl_flux) ** 2 / ref_uncertainty ** 2) / dof
+
+        # Student-t likelihood
+        elif metric == "student-t":
+            """
+            # For SED fitting:
+            systematic_fraction = 0.02  # 2%
+            student_t_nu = 5
+            
+            # For very heterogeneous photometry:
+            systematic_fraction = 0.05
+            student_t_nu = 3
+            """
+
+            systematic_fraction = 0.02
+            student_t_nu = 5.0
+
+            # Add systematic uncertainty floor
+            effective_uncertainty = np.sqrt(
+                ref_uncertainty ** 2 +
+                (systematic_fraction * np.abs(ref_flux)) ** 2
+            )
+
+            # Residuals
+            residual = ref_flux - tpl_flux
+
+            r2 = (residual / effective_uncertainty) ** 2
+
+            # Robust negative log-likelihood
+            neg2logL = np.sum(
+                (student_t_nu + 1.0)
+                * np.log1p(r2 / student_t_nu)
+            )
+
+            # Normalize similarly to reduced chi2
+            dof = len(ref_flux) - 1
+
+            if dof <= 0:
+                return np.nan
+
+            return neg2logL / dof
 
         # Cosine Similarity metric
         elif metric == "cosine-similarity":
@@ -609,9 +571,10 @@ class SED:
         elif metric == "mean-absolute-error":
             return np.nanmean(np.abs(ref_flux - tpl_flux))
 
-        # Mean Squared Error metric
-        elif metric == "mean-squared-error":
-            return np.nanmean((ref_flux - tpl_flux) ** 2)
+        # Root Mean Squared Error metric (normalize by range)
+        elif metric == "root-mean-squared-error":
+            rmse = np.sqrt(np.nanmean((ref_flux - tpl_flux) ** 2))
+            return rmse / (np.nanmax(ref_flux) - np.nanmin(ref_flux))
 
         # If an unsupported metric is provided, raise an error
         else:
@@ -631,47 +594,15 @@ class SED:
         all_combinations = []
         number_of_bands = len(data)
         for i in range(1, number_of_bands_to_omit + 1, 1):
-            for combination in itertools.combinations(
-                range(number_of_bands), number_of_bands - i
-            ):
+            for combination in itertools.combinations(range(number_of_bands), number_of_bands - i):
                 combined_data = np.array(data)[list(combination)]
                 all_combinations.append(combined_data)
         return all_combinations
 
-    def plot(
-        self,
-        spec_uncertainty=False,
-        phot_uncertainty=False,
-        show_grid=False,
-        xscale="linear",
-        yscale="linear",
-        figure_size=None,
-        margins=(0.02, 0.02),
-        line_width=1.0,
-        open_plot=True,
-        plot_format="png",
-        output_dir=tempfile.gettempdir(),
-        offset=0,
-        distinct_colors=None,
-        colors=None,
-        label_bands=False,
-        legend_below_plot=False,
-        legend_beside_plot=False,
-        legend_anchor=None,
-        flat_legend=False,
-        legend_no_border=False,
-        spectral_features=None,
-        feature_color="black",
-        legend_location="best",
-        reference_on_top=True,
-        relative_flux=False,
-        x_limits=None,
-        y_limits=None,
-        label_aside_curve=False,
-        label_position="left",
-        additional_legend_text=None,
-        detect_gaps=True,
-    ):
+    def plot(self, spec_uncertainty=False, phot_uncertainty=False, show_grid=False, xscale="linear", yscale="linear", figure_size=None, margins=(0.02, 0.02), line_width=1.0, open_plot=True, plot_format="png",
+             output_dir=tempfile.gettempdir(), offset=0, colors=None, label_bands=False, legend_below_plot=False, legend_beside_plot=False, legend_anchor=None, flat_legend=False, legend_no_border=False,
+             spectral_features=None, feature_color="black", legend_location="best", reference_on_top=True, x_limits=None, y_limits=None, label_aside_curve=False, label_position="left", additional_legend_text=None,
+             plot_spline=False, detect_gaps=True):
         """
         Plots the spectral energy distribution (SED) of the waveflux data, with various customization options
         for visualizing fluxes, uncertainties, and annotations such as bands, spectral features, and legends.
@@ -716,9 +647,6 @@ class SED:
         offset : float, optional, default=0
             The vertical offset between the curves in the plot.
 
-        distinct_colors : int or None, optional, default=None
-            The number of distinct colors for the curves. If None, it is determined based on the number of waveflux data.
-
         colors : list of str or None, optional, default=None
             A list of specific colors to use for the curves.
 
@@ -756,9 +684,6 @@ class SED:
         reference_on_top : bool, optional, default=True
             If True, the reference curve is placed on top of other curves in the plot.
 
-        relative_flux : bool, optional, default=False
-            If True, the flux is normalized to the reference flux and plotted as relative flux.
-
         x_limits : tuple of float, optional, default=None
             The x-axis limits as (xmin, xmax).
 
@@ -773,6 +698,9 @@ class SED:
 
         additional_legend_text : tuple of (int, str), optional, default=None
             Adds additional text to the legend at the specified index.
+
+        plot_spline: bool, optional, default=True
+            If True, overplots the flux data points with a spline for visual guidance.
 
         detect_gaps : bool, optional, default=True
             Enable automatic detection of gaps in the spectrum based on wavelength differences.
@@ -796,28 +724,21 @@ class SED:
         number_of_waveflux = len(self.data)
         if figure_size:
             plt.figure(figsize=(figure_size))
-        plt.rcParams.update(
-            {
-                "font.size": 8,
-                "font.family": "Arial",
-                "axes.linewidth": 0.7,
-                "axes.edgecolor": "silver",
-            }
-        )
-        plt.rcParams["axes.formatter.use_mathtext"] = True
-        if colors:
-            plt.rcParams["axes.prop_cycle"] = plt.cycler("color", colors)
-        else:
-            if not distinct_colors:
-                distinct_colors = number_of_waveflux if number_of_waveflux > 5 else 5
-            distinct_colors = distinct_colors if distinct_colors else number_of_waveflux
-            plt.rcParams["axes.prop_cycle"] = plt.cycler(
-                "color", plt.cm.nipy_spectral(np.linspace(0, 1, distinct_colors))
-            )
+        plt.rcParams.update({"font.size": 8,
+                             "font.family": "Arial",
+                             "axes.linewidth": 0.7,
+                             "axes.edgecolor": "silver",
+                             "axes.formatter.use_mathtext": True,
+                             "text.usetex": False,
+                             "mathtext.fontset": "custom",
+                             "mathtext.rm": "Arial"
+                             })
+        if colors is None:
+            cmap = plt.get_cmap("tab10")
+            colors = cmap(np.linspace(0, 1, 4 if number_of_waveflux < 5 else number_of_waveflux))
         i = 0
-        scale = 1
         normalized = False
-        for waveflux in self.data:
+        for color, waveflux in zip(colors, self.data):
             is_reference = waveflux.reference
             normalized = waveflux.normalized
             label = waveflux.label
@@ -826,21 +747,11 @@ class SED:
                 continue
             i += 1
             delta = offset * i
-            if reference_on_top:
-                zorder = 1 if is_reference else 0
-            else:
-                zorder = 0 if is_reference else 1
+            zorder = 2 if (reference_on_top == is_reference) else 1
             data.sort("Wavelength")
             wavelength = data["Wavelength"]
             flux = data["Flux"]
             uncertainty = data["Uncertainty"]
-            if relative_flux:
-                if is_reference:
-                    exp = self.get_exponent(np.nanmean(flux))
-                    scale = 10 ** exp
-                flux = (flux / scale) + 1
-                ratio = np.nanmean(flux) / np.nanmean(data["Flux"])
-                uncertainty = ratio * uncertainty
             if is_reference or number_of_waveflux == 1:
                 ref_wavelength = wavelength
                 ref_flux = flux
@@ -856,35 +767,26 @@ class SED:
                             sep = ",\n" if i % 3 == 0 else ", "
                             sep = "" if i == 0 else sep
                             label += sep + used_band
-                width = line_width if waveflux.connect_markers else 0
-                if phot_uncertainty:
-                    uncertainties = np.stack((uncertainty, uncertainty))
-                    curves = plt.errorbar(
-                        wavelength,
-                        flux + delta,
-                        marker="o",
-                        ms=2,
-                        lw=width,
-                        yerr=np.abs(uncertainties),
-                        capsize=1.5,
-                        capthick=0.3,
-                        elinewidth=0.3,
-                        label=label,
-                        zorder=zorder,
-                    )
+
+                if plot_spline:
+                    width = 0
                 else:
-                    curves = plt.errorbar(
-                        wavelength,
-                        flux + delta,
-                        marker="o",
-                        ms=2,
-                        lw=width,
-                        capsize=1.5,
-                        capthick=0.3,
-                        elinewidth=0.3,
-                        label=label,
-                        zorder=zorder,
-                    )
+                    width = line_width if waveflux.connect_markers else 0
+
+                from matplotlib.colors import to_rgba
+                if phot_uncertainty:
+                    plt.errorbar(wavelength, flux + delta, marker='o', ms=3, lw=width, color=to_rgba(color, alpha=0.4),
+                                 markeredgewidth=0.8, markeredgecolor=color, markerfacecolor="white", label=label, zorder=zorder,
+                                 elinewidth=0.8, capsize=0, yerr=uncertainty)
+                else:
+                    plt.errorbar(wavelength, flux + delta, marker='o', ms=3, lw=width, color=to_rgba(color, alpha=0.4),
+                                 markeredgewidth=0.8, markeredgecolor=color, markerfacecolor="white", label=label, zorder=zorder)
+
+                if plot_spline and waveflux.connect_markers:
+                    interp = PchipInterpolator(wavelength, flux)
+                    wl_dense = np.linspace(wavelength.min(), wavelength.max(), 1000)
+                    flux_dense = interp(wl_dense)
+                    plt.plot(wl_dense, flux_dense + delta, lw=line_width, color=color, alpha=0.5, zorder=0)
             else:
                 if detect_gaps:
                     # Calculate the differences between adjacent wavelengths
@@ -901,9 +803,7 @@ class SED:
                     # print(f"Calculated threshold for detecting gaps: {threshold}")
 
                     # Detect indices where the wavelength difference exceeds the threshold
-                    gap_indices = (
-                        np.nonzero(wavelength_diff > threshold)[0] + 1
-                    )  # Adjust indices
+                    gap_indices = (np.nonzero(wavelength_diff > threshold)[0] + 1)  # Adjust indices
 
                     # Print gap positions
                     # print(f"Indices of gaps: {gap_indices}")
@@ -913,43 +813,25 @@ class SED:
                     for idx in gap_indices:
                         flux[idx] = np.nan  # Insert NaN values to create gaps
 
-                curves = plt.plot(
-                    wavelength, flux + delta, lw=line_width, label=label, zorder=zorder
-                )
+                if plot_spline:
+                    interp = PchipInterpolator(wavelength, flux)
+                    if spec_uncertainty:
+                        interp_unc = PchipInterpolator(wavelength, uncertainty)
+                    wavelength = np.linspace(wavelength.min(), wavelength.max(), 1000)
+                    flux = interp(wavelength)
+                    if spec_uncertainty:
+                        uncertainty = interp_unc(wavelength)
+
+                plt.plot(wavelength, flux + delta, lw=line_width, color=color, label=label, zorder=zorder)
                 if spec_uncertainty:
-                    color = curves[-1].get_color()
                     flux_lower_bound = flux - uncertainty
                     flux_upper_bound = flux + uncertainty
-                    plt.fill_between(
-                        wavelength,
-                        flux_lower_bound + delta,
-                        flux_upper_bound + delta,
-                        color=color,
-                        alpha=0.2,
-                        label="Uncertainty",
-                    )
+                    plt.fill_between(wavelength, flux_lower_bound + delta, flux_upper_bound + delta, color=color, alpha=0.2, label="Uncertainty")
             if label_aside_curve:
-                color = curves[-1].get_color()
                 if label_position == "left" or label_position == "both":
-                    plt.text(
-                        wavelength[0],
-                        (flux + delta)[0],
-                        waveflux.label,
-                        fontsize=7,
-                        color=color,
-                        ha="right",
-                        va="bottom",
-                    )
+                    plt.text(wavelength[0], (flux + delta)[0], waveflux.label, fontsize=7, color=color, ha="right", va="bottom")
                 if label_position == "right" or label_position == "both":
-                    plt.text(
-                        wavelength[-1],
-                        (flux + delta)[0],
-                        waveflux.label,
-                        fontsize=7,
-                        color=color,
-                        ha="left",
-                        va="bottom",
-                    )
+                    plt.text(wavelength[-1], (flux + delta)[-1], waveflux.label, fontsize=7, color=color, ha="left", va="bottom")
 
         plt.xscale(xscale)
         plt.yscale(yscale)
@@ -963,14 +845,7 @@ class SED:
             plt.gca().yaxis.set_major_formatter(formatter)
 
         if show_grid:
-            plt.grid(
-                color="grey",
-                alpha=0.3,
-                linestyle="-.",
-                linewidth=0.2,
-                axis="both",
-                which="both",
-            )
+            plt.grid(color="grey", alpha=0.3, linestyle="-.", linewidth=0.2, axis="both", which="both")
             plt.gca().tick_params(axis="x", which="both", length=0)
             plt.gca().tick_params(axis="y", which="both", length=0)
         else:
@@ -980,9 +855,7 @@ class SED:
         plt.margins(x=margins[0], y=margins[1])
 
         plt.xlabel(f"Wavelength [{u.um:latex}]")
-        if relative_flux:
-            plt.ylabel("Relative Flux")
-        elif normalized:
+        if normalized:
             plt.ylabel("Normalized Flux")
         else:
             plt.ylabel(f"Flux [{self.flux_unit:latex_inline}]")
@@ -1014,40 +887,22 @@ class SED:
             if legend_below_plot:
                 anchor = legend_anchor if legend_anchor else (0.5, -0.2)
                 if handles and labels:
-                    legend = plt.legend(
-                        handles,
-                        labels,
-                        bbox_to_anchor=anchor,
-                        loc="center",
-                        fontsize=legend_fontsize,
-                    )
+                    legend = plt.legend(handles, labels, bbox_to_anchor=anchor, loc="center", fontsize=legend_fontsize)
                 else:
-                    legend = plt.legend(
-                        bbox_to_anchor=anchor, loc="center", fontsize=legend_fontsize
-                    )
+                    legend = plt.legend(bbox_to_anchor=anchor, loc="center", fontsize=legend_fontsize)
                 legend.get_frame().set_facecolor("none")
                 legend.get_frame().set_linewidth(0)
             elif legend_beside_plot:
                 anchor = legend_anchor if legend_anchor else (1.1, 0.5)
                 if handles and labels:
-                    legend = plt.legend(
-                        handles,
-                        labels,
-                        bbox_to_anchor=anchor,
-                        loc="center",
-                        fontsize=legend_fontsize,
-                    )
+                    legend = plt.legend(handles, labels, bbox_to_anchor=anchor, loc="center", fontsize=legend_fontsize)
                 else:
-                    legend = plt.legend(
-                        bbox_to_anchor=anchor, loc="center", fontsize=legend_fontsize
-                    )
+                    legend = plt.legend(bbox_to_anchor=anchor, loc="center", fontsize=legend_fontsize)
                 legend.get_frame().set_facecolor("none")
                 legend.get_frame().set_linewidth(0)
             else:
                 if handles and labels:
-                    legend = plt.legend(
-                        handles, labels, loc=legend_location, fontsize=legend_fontsize
-                    )
+                    legend = plt.legend(handles, labels, loc=legend_location, fontsize=legend_fontsize)
                 else:
                     legend = plt.legend(loc=legend_location, fontsize=legend_fontsize)
                 if legend_no_border:
@@ -1067,43 +922,28 @@ class SED:
             features_matching_range = []
             min_wave, max_wave = np.nanmin(ref_wavelength), np.nanmax(ref_wavelength)
             for feature in spectral_features:
-                min_wave_feature, max_wave_feature = (
-                    feature["wavelengths"][0],
-                    feature["wavelengths"][-1],
-                )
+                min_wave_feature, max_wave_feature = (feature["wavelengths"][0], feature["wavelengths"][-1])
                 if min_wave_feature > max_wave or max_wave_feature < min_wave:
                     continue
                 if min_wave_feature < min_wave and max_wave_feature > min_wave:
                     if feature["type"] == "band":
                         feature["wavelengths"][0] = min_wave
                     else:
-                        feature["wavelengths"] = [
-                            w for w in feature["wavelengths"] if w >= min_wave
-                        ]
+                        feature["wavelengths"] = [w for w in feature["wavelengths"] if w >= min_wave]
                 if max_wave_feature > max_wave and min_wave_feature < max_wave:
                     if feature["type"] == "band":
                         feature["wavelengths"][-1] = max_wave
                     else:
-                        feature["wavelengths"] = [
-                            w for w in feature["wavelengths"] if w <= max_wave
-                        ]
+                        feature["wavelengths"] = [w for w in feature["wavelengths"] if w <= max_wave]
                 features_matching_range.append(feature)
 
             # Find the highest flux value within each feature's wavelength range
             feature_flux_values = []
             for feature in features_matching_range:
-                min_wave_feature, max_wave_feature = (
-                    feature["wavelengths"][0],
-                    feature["wavelengths"][-1],
-                )
-                indices = np.nonzero(
-                    (ref_wavelength >= min_wave_feature)
-                    & (ref_wavelength <= max_wave_feature)
-                )
+                min_wave_feature, max_wave_feature = (feature["wavelengths"][0], feature["wavelengths"][-1])
+                indices = np.nonzero((ref_wavelength >= min_wave_feature) & (ref_wavelength <= max_wave_feature))
                 if len(indices[0]) == 0:
-                    indices = self.find_nearest(
-                        ref_wavelength, (min_wave_feature + max_wave_feature) / 2
-                    )
+                    indices = self.find_nearest(ref_wavelength, (min_wave_feature + max_wave_feature) / 2)
                 max_flux_value = np.nanmax(ref_flux[indices])
                 feature_flux_values.append(max_flux_value)
 
@@ -1119,58 +959,21 @@ class SED:
             # Plot lines for spectral features at the highest flux values
             y_offset = 10 ** exp
             for i, feature in enumerate(features_matching_range):
-                feature_label, feature_type, wavelengths = (
-                    feature["label"],
-                    feature["type"],
-                    feature["wavelengths"],
-                )
+                feature_label, feature_type, wavelengths = (feature["label"], feature["type"], feature["wavelengths"])
                 offset = feature["offset"] if "offset" in feature else 1
                 max_flux_value = feature_flux_values[i]
                 if feature_type == "band":
-                    min_wave, max_wave = (
-                        feature["wavelengths"][0],
-                        feature["wavelengths"][-1],
-                    )
+                    min_wave, max_wave = (feature["wavelengths"][0], feature["wavelengths"][-1])
                     y = max_flux_value + y_offset * offset
-                    plt.hlines(
-                        xmin=min_wave,
-                        xmax=max_wave,
-                        y=y,
-                        lw=0.5,
-                        color=feature_color,
-                        linestyle="-",
-                    )
-                    plt.text(
-                        (min_wave + max_wave) / 2,
-                        y,
-                        f"{feature_label}",
-                        fontsize=7,
-                        color=feature_color,
-                        ha="center",
-                        va="bottom",
-                    )
+                    plt.hlines(xmin=min_wave, xmax=max_wave, y=y, lw=0.5, color=feature_color, linestyle="-")
+                    plt.text((min_wave + max_wave) / 2, y, f"{feature_label}", fontsize=7, color=feature_color, ha="center", va="bottom")
                 else:
                     for wavelength in wavelengths:
                         line_offset = y_offset / 5
                         line_length = y_offset / 2
                         ymin = max_flux_value + line_offset * offset
-                        plt.vlines(
-                            x=wavelength,
-                            ymin=ymin,
-                            ymax=ymin + line_length,
-                            lw=0.5,
-                            color=feature_color,
-                            linestyle="-",
-                        )
-                    plt.text(
-                        np.nanmean(wavelengths),
-                        ymin + line_length,
-                        f"{feature_label}",
-                        fontsize=7,
-                        color=feature_color,
-                        ha="center",
-                        va="bottom",
-                    )
+                        plt.vlines(x=wavelength, ymin=ymin, ymax=ymin + line_length, lw=0.5, color=feature_color, linestyle="-")
+                    plt.text(np.nanmean(wavelengths), ymin + line_length, f"{feature_label}", fontsize=7, color=feature_color, ha="center", va="bottom")
 
         # Save and open the plot
         target_name = self.target_name if self.target_name else "SED"
@@ -1183,18 +986,12 @@ class SED:
         if open_plot:
             self.start_file(filename)
 
-    def to_flux_lambda(
-        self, density_unit=u.AA, normalize_at_wavelength=None, subtract_continuum=None
-    ):
+    def to_flux_lambda(self, density_unit=u.AA, normalize_at_wavelength=None, subtract_continuum=None):
         for waveflux in self.data:
             data = waveflux.data
             wavelength = data["Wavelength"].value * u.um
-            data["Flux"] = flux_to_flux_lambda(
-                wavelength, data["Flux"].value * u.Jy, density_unit
-            )
-            data["Uncertainty"] = flux_to_flux_lambda(
-                wavelength, data["Uncertainty"].value * u.Jy, density_unit
-            )
+            data["Flux"] = flux_to_flux_lambda(wavelength, data["Flux"].value * u.Jy, density_unit)
+            data["Uncertainty"] = flux_to_flux_lambda(wavelength, data["Uncertainty"].value * u.Jy, density_unit)
             if normalize_at_wavelength:
                 waveflux.normalize_at_wavelength(normalize_at_wavelength)
             if subtract_continuum:
@@ -1226,15 +1023,7 @@ class SED:
 class WaveFlux:
     VSA_BASE_URL = "http://vsa.roe.ac.uk:8080/vdfs/"
 
-    def __init__(
-        self,
-        label="",
-        wavelength=None,
-        flux=None,
-        uncertainty=None,
-        spectrum=None,
-        model_params=None,
-    ):
+    def __init__(self, label="", wavelength=None, flux=None, uncertainty=None, spectrum=None, model_params=None):
         """
         Initialize a WaveFlux instance with spectral data.
 
@@ -1296,9 +1085,7 @@ class WaveFlux:
                 uncertainty = np.empty(len(flux))
                 uncertainty[:] = np.nan
             else:
-                uncertainty = uncertainty.to(
-                    u.Jy, equivalencies=u.spectral_density(wavelength)
-                )
+                uncertainty = uncertainty.to(u.Jy, equivalencies=u.spectral_density(wavelength))
 
             # Convert wavelength to micron
             wavelength = wavelength.to(u.um, equivalencies=u.spectral())
@@ -1315,18 +1102,14 @@ class WaveFlux:
                 uncertainty[:] = np.nan
             else:
                 uncertainty = uncertainty.array * u.Jy
-                uncertainty = uncertainty.to(
-                    u.Jy, equivalencies=u.spectral_density(wavelength)
-                )
+                uncertainty = uncertainty.to(u.Jy, equivalencies=u.spectral_density(wavelength))
 
             # Convert wavelength to micron
             wavelength = wavelength.to(u.um, equivalencies=u.spectral())
 
             self.create_table(wavelength, flux, uncertainty)
         else:
-            self.data = Table(
-                names=["Wavelength", "Flux", "Uncertainty"], dtype=["f", "f", "f"]
-            )
+            self.data = Table(names=["Wavelength", "Flux", "Uncertainty"], dtype=["f", "f", "f"])
             self.photometry = True
 
     def add(self, filter_id, magnitude, error=np.nan, band=None):
@@ -1386,9 +1169,7 @@ class WaveFlux:
 
     def create_table(self, wavelength, flux, uncertainty):
         columns = [wavelength, flux, uncertainty]
-        self.data = Table(
-            columns, names=["Wavelength", "Flux", "Uncertainty"], dtype=["f", "f", "f"]
-        )
+        self.data = Table(columns, names=["Wavelength", "Flux", "Uncertainty"], dtype=["f", "f", "f"])
 
     def signal_to_noise(self):
         """
@@ -1542,9 +1323,7 @@ class WaveFlux:
             min_wave = np.nanmin(wavelength)
         if max_wave is None:
             max_wave = np.nanmax(wavelength)
-        trimmed_wave, trimmed_flux = trim(
-            wavelength, self.data["Flux"], min_wave, max_wave
-        )
+        trimmed_wave, trimmed_flux = trim(wavelength, self.data["Flux"], min_wave, max_wave)
         _, trimmed_unc = trim(wavelength, self.data["Uncertainty"], min_wave, max_wave)
         self.create_table(trimmed_wave, trimmed_flux, trimmed_unc)
 
@@ -1585,9 +1364,7 @@ class WaveFlux:
         wavelength = self.data["Wavelength"]
         flux = self.data["Flux"]
         uncertainty = self.data["Uncertainty"]
-        flux, uncertainty = normalize(
-            ref_wavelength, ref_flux, wavelength, flux, uncertainty
-        )
+        flux, uncertainty = normalize(ref_wavelength, ref_flux, wavelength, flux, uncertainty)
         self.create_table(wavelength, flux, uncertainty)
 
     def normalize_at_wavelength(self, value):
@@ -1645,33 +1422,10 @@ class WaveFlux:
         """
         data = reference.data
         wavelength = self.data["Wavelength"]
-        flux = shift(
-            data["Wavelength"], data["Flux"], self.data["Wavelength"], self.data["Flux"]
-        )
-        ratio = np.nanmean(flux) / np.nanmean(self.data["Flux"])
-        uncertainty = ratio * self.data["Uncertainty"]
-        self.create_table(wavelength, flux, uncertainty)
-
-    def scale(self, reference):
-        """
-        Scale the flux values of the current WaveFlux instance to match a reference WaveFlux instance.
-
-        This method scales the flux values of the current WaveFlux instance to match the reference WaveFlux instance.
-        It calculates a scaling factor based on the mean flux values of both spectra and applies
-        this scaling factor to the current spectrum. It updates the instance with the scaled data.
-
-        Parameters:
-        reference (WaveFlux): The reference WaveFlux instance to which the current spectrum will be scaled.
-
-        Returns:
-        None
-        """
-        data = reference.data
-        wavelength = self.data["Wavelength"]
-        flux = scale(data["Flux"], self.data["Flux"])
-        ratio = np.nanmean(flux) / np.nanmean(self.data["Flux"])
-        uncertainty = ratio * self.data["Uncertainty"]
-        self.create_table(wavelength, flux, uncertainty)
+        flux = self.data["Flux"]
+        uncertainty = self.data["Uncertainty"]
+        scaled_flux = shift(data["Wavelength"], data["Flux"], wavelength, flux)
+        self.create_table(wavelength, scaled_flux, uncertainty)
 
     def scale_to_distance(self, value, error, new_distance=10, parallax=True):
         """
@@ -1703,9 +1457,7 @@ class WaveFlux:
         wavelength = self.data["Wavelength"]
         flux = self.data["Flux"]
         flux_error = self.data["Uncertainty"]
-        flux, uncertainty = scale_to_distance(
-            flux, flux_error, distance, distance_error, new_distance
-        )
+        flux, uncertainty = scale_to_distance(flux, flux_error, distance, distance_error, new_distance)
         self.create_table(wavelength, flux, uncertainty)
 
     def add_featured_photometry(self, ra, dec, radius=5):
@@ -1758,20 +1510,20 @@ class WaveFlux:
         Returns:
         bool: True if Gaia photometry was added successfully, False otherwise.
         """
+
+        def _has_value(x) -> bool:
+            """True if x is a real, unmasked, non-NaN scalar."""
+            if np.ma.is_masked(x):
+                return False
+            try:
+                return np.isfinite(x)
+            except TypeError:
+                # If x isn't numeric, treat as missing
+                return False
+
         coords = SkyCoord(ra, dec, unit=u.deg)
         radius *= u.arcsec
-        v = Vizier(
-            columns=[
-                "+_r",
-                "Source",
-                "BPmag",
-                "e_BPmag",
-                "Gmag",
-                "e_Gmag",
-                "RPmag",
-                "e_RPmag",
-            ]
-        )
+        v = Vizier(columns=["+_r", "Source", "BPmag", "e_BPmag", "Gmag", "e_Gmag", "RPmag", "e_RPmag"])
         tables = v.query_region(coords, radius=radius, catalog="I/355/gaiadr3")
         if tables:
             table = tables[0]
@@ -1783,11 +1535,11 @@ class WaveFlux:
             e_g = row["e_Gmag"]
             e_rp = row["e_RPmag"]
             len1 = len(self.data)
-            if ~np.isnan(e_bp) and "BP" not in omit_bands:
+            if _has_value(e_bp) and ("BP" not in omit_bands):
                 self.add(FilterID.GAIA_BP.value, bp, e_bp, "Gaia BP")
-            if ~np.isnan(e_g) and "G" not in omit_bands:
+            if _has_value(e_g) and ("G" not in omit_bands):
                 self.add(FilterID.GAIA_G.value, g, e_g, "Gaia G")
-            if ~np.isnan(e_rp) and "RP" not in omit_bands:
+            if _has_value(e_rp) and ("RP" not in omit_bands):
                 self.add(FilterID.GAIA_RP.value, rp, e_rp, "Gaia RP")
             len2 = len(self.data)
             if len2 > len1:
@@ -1818,12 +1570,7 @@ class WaveFlux:
             return
         radius *= u.arcsec
         query_url = "https://catalogs.mast.stsci.edu/api/v0.1/panstarrs/dr2/mean.csv"
-        payload = {
-            "ra": ra,
-            "dec": dec,
-            "radius": radius.to(u.deg).value,
-            "nStackDetections.gte": 1,
-        }
+        payload = {"ra": ra, "dec": dec, "radius": radius.to(u.deg).value, "nStackDetections.gte": 1}
         response = requests.get(query_url, params=payload, timeout=300)
 
         try:
@@ -1890,10 +1637,7 @@ class WaveFlux:
         response = requests.get(query_url, params=payload, timeout=300)
         table = ascii.read(response.text, format="csv")
         if table and len(table) > 0:
-            table.add_column(
-                calculate_separation(ra, dec, table["ra"], table["dec"]),
-                name="distance",
-            )
+            table.add_column(calculate_separation(ra, dec, table["ra"], table["dec"]), name="distance")
             table.sort("distance")
             row = table[0]
             g = row["gmag"]
@@ -1943,32 +1687,7 @@ class WaveFlux:
         """
         coords = SkyCoord(ra, dec, unit=u.deg)
         radius *= u.arcsec
-        v = Vizier(
-            columns=[
-                "+_r",
-                "DES",
-                "gmag",
-                "e_gmag",
-                "rmag",
-                "e_rmag",
-                "imag",
-                "e_imag",
-                "zmag",
-                "e_zmag",
-                "Ymag",
-                "e_Ymag",
-                "gFlag",
-                "rFlag",
-                "iFlag",
-                "zFlag",
-                "yFlag",
-                "gmag0",
-                "rmag0",
-                "imag0",
-                "zmag0",
-                "Ymag0",
-            ]
-        )
+        v = Vizier(columns=["+_r", "DES", "gmag", "e_gmag", "rmag", "e_rmag", "imag", "e_imag", "zmag", "e_zmag", "Ymag", "e_Ymag", "gFlag", "rFlag", "iFlag", "zFlag", "yFlag", "gmag0", "rmag0", "imag0", "zmag0", "Ymag0"])
         tables = v.query_region(coords, radius=radius, catalog="II/371/des_dr2")
         if tables:
             table = tables[0]
@@ -2020,30 +1739,9 @@ class WaveFlux:
         """
         coords = SkyCoord(ra, dec, unit=u.deg)
         radius *= u.arcsec
-        table = SDSS.query_region(
-            coords,
-            radius=radius,
-            data_release=17,
-            fields=[
-                "ra",
-                "dec",
-                "u",
-                "g",
-                "r",
-                "i",
-                "z",
-                "Err_u",
-                "Err_g",
-                "Err_r",
-                "Err_i",
-                "Err_z",
-            ],
-        )
+        table = SDSS.query_region(coords, radius=radius, data_release=17, fields=["ra", "dec", "u", "g", "r", "i", "z", "Err_u", "Err_g", "Err_r", "Err_i", "Err_z"])
         if table and len(table) > 0:
-            table.add_column(
-                calculate_separation(ra, dec, table["ra"], table["dec"]),
-                name="distance",
-            )
+            table.add_column(calculate_separation(ra, dec, table["ra"], table["dec"]), name="distance")
             table.sort("distance")
             row = table[0]
             U = row["u"]
@@ -2093,18 +1791,7 @@ class WaveFlux:
         """
         coords = SkyCoord(ra, dec, unit=u.deg)
         radius *= u.arcsec
-        v = Vizier(
-            columns=[
-                "+_r",
-                "2MASS",
-                "Jmag",
-                "e_Jmag",
-                "Hmag",
-                "e_Hmag",
-                "Kmag",
-                "e_Kmag",
-            ]
-        )
+        v = Vizier(columns=["+_r", "2MASS", "Jmag", "e_Jmag", "Hmag", "e_Hmag", "Kmag", "e_Kmag"])
         tables = v.query_region(coords, radius=radius, catalog="II/246/out")
         if tables:
             table = tables[0].filled(np.nan)
@@ -2127,9 +1814,7 @@ class WaveFlux:
                 return True
         return False
 
-    def add_ukidss_photometry(
-        self, ra, dec, radius=5, omit_bands=[], programme_id="LAS", dereddened=False
-    ):
+    def add_ukidss_photometry(self, ra, dec, radius=5, omit_bands=[], programme_id="LAS", dereddened=False):
         """
         Add United Kingdom Infrared Telescope (UKIRT) Infrared Deep Sky Survey (UKIDSS) photometry to the WaveFlux instance
         based on the specified coordinates.
@@ -2154,9 +1839,7 @@ class WaveFlux:
             return
         coords = SkyCoord(ra, dec, unit=u.deg)
         radius *= u.arcsec
-        table = Ukidss.query_region(
-            coords, radius=radius, database="UKIDSSDR11PLUS", programme_id=programme_id
-        )
+        table = Ukidss.query_region(coords, radius=radius, database="UKIDSSDR11PLUS", programme_id=programme_id)
         if table:
             table.sort("distance")
             row = table[0]
@@ -2249,9 +1932,7 @@ class WaveFlux:
         coords = SkyCoord(ra, dec, unit=u.deg)
         radius *= u.arcsec
         Vsa.TIMEOUT = 3000
-        table = Vsa.query_region(
-            coords, radius=radius, database="VHSDR7", programme_id="VHS"
-        )
+        table = Vsa.query_region(coords, radius=radius, database="VHSDR7", programme_id="VHS")
         if table:
             table.sort("distance")
             row = table[0]
@@ -2301,9 +1982,7 @@ class WaveFlux:
         coords = SkyCoord(ra, dec, unit=u.deg)
         radius *= u.arcsec
         Vsa.TIMEOUT = 3000
-        table = Vsa.query_region(
-            coords, radius=radius, database="VIKINGDR5", programme_id="VIKING"
-        )
+        table = Vsa.query_region(coords, radius=radius, database="VIKINGDR5", programme_id="VIKING")
         if table:
             table.sort("distance")
             row = table[0]
@@ -2353,9 +2032,7 @@ class WaveFlux:
         coords = SkyCoord(ra, dec, unit=u.deg)
         radius *= u.arcsec
         Vsa.TIMEOUT = 3000
-        table = Vsa.query_region(
-            coords, radius=radius, database="VVVDR5", programme_id="VVV"
-        )
+        table = Vsa.query_region(coords, radius=radius, database="VVVDR5", programme_id="VVV")
         if table:
             table.sort("distance")
             row = table[0]
@@ -2402,26 +2079,7 @@ class WaveFlux:
         """
         coords = SkyCoord(ra, dec, unit=u.deg)
         radius *= u.arcsec
-        v = Vizier(
-            columns=[
-                "+_r",
-                "AllWISE",
-                "W1mag",
-                "e_W1mag",
-                "W2mag",
-                "e_W2mag",
-                "W3mag",
-                "e_W3mag",
-                "W4mag",
-                "e_W4mag",
-                "Jmag",
-                "e_Jmag",
-                "Hmag",
-                "e_Hmag",
-                "Kmag",
-                "e_Kmag",
-            ]
-        )
+        v = Vizier(columns=["+_r", "AllWISE", "W1mag", "e_W1mag", "W2mag", "e_W2mag", "W3mag", "e_W3mag", "W4mag", "e_W4mag", "Jmag", "e_Jmag", "Hmag", "e_Hmag", "Kmag", "e_Kmag"])
         tables = v.query_region(coords, radius=radius, catalog="II/328/allwise")
         if tables:
             table = tables[0].filled(np.nan)
@@ -2469,9 +2127,7 @@ class WaveFlux:
         """
         coords = SkyCoord(ra, dec, unit=u.deg)
         radius *= u.arcsec
-        v = Vizier(
-            columns=["+_r", "Name", "W1mproPM", "e_W1mproPM", "W2mproPM", "e_W2mproPM"]
-        )
+        v = Vizier(columns=["+_r", "Name", "W1mproPM", "e_W1mproPM", "W2mproPM", "e_W2mproPM"])
         tables = v.query_region(coords, radius=radius, catalog="II/365/catwise")
         if tables:
             table = tables[0].filled(np.nan)
@@ -2494,9 +2150,7 @@ class WaveFlux:
 def create_obj_name(ra_deg, dec_deg):
     coord = SkyCoord(ra=ra_deg, dec=dec_deg, unit="deg", frame="icrs")
     ra_str = coord.ra.to_string(unit="hour", sep="", precision=2, pad=True)[:4]
-    dec_str = coord.dec.to_string(
-        unit="deg", sep="", precision=2, alwayssign=True, pad=True
-    )[:5]
+    dec_str = coord.dec.to_string(unit="deg", sep="", precision=2, alwayssign=True, pad=True)[:5]
     return f"J{ra_str}{dec_str}"
 
 
@@ -2516,10 +2170,7 @@ def flux_to_flux_lambda(wavelength, flux, density_unit):
     Returns:
     astropy.units.quantity.Quantity: The flux density per unit wavelength in erg/s/cm^2/Ångstrom.
     """
-    return flux.to(
-        u.erg / u.s / u.cm ** 2 / density_unit,
-        equivalencies=u.spectral_density(wavelength),
-    )
+    return flux.to(u.erg / u.s / u.cm ** 2 / density_unit, equivalencies=u.spectral_density(wavelength))
 
 
 def magnitude_to_flux_lambda(zeropoint, wavelength, magnitude, density_unit=u.AA):
@@ -2690,11 +2341,7 @@ def align_flux(wavelength, flux):
     """
 
     # Initial guesses for the parameters based on the data
-    initial_guess = [
-        np.max(flux),
-        wavelength[np.argmax(flux)],
-        (np.max(wavelength) - np.min(wavelength)) / 4,
-    ]
+    initial_guess = [np.max(flux), wavelength[np.argmax(flux)], (np.max(wavelength) - np.min(wavelength)) / 4]
 
     # Fit the model to each spectrum
     popt, _ = curve_fit(curve_model, wavelength, flux, p0=initial_guess)
@@ -2832,9 +2479,7 @@ def normalize(ref_wavelength, ref_flux, wavelength, flux, uncertainty):
     Returns:
     tuple: A tuple containing the normalized flux values and uncertainties.
     """
-    min_wave, max_wave = determine_overlapping_wavelength_range(
-        wavelength, ref_wavelength
-    )
+    min_wave, max_wave = determine_overlapping_wavelength_range(wavelength, ref_wavelength)
     this_wave, this_flux = trim(wavelength, flux, min_wave, max_wave)
     other_wave, other_flux = trim(ref_wavelength, ref_flux, min_wave, max_wave)
     interp_flux = np.interp(other_wave, this_wave, this_flux)
@@ -2901,38 +2546,6 @@ def shift(ref_wavelength, ref_flux, wavelength, flux):
     return flux + mean_distance
 
 
-def scale(ref_flux, flux):
-    """
-    Scale the flux values of a spectrum based on a reference spectrum.
-
-    This function scales the input flux values to match the reference flux values. The scaling factor is determined by
-    calculating the ratio of the mean of the reference flux to the mean of the input flux. The flux values are scaled
-    proportionally, preserving their relative differences.
-    If the scaling ratio is zero, infinity, or contains NaN values, the function returns the input flux unchanged.
-
-    Parameters:
-    ref_flux (array-like): Reference flux values.
-    flux (array-like): Flux values to be scaled.
-
-    Returns:
-    array-like: Scaled flux values.
-    """
-    ratio = np.nanmean(ref_flux) / np.nanmean(flux)
-    if np.isinf(ratio) or ratio == 0:
-        return flux
-
-    base10 = math.log10(abs(ratio))
-    if np.isnan(base10):
-        return flux
-
-    exp = math.floor(base10)
-    if exp == 0:
-        return flux
-
-    scale = 10 ** (exp)
-    return flux * scale
-
-
 def scale_to_distance(flux, flux_error, distance, distance_error, new_distance=10):
     """
     Scale flux values of a spectrum to a new distance.
@@ -2968,10 +2581,7 @@ def scale_to_distance(flux, flux_error, distance, distance_error, new_distance=1
         Error associated with the scaled flux measurements at the new distance.
     """
     scaled_flux = flux * (distance / new_distance) ** 2
-    scaled_flux_error = np.sqrt(
-        ((distance / new_distance) ** 2 * flux_error) ** 2
-        + (2 * (1 / new_distance) ** 2 * flux * distance * distance_error) ** 2
-    )
+    scaled_flux_error = np.sqrt(((distance / new_distance) ** 2 * flux_error) ** 2 + (2 * (1 / new_distance) ** 2 * flux * distance * distance_error) ** 2)
     return scaled_flux, scaled_flux_error
 
 
@@ -3062,16 +2672,10 @@ class TemplateProvider:
     def __init__(self):
         self.module_path = os.path.dirname(inspect.getfile(inspect.currentframe()))
 
-    def get_Kesseli_2017_templates(
-        self, wave_range=None, spt=None, smooth_window=None, print_template_info=True
-    ):
+    def get_Kesseli_2017_templates(self, wave_range=None, spt=None, smooth_window=None, print_template_info=True):
         print("Loading Kesseli+2017 templates ...")
         template_dir = join(self.module_path, "templates/Kesseli+2017/")
-        template_paths = [
-            template_dir + f
-            for f in os.listdir(template_dir)
-            if f.endswith(".fits") and isfile(join(template_dir, f))
-        ]
+        template_paths = [template_dir + f for f in os.listdir(template_dir) if f.endswith(".fits") and isfile(join(template_dir, f))]
         templates = []
         for template_path in template_paths:
             template_info = self.extract_Kesseli_2017_template_info(template_path)
@@ -3112,16 +2716,10 @@ class TemplateProvider:
             else:
                 return ""
 
-    def get_Theissen_2022_templates(
-        self, wave_range=None, spt=None, smooth_window=None, print_template_info=True
-    ):
+    def get_Theissen_2022_templates(self, wave_range=None, spt=None, smooth_window=None, print_template_info=True):
         print("Loading Theissen+2022 templates ...")
         template_dir = join(self.module_path, "templates/Theissen+2022/")
-        template_paths = [
-            template_dir + f
-            for f in os.listdir(template_dir)
-            if f.endswith(".fits") and isfile(join(template_dir, f))
-        ]
+        template_paths = [template_dir + f for f in os.listdir(template_dir) if f.endswith(".fits") and isfile(join(template_dir, f))]
         templates = []
         for template_path in template_paths:
             template_info = self.extract_Theissen_2022_template_info(template_path)
@@ -3146,13 +2744,7 @@ class TemplateProvider:
             wavelength = np.concatenate([wave0, wave1, wave2, wave3]) * u.um
             flux = np.concatenate([flux0, flux1, flux2, flux3]) * u.Jy
             uncertainty = np.concatenate([unc0, unc1, unc2, unc3]) * u.Jy
-            wf = WaveFlux(
-                template_info,
-                wavelength,
-                flux,
-                uncertainty,
-                model_params={"spt": template_info},
-            )
+            wf = WaveFlux(template_info, wavelength, flux, uncertainty, model_params={"spt": template_info})
             if wave_range:
                 wf.trim(wave_range[0], wave_range[1])
             if smooth_window:
@@ -3169,16 +2761,10 @@ class TemplateProvider:
         else:
             return ""
 
-    def get_Burgasser_2017_templates(
-        self, wave_range=None, spt=None, smooth_window=None, print_template_info=True
-    ):
+    def get_Burgasser_2017_templates(self, wave_range=None, spt=None, smooth_window=None, print_template_info=True):
         print("Loading Burgasser+2017 templates ...")
         template_dir = join(self.module_path, "templates/Burgasser+2017/")
-        template_paths = [
-            template_dir + f
-            for f in os.listdir(template_dir)
-            if f.endswith(".fits") and isfile(join(template_dir, f))
-        ]
+        template_paths = [template_dir + f for f in os.listdir(template_dir) if f.endswith(".fits") and isfile(join(template_dir, f))]
         templates = []
         for template_path in template_paths:
             template_info = self.extract_Burgasser_2017_template_info(template_path)
@@ -3191,13 +2777,7 @@ class TemplateProvider:
             wavelength = data[0] * u.um
             flux = data[1] * u.Jy
             uncertainty = data[2] * u.Jy
-            wf = WaveFlux(
-                template_info,
-                wavelength,
-                flux,
-                uncertainty,
-                model_params={"spt": template_info},
-            )
+            wf = WaveFlux(template_info, wavelength, flux, uncertainty, model_params={"spt": template_info})
             if wave_range:
                 wf.trim(wave_range[0], wave_range[1])
             if smooth_window:
@@ -3218,262 +2798,35 @@ class TemplateProvider:
 class Features:
 
     def __init__(self):
-        self.features = [
-            {
-                "id": "h2o",
-                "label": "H$_2$O",
-                "type": "band",
-                "wavelengths": [0.925, 0.95],
-            },
-            {
-                "id": "h2o",
-                "label": "H$_2$O",
-                "type": "band",
-                "wavelengths": [1.08, 1.2],
-            },
-            {
-                "id": "h2o",
-                "label": "H$_2$O",
-                "type": "band",
-                "wavelengths": [1.325, 1.55],
-            },
-            {
-                "id": "h2o",
-                "label": "H$_2$O",
-                "type": "band",
-                "wavelengths": [1.72, 2.14],
-            },
-            {
-                "id": "ch4",
-                "label": "CH$_4$",
-                "type": "band",
-                "wavelengths": [1.1, 1.24],
-            },
-            {
-                "id": "ch4",
-                "label": "CH$_4$",
-                "type": "band",
-                "wavelengths": [1.28, 1.44],
-            },
-            {
-                "id": "ch4",
-                "label": "CH$_4$",
-                "type": "band",
-                "wavelengths": [1.6, 1.76],
-            },
-            {
-                "id": "ch4",
-                "label": "CH$_4$",
-                "type": "band",
-                "wavelengths": [2.2, 2.35],
-            },
-            {"id": "co", "label": "CO", "type": "band", "wavelengths": [2.29, 2.39]},
-            {
-                "id": "tio",
-                "label": "TiO",
-                "type": "band",
-                "wavelengths": [0.6569, 0.6852],
-            },
-            {
-                "id": "tio",
-                "label": "TiO",
-                "type": "band",
-                "wavelengths": [0.705, 0.727],
-            },
-            {"id": "tio", "label": "TiO", "type": "band", "wavelengths": [0.76, 0.8]},
-            {
-                "id": "tio",
-                "label": "TiO",
-                "type": "band",
-                "wavelengths": [0.825, 0.831],
-            },
-            {"id": "tio", "label": "TiO", "type": "band", "wavelengths": [0.845, 0.86]},
-            {"id": "vo", "label": "VO", "type": "band", "wavelengths": [1.04, 1.08]},
-            {
-                "id": "young vo",
-                "label": "VO",
-                "type": "band",
-                "wavelengths": [1.17, 1.2],
-            },
-            {
-                "id": "cah",
-                "label": "CaH",
-                "type": "band",
-                "wavelengths": [0.6346, 0.639],
-            },
-            {
-                "id": "cah",
-                "label": "CaH",
-                "type": "band",
-                "wavelengths": [0.675, 0.705],
-            },
-            {
-                "id": "crh",
-                "label": "CrH",
-                "type": "band",
-                "wavelengths": [0.8611, 0.8681],
-            },
-            {
-                "id": "feh",
-                "label": "FeH",
-                "type": "band",
-                "wavelengths": [0.8692, 0.875],
-            },
-            {"id": "feh", "label": "FeH", "type": "band", "wavelengths": [0.98, 1.03]},
-            {"id": "feh", "label": "FeH", "type": "band", "wavelengths": [1.19, 1.25]},
-            {"id": "feh", "label": "FeH", "type": "band", "wavelengths": [1.57, 1.64]},
-            {"id": "h2", "label": "H$_2$", "type": "band", "wavelengths": [1.5, 2.4]},
-            {"id": "sb", "label": "*", "type": "band", "wavelengths": [1.6, 1.64]},
-            {"id": "h", "label": "H I", "type": "line", "wavelengths": [1.004, 1.005]},
-            {"id": "h", "label": "H I", "type": "line", "wavelengths": [1.093, 1.094]},
-            {"id": "h", "label": "H I", "type": "line", "wavelengths": [1.281, 1.282]},
-            {"id": "h", "label": "H I", "type": "line", "wavelengths": [1.944, 1.945]},
-            {"id": "h", "label": "H I", "type": "line", "wavelengths": [2.166, 2.166]},
-            {
-                "id": "na",
-                "label": "Na I",
-                "type": "line",
-                "wavelengths": [0.8186, 0.8195],
-            },
-            {
-                "id": "na",
-                "label": "Na I",
-                "type": "line",
-                "wavelengths": [1.136, 1.137],
-            },
-            {
-                "id": "na",
-                "label": "Na I",
-                "type": "line",
-                "wavelengths": [2.206, 2.209],
-            },
-            {
-                "id": "cs",
-                "label": "Cs I",
-                "type": "line",
-                "wavelengths": [0.8521, 0.8521],
-            },
-            {
-                "id": "cs",
-                "label": "Cs I",
-                "type": "line",
-                "wavelengths": [0.8943, 0.8943],
-            },
-            {"id": "rb", "label": "Rb I", "type": "line", "wavelengths": [0.78, 0.78]},
-            {
-                "id": "rb",
-                "label": "Rb I",
-                "type": "line",
-                "wavelengths": [0.7948, 0.7948],
-            },
-            {
-                "id": "mg",
-                "label": "Mg I",
-                "type": "line",
-                "wavelengths": [1.7113336, 1.7113336],
-            },
-            {
-                "id": "mg",
-                "label": "Mg I",
-                "type": "line",
-                "wavelengths": [1.5745017, 1.577015],
-            },
-            {
-                "id": "mg",
-                "label": "Mg I",
-                "type": "line",
-                "wavelengths": [1.4881595, 1.4881847, 1.5029098, 1.5044356],
-            },
-            {
-                "id": "mg",
-                "label": "Mg I",
-                "type": "line",
-                "wavelengths": [1.1831422, 1.2086969],
-            },
-            {
-                "id": "ca",
-                "label": "Ca I",
-                "type": "line",
-                "wavelengths": [0.6573, 0.6573],
-            },
-            {
-                "id": "ca",
-                "label": "Ca I",
-                "type": "line",
-                "wavelengths": [2.26311, 2.265741],
-            },
-            {
-                "id": "ca",
-                "label": "Ca I",
-                "type": "line",
-                "wavelengths": [1.978219, 1.985852, 1.986764],
-            },
-            {
-                "id": "ca",
-                "label": "Ca I",
-                "type": "line",
-                "wavelengths": [1.931447, 1.94583, 1.951105],
-            },
-            {
-                "id": "caii",
-                "label": "Ca II",
-                "type": "line",
-                "wavelengths": [1.184224, 1.195301],
-            },
-            {
-                "id": "caii",
-                "label": "Ca II",
-                "type": "line",
-                "wavelengths": [0.985746, 0.993409],
-            },
-            {
-                "id": "al",
-                "label": "Al I",
-                "type": "line",
-                "wavelengths": [1.672351, 1.675511],
-            },
-            {
-                "id": "al",
-                "label": "Al I",
-                "type": "line",
-                "wavelengths": [1.3127006, 1.3154345],
-            },
-            {
-                "id": "fe",
-                "label": "Fe I",
-                "type": "line",
-                "wavelengths": [1.5081407, 1.549457],
-            },
-            {
-                "id": "fe",
-                "label": "Fe I",
-                "type": "line",
-                "wavelengths": [1.25604314, 1.28832892],
-            },
-            {
-                "id": "fe",
-                "label": "Fe I",
-                "type": "line",
-                "wavelengths": [
-                    1.14254467,
-                    1.15967616,
-                    1.16107501,
-                    1.16414462,
-                    1.16931726,
-                    1.18860965,
-                    1.18873357,
-                    1.19763233,
-                ],
-            },
-            {
-                "id": "k",
-                "label": "K I",
-                "type": "line",
-                "wavelengths": [0.7699, 0.7665],
-            },
-            {"id": "k", "label": "K I", "type": "line", "wavelengths": [1.169, 1.177]},
-            {"id": "k", "label": "K I", "type": "line", "wavelengths": [1.244, 1.252]},
-        ]
+        self.features = [{"id": "h2o", "label": "H$_2$O", "type": "band", "wavelengths": [0.925, 0.95]}, {"id": "h2o", "label": "H$_2$O", "type": "band", "wavelengths": [1.08, 1.2]},
+                         {"id": "h2o", "label": "H$_2$O", "type": "band", "wavelengths": [1.325, 1.55]}, {"id": "h2o", "label": "H$_2$O", "type": "band", "wavelengths": [1.72, 2.14]},
+                         {"id": "ch4", "label": "CH$_4$", "type": "band", "wavelengths": [1.1, 1.24]}, {"id": "ch4", "label": "CH$_4$", "type": "band", "wavelengths": [1.28, 1.44]},
+                         {"id": "ch4", "label": "CH$_4$", "type": "band", "wavelengths": [1.6, 1.76]}, {"id": "ch4", "label": "CH$_4$", "type": "band", "wavelengths": [2.2, 2.35]},
+                         {"id": "co", "label": "CO", "type": "band", "wavelengths": [2.29, 2.39]}, {"id": "tio", "label": "TiO", "type": "band", "wavelengths": [0.6569, 0.6852]},
+                         {"id": "tio", "label": "TiO", "type": "band", "wavelengths": [0.705, 0.727]}, {"id": "tio", "label": "TiO", "type": "band", "wavelengths": [0.76, 0.8]},
+                         {"id": "tio", "label": "TiO", "type": "band", "wavelengths": [0.825, 0.831]}, {"id": "tio", "label": "TiO", "type": "band", "wavelengths": [0.845, 0.86]},
+                         {"id": "vo", "label": "VO", "type": "band", "wavelengths": [1.04, 1.08]}, {"id": "young vo", "label": "VO", "type": "band", "wavelengths": [1.17, 1.2]},
+                         {"id": "cah", "label": "CaH", "type": "band", "wavelengths": [0.6346, 0.639]}, {"id": "cah", "label": "CaH", "type": "band", "wavelengths": [0.675, 0.705]},
+                         {"id": "crh", "label": "CrH", "type": "band", "wavelengths": [0.8611, 0.8681]}, {"id": "feh", "label": "FeH", "type": "band", "wavelengths": [0.8692, 0.875]},
+                         {"id": "feh", "label": "FeH", "type": "band", "wavelengths": [0.98, 1.03]}, {"id": "feh", "label": "FeH", "type": "band", "wavelengths": [1.19, 1.25]},
+                         {"id": "feh", "label": "FeH", "type": "band", "wavelengths": [1.57, 1.64]}, {"id": "h2", "label": "H$_2$", "type": "band", "wavelengths": [1.5, 2.4]},
+                         {"id": "sb", "label": "*", "type": "band", "wavelengths": [1.6, 1.64]}, {"id": "h", "label": "H I", "type": "line", "wavelengths": [1.004, 1.005]},
+                         {"id": "h", "label": "H I", "type": "line", "wavelengths": [1.093, 1.094]}, {"id": "h", "label": "H I", "type": "line", "wavelengths": [1.281, 1.282]},
+                         {"id": "h", "label": "H I", "type": "line", "wavelengths": [1.944, 1.945]}, {"id": "h", "label": "H I", "type": "line", "wavelengths": [2.166, 2.166]},
+                         {"id": "na", "label": "Na I", "type": "line", "wavelengths": [0.8186, 0.8195]}, {"id": "na", "label": "Na I", "type": "line", "wavelengths": [1.136, 1.137]},
+                         {"id": "na", "label": "Na I", "type": "line", "wavelengths": [2.206, 2.209]}, {"id": "cs", "label": "Cs I", "type": "line", "wavelengths": [0.8521, 0.8521]},
+                         {"id": "cs", "label": "Cs I", "type": "line", "wavelengths": [0.8943, 0.8943]}, {"id": "rb", "label": "Rb I", "type": "line", "wavelengths": [0.78, 0.78]},
+                         {"id": "rb", "label": "Rb I", "type": "line", "wavelengths": [0.7948, 0.7948]}, {"id": "mg", "label": "Mg I", "type": "line", "wavelengths": [1.7113336, 1.7113336]},
+                         {"id": "mg", "label": "Mg I", "type": "line", "wavelengths": [1.5745017, 1.577015]}, {"id": "mg", "label": "Mg I", "type": "line", "wavelengths": [1.4881595, 1.4881847, 1.5029098, 1.5044356]},
+                         {"id": "mg", "label": "Mg I", "type": "line", "wavelengths": [1.1831422, 1.2086969]}, {"id": "ca", "label": "Ca I", "type": "line", "wavelengths": [0.6573, 0.6573]},
+                         {"id": "ca", "label": "Ca I", "type": "line", "wavelengths": [2.26311, 2.265741]}, {"id": "ca", "label": "Ca I", "type": "line", "wavelengths": [1.978219, 1.985852, 1.986764]},
+                         {"id": "ca", "label": "Ca I", "type": "line", "wavelengths": [1.931447, 1.94583, 1.951105]}, {"id": "caii", "label": "Ca II", "type": "line", "wavelengths": [1.184224, 1.195301]},
+                         {"id": "caii", "label": "Ca II", "type": "line", "wavelengths": [0.985746, 0.993409]}, {"id": "al", "label": "Al I", "type": "line", "wavelengths": [1.672351, 1.675511]},
+                         {"id": "al", "label": "Al I", "type": "line", "wavelengths": [1.3127006, 1.3154345]}, {"id": "fe", "label": "Fe I", "type": "line", "wavelengths": [1.5081407, 1.549457]},
+                         {"id": "fe", "label": "Fe I", "type": "line", "wavelengths": [1.25604314, 1.28832892]},
+                         {"id": "fe", "label": "Fe I", "type": "line", "wavelengths": [1.14254467, 1.15967616, 1.16107501, 1.16414462, 1.16931726, 1.18860965, 1.18873357, 1.19763233]},
+                         {"id": "k", "label": "K I", "type": "line", "wavelengths": [0.7699, 0.7665]}, {"id": "k", "label": "K I", "type": "line", "wavelengths": [1.169, 1.177]},
+                         {"id": "k", "label": "K I", "type": "line", "wavelengths": [1.244, 1.252]}]
 
     def get_all_features(self):
         return self.features
