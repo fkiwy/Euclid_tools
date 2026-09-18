@@ -49,9 +49,12 @@ import warnings
 
 from astropy.utils.exceptions import AstropyWarning
 
-from euclid_tools.esa_tools import retrieve_objects, retrieve_spectrum, remove_bad_values
+from euclid_tools import get_backend
+from euclid_tools.esa_tools import remove_bad_values
 from euclid_tools.shared import create_object_name
 from flux_comp.core import SED, WaveFlux, TemplateProvider
+
+backend = get_backend('esa')
 
 warnings.simplefilter("ignore", category=AstropyWarning)
 
@@ -68,7 +71,7 @@ ra, dec = 266.4850113, 64.9936424
 search_radius = 5
 
 # Retrieve objects based on coordinates
-results = retrieve_objects(ra, dec, search_radius)
+results = backend.retrieve_objects(ra, dec, search_radius=search_radius)
 
 if results:
     result = results[0]
@@ -79,7 +82,7 @@ if results:
     print(f"Object found at RA: {round(ra, 7)}, Dec: {round(dec, 7)}")
 
     # Retrieve the spectrum for the object
-    data = retrieve_spectrum(object_id)
+    data = backend.retrieve_spectrum(object_id)
 
     if data and len(data) > 0:
         # Select template(s) for comparison (Theissen+2022)

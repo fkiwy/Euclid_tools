@@ -52,9 +52,13 @@ import warnings
 
 from astropy.utils.exceptions import AstropyWarning
 
+from euclid_tools import get_backend
 from euclid_tools.image_plotter import plot_images
-from euclid_tools.irsa_tools import retrieve_objects, retrieve_spectrum, retrieve_cutout, print_catalog_info
-from euclid_tools.shared import print_results, print_message
+from euclid_tools.irsa_tools import print_catalog_info
+from euclid_tools.shared import print_results, print_message, remove_bad_values, create_object_name
+from flux_comp.core import SED, WaveFlux
+
+backend = get_backend('irsa')
 
 warnings.simplefilter("ignore", category=AstropyWarning)
 
@@ -80,7 +84,7 @@ ra, dec = 266.4850113, 64.9936424
 search_radius = 5
 
 # Perform cone search for objects
-results = retrieve_objects(ra, dec, search_radius)
+results = backend.retrieve_objects(ra, dec, search_radius=search_radius)
 
 if not results:
     # If no results are found, print message and exit
@@ -99,7 +103,7 @@ result = results[0]
 object_id = str(result["object_id"])
 
 # Retrieve the spectrum for the selected object
-data = retrieve_spectrum(object_id)
+data = backend.retrieve_spectrum(object_id)
 
 # Plot the spectrum if data is available
 if data and len(data) > 0:
@@ -133,10 +137,10 @@ if data and len(data) > 0:
 cutout_size = 20  # arcsec
 
 # Retrieve cutouts from various bands (VIS, Y, J, H)
-vis_hdu = retrieve_cutout(ra, dec, search_radius, cutout_size, "VIS")
-y_hdu = retrieve_cutout(ra, dec, search_radius, cutout_size, "Y")
-j_hdu = retrieve_cutout(ra, dec, search_radius, cutout_size, "J")
-h_hdu = retrieve_cutout(ra, dec, search_radius, cutout_size, "H")
+vis_hdu = backend.retrieve_cutout(ra, dec, search_radius=search_radius, cutout_size=cutout_size, band="VIS")
+y_hdu = backend.retrieve_cutout(ra, dec, search_radius=search_radius, cutout_size=cutout_size, band="Y")
+j_hdu = backend.retrieve_cutout(ra, dec, search_radius=search_radius, cutout_size=cutout_size, band="J")
+h_hdu = backend.retrieve_cutout(ra, dec, search_radius=search_radius, cutout_size=cutout_size, band="H")
 
 # Collect the images in a list with band and RGB mapping information
 images = []

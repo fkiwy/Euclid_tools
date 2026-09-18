@@ -57,7 +57,10 @@ class ApiContractTests(unittest.TestCase):
 
         cleaned = remove_bad_values(table, lambda mask: (mask % 2 == 1) | (mask >= 64))
         self.assertEqual(list(cleaned.colnames), ["WAVELENGTH", "FLUX", "ERROR"])
-        self.assertTrue(np.isnan(cleaned["FLUX"][1]))
+        # remove_bad_values returns a sliced table containing only good rows
+        self.assertEqual(len(cleaned), 2)
+        self.assertEqual(float(cleaned["FLUX"][0].value), 10.0)
+        self.assertEqual(float(cleaned["FLUX"][1].value), 30.0)
         self.assertEqual(cleaned["WAVELENGTH"].unit, u.micron)
 
     def test_normalize_spectrum_table_handles_integer_mask_columns(self):
