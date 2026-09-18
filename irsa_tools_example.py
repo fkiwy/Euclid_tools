@@ -2,7 +2,7 @@
 Example: Using Euclid Tools for Object Retrieval, Spectrum Plotting, and Image Cutouts
 
 This example demonstrates how to use tools from `tools.esa_tools` to retrieve catalog objects,
-spectra, and image cutouts from the Euclid mission. It also shows how to plot the spectrum and 
+spectra, and image cutouts from the Euclid mission. It also shows how to plot the spectrum and
 the images in various bands.
 
 The steps in the script are as follows:
@@ -14,7 +14,6 @@ The steps in the script are as follows:
 
 Dependencies:
 - `euclid_tools.esa_tools` (for retrieving catalog objects, spectra, and image cutouts)
-- `euclid_tools.spectrum_plotter` (for spectrum plotting)
 - `euclid_tools.image_plotter` (for plotting images)
 - `euclid_tools.shared` (for utility functions like `print_results` or `print_message`)
 - `astropy` (for units and warnings handling)
@@ -56,7 +55,6 @@ from astropy.utils.exceptions import AstropyWarning
 from euclid_tools.image_plotter import plot_images
 from euclid_tools.irsa_tools import retrieve_objects, retrieve_spectrum, retrieve_cutout, print_catalog_info
 from euclid_tools.shared import print_results, print_message
-from euclid_tools.spectrum_plotter import plot_spectrum
 
 warnings.simplefilter("ignore", category=AstropyWarning)
 
@@ -101,11 +99,31 @@ result = results[0]
 object_id = str(result["object_id"])
 
 # Retrieve the spectrum for the selected object
-table = retrieve_spectrum(object_id)
+data = retrieve_spectrum(object_id)
 
-if table and len(table) > 0:
-    # Plot the spectrum if data is available
-    plot_spectrum(table, ra, dec, plot_format="pdf")
+# Plot the spectrum if data is available
+if data and len(data) > 0:
+    # Mask bad values in the spectrum to improve comparison results
+    data = remove_bad_values(data, mask_func=lambda mask: (mask % 2 == 1) | (mask >= 64))
+
+    # Create a WaveFlux object for comparison
+    spectrum = WaveFlux(
+        label="Spectrum", wavelength=data["WAVELENGTH"], flux=data["FLUX"], uncertainty=data["ERROR"]
+    )
+
+    # Create object name for plotting
+    object_name = create_object_name(ra, dec, precision=2, shortform=False, prefix="J", decimal=False)
+
+    # Set up the SED object
+    sed = SED(object_name)
+    sed.add(spectrum)
+
+    # Convert to flux lambda and plot the spectrum
+    sed.to_flux_lambda()
+    sed.plot(
+        spec_uncertainty=True,
+        plot_format="pdf",
+    )
 
 # ------------------------------
 # Retrieve cutouts

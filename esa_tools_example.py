@@ -14,7 +14,6 @@ The steps in the script are as follows:
 
 Dependencies:
 - `euclid_tools.esa_tools` (for retrieving catalog objects, spectra, and image cutouts)
-- `euclid_tools.spectrum_plotter` (for spectrum plotting)
 - `euclid_tools.image_plotter` (for plotting images)
 - `euclid_tools.shared` (for utility functions like `print_results` or `print_message`)
 - `astropy` (for units and warnings handling)
@@ -111,8 +110,6 @@ if data and len(data) > 0:
     spectrum = WaveFlux(
         label="Spectrum", wavelength=data["WAVELENGTH"], flux=data["FLUX"], uncertainty=data["ERROR"]
     )
-
-    # spectrum.trim(1.21, 1.89)
 
     # Create object name for plotting
     object_name = create_object_name(ra, dec, precision=2, shortform=False, prefix="J", decimal=False)
