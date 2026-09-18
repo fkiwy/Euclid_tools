@@ -7,7 +7,7 @@ import astropy.units as u
 import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
-from astropy.table import Table, QTable, MaskedColumn
+from astropy.table import Table, QTable, MaskedColumn, Column
 from astroquery.esa.euclid import Euclid
 
 from euclid_tools.backends import resolve_radius
@@ -158,7 +158,7 @@ def retrieve_spectrum(object_id: str, save_spectrum: bool = False, output_dir: s
 
 def mask_bad_values(spectrum: QTable, mask_func: Callable[[np.ndarray], np.ndarray]) -> QTable:
     """
-    Mask bad values in the spectrum data based on the MASK column.
+    Remove bad values in the spectrum data based on the MASK column.
 
     Parameters
     ----------
@@ -172,29 +172,63 @@ def mask_bad_values(spectrum: QTable, mask_func: Callable[[np.ndarray], np.ndarr
     Returns
     -------
     QTable
-        A new table with masked values replaced by NaN. The MASK column is not included in the output.
-
-    Notes
-    -----
-    - The MASK column is used to identify bad values.
-    - The WAVELENGTH, FLUX, and ERROR columns are masked based on the provided mask function.
-    - The output table contains the same columns but with masked values replaced by NaN.
+        A new table with rows corresponding to bad MASK values removed. The MASK column is not included in
+        the output; only the WAVELENGTH, FLUX and ERROR columns are returned for the remaining good rows.
     """
 
     # Use the MASK column to create a boolean mask for values to ignore
     bad_mask = mask_func(spectrum["MASK"].value)
 
-    # Apply the mask to the spectrum data
-    wavelength = MaskedColumn(spectrum["WAVELENGTH"], mask=bad_mask)
-    flux = MaskedColumn(spectrum["FLUX"], mask=bad_mask)
-    error = MaskedColumn(spectrum["ERROR"], mask=bad_mask)
+    # Keep only rows that are not flagged as bad
+    good_mask = ~np.array(bad_mask, dtype=bool)
 
-    # Replace masked values by NaN
-    wavelength = wavelength.filled(np.nan)
-    flux = flux.filled(np.nan)
-    error = error.filled(np.nan)
+    # Also ensure wavelength and flux are finite for safety
+    try:
+        wl = spectrum["WAVELENGTH"].quantity if hasattr(spectrum["WAVELENGTH"], 'quantity') else spectrum["WAVELENGTH"]
+    except Exception:
+        wl = spectrum["WAVELENGTH"]
 
-    return QTable([wavelength, flux, error], names=("WAVELENGTH", "FLUX", "ERROR"))
+    # Build final mask: good and finite wavelength and flux
+    finite_mask = np.isfinite(np.array(wl))
+    combined_mask = good_mask & finite_mask
+
+    # Slice the original table to keep only good rows (slice the table to drop rows)
+    # Prefer explicit indexing to avoid returning MaskedColumns filled with NaN
+    indices = np.nonzero(combined_mask)[0]
+
+    # Extract wavelength preserving Quantity when available
+    col_wl = spectrum["WAVELENGTH"]
+    # Extract raw data and unit (if present on the column)
+    wl_unit = getattr(col_wl, 'unit', None)
+    wl_data = np.array(col_wl)[indices]
+
+    col_flux = spectrum["FLUX"]
+    fl_unit = getattr(col_flux, 'unit', None)
+    fl_data = np.array(col_flux)[indices]
+
+    col_err = spectrum["ERROR"]
+    err_unit = getattr(col_err, 'unit', None)
+    err_data = np.array(col_err)[indices]
+
+    # Construct columns explicitly to preserve units when present
+    from astropy.table import Column as _Column
+
+    if wl_unit is not None:
+        wl_col = _Column(data=wl_data, unit=wl_unit, name="WAVELENGTH")
+    else:
+        wl_col = _Column(data=wl_data, name="WAVELENGTH")
+
+    if fl_unit is not None:
+        fl_col = _Column(data=fl_data, unit=fl_unit, name="FLUX")
+    else:
+        fl_col = _Column(data=fl_data, name="FLUX")
+
+    if err_unit is not None:
+        err_col = _Column(data=err_data, unit=err_unit, name="ERROR")
+    else:
+        err_col = _Column(data=err_data, name="ERROR")
+
+    return QTable([wl_col, fl_col, err_col])
 
 
 def retrieve_cutout(ra: float, dec: float, search_radius: float = None, cutout_size: float = None, band: str = None, radius: float = None) -> fits.PrimaryHDU:
