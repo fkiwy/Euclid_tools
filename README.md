@@ -62,9 +62,8 @@ The toolset consists of several scripts and modules:
 - **`euclid_tools/esa_tools.py`**: Contains functions for interacting with the ESA archive.
 - **`euclid_tools/irsa_tools.py`**: Contains functions for interacting with the IRSA archive.
 - **`euclid_tools/image_plotter.py`**: Functions for plotting image cutouts.
-- **`euclid_tools/spectrum_plotter.py`**: Functions for plotting spectra.
 - **`euclid_tools/shared.py`**: Shared utility functions used across the toolset.
-- **`flux_comp/core.py`**: Core functions for spectrum comparison.
+- **`flux_comp/core.py`**: Core functions for spectrum comparison and plotting (SED, WaveFlux)
 
 ### 1. `retrieve_objects()`
 
@@ -135,26 +134,22 @@ H).
 
 - A FITS HDU containing the image cutout for the specified band.
 
-### 5. `plot_spectrum()`
+### 5. Plotting spectra (via flux_comp)
 
-Located in `euclid_tools/spectrum_plotter.py`.
+Plotting of spectra is provided by the `flux_comp` package. The toolkit uses `flux_comp.core.SED` and
+`flux_comp.core.WaveFlux` to build, convert, and render spectral plots. This approach centralizes comparison and
+visualization logic in `flux_comp` rather than a separate local plotting helper.
 
-This function generates a plot of the observed spectrum for a given object. The plot includes both the flux and error
-values, allowing users to visualize the spectrum and uncertainties.
+#### Typical workflow:
 
-#### Parameters:
-
-- `data`: The spectrum data (including wavelength, flux, and error).
-- `ra`: Right Ascension of the target object.
-- `dec`: Declination of the target object.
-- `output_dir`: Directory where the plot will be saved.
-- `open_plot`: Whether to open the plot file immediately after saving. Default is `False`. If set to `True`, the plot
-  will be opened using the default system viewer.
-- `plot_format`: The format of the plot (e.g., "pdf", "png").
+- Build a WaveFlux object: WaveFlux(label, wavelength, flux, uncertainty)
+- Create an SED and add the spectrum: sed = SED(name); sed.add(waveflux)
+- Convert units if needed: sed.to_flux_lambda()
+- Plot using sed.plot(...), with options such as spec_uncertainty and plot_format
 
 #### Output:
 
-- A saved plot of the spectrum.
+- A saved plot (format controlled by `plot_format`) and optionally an open viewer when supported.
 
 ### 6. `plot_images()`
 
@@ -197,12 +192,12 @@ To compare an observed spectrum to a template, the `flux_comp` package is used. 
 
 ### Example 1: Retrieving and Plotting a Spectrum
 
-This example demonstrates how to retrieve a spectrum for an object and plot it using the `plot_spectrum` function. The
-full example code can be found in `esa_tools_example.py`.
+This example demonstrates how to retrieve a spectrum for an object and plot it using `flux_comp` (SED/WaveFlux).
+The full example code can be found in `esa_tools_example.py`.
 
 ```python
 from euclid_tools.esa_tools import retrieve_objects, retrieve_spectrum
-from euclid_tools.spectrum_plotter import plot_spectrum
+from flux_comp.core import SED, WaveFlux
 
 # Define object coordinates
 # ra, dec = 58.1332495, -49.1830038
@@ -222,8 +217,12 @@ if results:
     # Retrieve spectrum data
     spectrum_data = retrieve_spectrum(object_id)
 
-    # Plot the spectrum
-    plot_spectrum(spectrum_data, ra, dec, output_dir=".", plot_format="pdf")
+    # Build a WaveFlux and SED and plot
+    wf = WaveFlux(label="Spectrum", wavelength=spectrum_data["WAVELENGTH"], flux=spectrum_data["FLUX"], uncertainty=spectrum_data["ERROR"])
+    sed = SED("Object")
+    sed.add(wf)
+    sed.to_flux_lambda()
+    sed.plot(spec_uncertainty=True, plot_format="pdf")
 else:
     print("No object found for the given coordinates and radius.")
 ```

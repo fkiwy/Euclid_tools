@@ -2,13 +2,13 @@
 Example: Using Euclid Tools for Object Retrieval, Spectrum Plotting, and Image Cutouts
 
 This example demonstrates how to use tools from `tools.esa_tools` to retrieve catalog objects,
-spectra, and image cutouts from the Euclid mission. It also shows how to plot the spectrum and
-the images in various bands.
+spectra, and image cutouts from the Euclid mission. It also shows how to plot the spectrum using `flux_comp`
+and the images in various bands.
 
 The steps in the script are as follows:
 1. Print catalog information.
 2. Retrieve catalog objects near specified coordinates.
-3. Retrieve and plot the spectrum for a selected object.
+3. Retrieve and plot the spectrum for a selected object (using flux_comp).
 4. Retrieve image cutouts in different bands (VIS, Y, J, H).
 5. Plot the retrieved images in a multi-band format.
 
@@ -28,7 +28,7 @@ Steps in the script:
 
 3. **Retrieve Spectrum:**
    - The script retrieves the spectrum for the selected object using the `retrieve_spectrum()` function.
-   - If a valid spectrum is retrieved, it will be plotted using the `plot_spectrum()` function.
+   - If a valid spectrum is retrieved, it will be plotted using `flux_comp` (SED/WaveFlux) via sed.plot().
 
 4. **Retrieve Cutouts:**
    - The script retrieves image cutouts from different bands (VIS, Y, J, H) with a specified cutout size, using the `retrieve_cutout()` function.
