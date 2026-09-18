@@ -126,6 +126,8 @@ if data and len(data) > 0:
     sed.to_flux_lambda()
     sed.plot(
         spec_uncertainty=True,
+        figure_size=(8, 5),
+        show_grid=True,
         plot_format="pdf",
     )
 

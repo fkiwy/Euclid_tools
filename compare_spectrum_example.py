@@ -121,7 +121,9 @@ if results:
             reference_on_top=False,
             spec_uncertainty=True,
             colors=["tab:blue", "tab:orange"],
-            plot_format="pdf",
+            figure_size=(8, 5),
+            show_grid=True,
+            plot_format="png",
         )
     else:
         print("No spectrum found for the given object ID")
