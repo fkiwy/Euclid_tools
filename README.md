@@ -62,12 +62,13 @@ The toolset consists of several scripts and modules:
 - **`euclid_tools/esa_tools.py`**: Contains functions for interacting with the ESA archive.
 - **`euclid_tools/irsa_tools.py`**: Contains functions for interacting with the IRSA archive.
 - **`euclid_tools/image_plotter.py`**: Functions for plotting image cutouts.
+- **`euclid_tools/backends.py`**: Backend factory and adapters (`get_backend`)
 - **`euclid_tools/shared.py`**: Shared utility functions used across the toolset.
 - **`flux_comp/core.py`**: Core functions for spectrum comparison and plotting (SED, WaveFlux)
 
 ### 1. `retrieve_objects()`
 
-Located in `euclid_tools/esa_tools.py` or `euclid_tools/irsa_tools.py` depending on which version is used.
+Access via `get_backend('esa')` or `get_backend('irsa')` — backends implement this method.
 
 This function allows users to retrieve catalog objects from the Euclid archive based on coordinates and a specified
 search radius.
@@ -84,7 +85,7 @@ search radius.
 
 ### 2. `retrieve_spectrum()`
 
-Located in `euclid_tools/esa_tools.py` or `euclid_tools/irsa_tools.py`.
+Access via `get_backend('esa')` or `get_backend('irsa')` — backends implement this method.
 
 This function retrieves the spectrum of a given object from the Euclid archive based on the object ID.
 
@@ -101,7 +102,7 @@ This function retrieves the spectrum of a given object from the Euclid archive b
 
 ### 3. `remove_bad_values()`
 
-Located in `euclid_tools/esa_tools.py` or `euclid_tools/irsa_tools.py`.
+Access via `get_backend('esa')` or `get_backend('irsa')` — backends implement this method (helper function is provided in `euclid_tools.shared`).
 
 This function mask bad values in the spectrum data based on the MASK column.
 
@@ -117,7 +118,7 @@ This function mask bad values in the spectrum data based on the MASK column.
 
 ### 4. `retrieve_cutout()`
 
-Located in `euclid_tools/esa_tools.py` or `euclid_tools/irsa_tools.py`.
+Access via `get_backend('esa')` or `get_backend('irsa')` — backends implement this method.
 
 This function retrieves an image cutout for a given region around the target object and specified band (e.g., VIS, Y, J,
 H).
@@ -134,7 +135,7 @@ H).
 
 - A FITS HDU containing the image cutout for the specified band.
 
-### 5. Plotting spectra (via flux_comp)
+### 5. Plotting spectra (`SED.plot()`)
 
 Plotting of spectra is provided by the `flux_comp` package. The toolkit uses `flux_comp.core.SED` and
 `flux_comp.core.WaveFlux` to build, convert, and render spectral plots. This approach centralizes comparison and
@@ -173,9 +174,7 @@ images can be combined into RGB composites.
 
 - A saved plot of the RGB images.
 
-### 6. Spectrum Comparison Using `flux_comp`
-
-Located in `flux_comp/core.py`.
+### 7. Comparing spectra to templates (`SED.compare()`)
 
 To compare an observed spectrum to a template, the `flux_comp` package is used. The script leverages the `SED` and
 `WaveFlux` classes for the comparison, employing metrics such as reduced chi-squared.
@@ -196,7 +195,7 @@ This example demonstrates how to retrieve a spectrum for an object and plot it u
 The full example code can be found in `esa_tools_example.py`.
 
 ```python
-from euclid_tools.esa_tools import retrieve_objects, retrieve_spectrum
+from euclid_tools.backends import get_backend
 from flux_comp.core import SED, WaveFlux
 
 # Define object coordinates
@@ -207,15 +206,16 @@ ra, dec = 266.4850113, 64.9936424
 # Search radius (arcsec)
 search_radius = 5
 
-# Retrieve object data from ESA
-results = retrieve_objects(ra, dec, search_radius)
+# Use backend factory and perform search
+backend = get_backend('esa')
+results = backend.retrieve_objects(ra, dec, search_radius=search_radius)
 
 if results:
     result = results[0]
     object_id = str(result["object_id"])
 
     # Retrieve spectrum data
-    spectrum_data = retrieve_spectrum(object_id)
+    spectrum_data = backend.retrieve_spectrum(object_id)
 
     # Build a WaveFlux and SED and plot
     wf = WaveFlux(label="Spectrum", wavelength=spectrum_data["WAVELENGTH"], flux=spectrum_data["FLUX"], uncertainty=spectrum_data["ERROR"])
@@ -237,7 +237,7 @@ This example shows how to retrieve image cutouts for a given object using differ
 `plot_images` function. The full example code can be found in `esa_tools_example.py`.
 
 ```python
-from euclid_tools.esa_tools import retrieve_cutout
+from euclid_tools.backends import get_backend
 from euclid_tools.image_plotter import plot_images
 
 # Define object coordinates and cutout size (arcsec)
@@ -246,12 +246,13 @@ from euclid_tools.image_plotter import plot_images
 ra, dec = 266.4850113, 64.9936424
 cutout_size = 20  # arcsec
 
-# Retrieve image cutouts for different bands
+# Retrieve image cutouts for different bands via backend
+backend = get_backend('esa')
 search_radius = 5  # arcsec
-vis_hdu = retrieve_cutout(ra, dec, search_radius, cutout_size, "VIS")
-y_hdu = retrieve_cutout(ra, dec, search_radius, cutout_size, "Y")
-j_hdu = retrieve_cutout(ra, dec, search_radius, cutout_size, "J")
-h_hdu = retrieve_cutout(ra, dec, search_radius, cutout_size, "H")
+vis_hdu = backend.retrieve_cutout(ra, dec, search_radius=search_radius, cutout_size=cutout_size, band="VIS")
+y_hdu = backend.retrieve_cutout(ra, dec, search_radius=search_radius, cutout_size=cutout_size, band="Y")
+j_hdu = backend.retrieve_cutout(ra, dec, search_radius=search_radius, cutout_size=cutout_size, band="J")
+h_hdu = backend.retrieve_cutout(ra, dec, search_radius=search_radius, cutout_size=cutout_size, band="H")
 
 # Prepare the images list for plotting
 images = [
@@ -277,10 +278,14 @@ and compare it to predefined templates using the `flux_comp` tool. The full exam
 
 ```python
 from flux_comp.core import SED, WaveFlux, TemplateProvider
-from euclid_tools.esa_tools import retrieve_spectrum, remove_bad_values
+from euclid_tools.backends import get_backend
+from euclid_tools.shared import remove_bad_values
+
+# use backend factory
+backend = get_backend('esa')
 
 # Retrieve spectrum for an object
-data = retrieve_spectrum(object_id)
+data = backend.retrieve_spectrum(object_id)
 
 # Remove bad values from the spectrum to improve comparison results
 data = remove_bad_values(data, mask_func=lambda mask: (mask % 2 == 1) | (mask >= 64))

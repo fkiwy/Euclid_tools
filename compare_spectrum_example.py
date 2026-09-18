@@ -50,8 +50,7 @@ import warnings
 from astropy.utils.exceptions import AstropyWarning
 
 from euclid_tools import get_backend
-from euclid_tools.esa_tools import remove_bad_values
-from euclid_tools.shared import create_object_name
+from euclid_tools.shared import create_object_name, remove_bad_values
 from flux_comp.core import SED, WaveFlux, TemplateProvider
 
 backend = get_backend('esa')
