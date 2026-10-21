@@ -43,6 +43,8 @@ def retrieve_objects(ra: float, dec: float, radius: float = None, search_radius:
     -----
     - Columns `tileid`, `x`, `y`, `z`, `spt_ind`, `htm20`, `cntr`are removed.
     - Adds VIS, Y, J, and H magnitudes using `add_magnitude`.
+    - Adds aperture AB/Vega magnitudes and errors with prefixes
+      `VIS_4fwhm_aper`, `Y_2fwhm_aper`, `J_2fwhm_aper`, and `H_2fwhm_aper`.
     - Results are sorted by angular separation in arcseconds.
     """
 
@@ -60,6 +62,10 @@ def retrieve_objects(ra: float, dec: float, radius: float = None, search_radius:
     add_magnitude(table, table["flux_y_templfit"], table["fluxerr_y_templfit"], "Y")
     add_magnitude(table, table["flux_j_templfit"], table["fluxerr_j_templfit"], "J")
     add_magnitude(table, table["flux_h_templfit"], table["fluxerr_h_templfit"], "H")
+
+    for band, aperture in (("VIS", "4fwhm_aper"), ("Y", "2fwhm_aper"), ("J", "2fwhm_aper"), ("H", "2fwhm_aper")):
+        flux_column = f"{band.lower()}_{aperture}"
+        add_magnitude(table, table[f"flux_{flux_column}"], table[f"fluxerr_{flux_column}"], band, suffix=f"_{aperture}")
 
     # Create a SkyCoord object for the target
     target_coord = SkyCoord(ra, dec, unit=(u.deg, u.deg), frame="icrs")

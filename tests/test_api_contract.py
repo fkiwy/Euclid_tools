@@ -38,7 +38,7 @@ class ApiContractTests(unittest.TestCase):
             names=("WAVELENGTH", "FLUX", "ERROR", "MASK"),
         )
 
-        normalized = normalize_spectrum_table(table, include_mask=True)
+        normalized = normalize_spectrum_table(table)
         self.assertEqual(list(normalized.colnames), ["WAVELENGTH", "FLUX", "ERROR", "MASK"])
         self.assertEqual(normalized["MASK"][1], 64)
         self.assertEqual(float(normalized["FLUX"][1].value), 20.0)
@@ -75,7 +75,7 @@ class ApiContractTests(unittest.TestCase):
             names=("WAVELENGTH", "FLUX", "ERROR", "MASK"),
         )
 
-        normalized = normalize_spectrum_table(table, include_mask=True)
+        normalized = normalize_spectrum_table(table)
         self.assertEqual(normalized["MASK"][1], 0)
         self.assertEqual(normalized["WAVELENGTH"].unit, u.micron)
 

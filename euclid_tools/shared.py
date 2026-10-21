@@ -81,7 +81,7 @@ def create_object_name(ra, dec, precision=0, sep="", prefix=None, shortform=Fals
     return str(object_name)
 
 
-def add_magnitude(table, flux, flux_err, band):
+def add_magnitude(table, flux, flux_err, band, suffix=""):
     """
     Add AB and Vega magnitudes and errors to a table based on flux values.
 
@@ -95,6 +95,8 @@ def add_magnitude(table, flux, flux_err, band):
         Flux uncertainties in microJanskys (µJy).
     band : str
         Photometric band name (e.g., 'VIS', 'Y', 'J', 'H').
+    suffix : str, optional
+        Measurement suffix appended to the band in output column names.
 
     Notes
     -----
@@ -103,17 +105,18 @@ def add_magnitude(table, flux, flux_err, band):
     - '<band>_Vega_mag', '<band>_Vega_err'
     """
 
-    table[band + "_AB_mag"], table[band + "_AB_err"] = convert_flux_to_mag(
+    column_prefix = band + suffix
+    table[column_prefix + "_AB_mag"], table[column_prefix + "_AB_err"] = convert_flux_to_mag(
         flux, flux_err, magnitude_system=MagnitudeSystem.AB
     )
-    table[band + "_AB_mag"].unit = u.mag
-    table[band + "_AB_err"].unit = u.mag
+    table[column_prefix + "_AB_mag"].unit = u.mag
+    table[column_prefix + "_AB_err"].unit = u.mag
 
-    table[band + "_Vega_mag"], table[band + "_Vega_err"] = convert_flux_to_mag(
+    table[column_prefix + "_Vega_mag"], table[column_prefix + "_Vega_err"] = convert_flux_to_mag(
         flux, flux_err, magnitude_system=MagnitudeSystem.Vega, band=band
     )
-    table[band + "_Vega_mag"].unit = u.mag
-    table[band + "_Vega_err"].unit = u.mag
+    table[column_prefix + "_Vega_mag"].unit = u.mag
+    table[column_prefix + "_Vega_err"].unit = u.mag
 
 
 def convert_flux_to_mag(flux, flux_err, magnitude_system, band=None):

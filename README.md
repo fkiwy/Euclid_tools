@@ -35,6 +35,8 @@ This toolkit provides the following core functionality:
 > calculates magnitudes with uncertainties from the available flux columns using appropriate zero-points. Magnitudes are
 > computed in both **AB** and **Vega** systems, and added directly to the result table returned by `retrieve_objects()`.
 > VIS magnitude is derived from `flux_vis_psf` and Y, J, H magnitudes from `flux_[band]_templfit`.
+> Both ESA and IRSA also return aperture magnitudes and uncertainties from the VIS 4 FWHM and Y, J, H 2 FWHM
+> aperture fluxes, as detailed below.
 
 - **Spectrum Retrieval and Visualization**
     - Retrieve NISP spectra (slitless grism) for individual sources.
@@ -82,6 +84,22 @@ search radius.
 #### Returns:
 
 - An Astropy Table containing objects that are found within the specified search radius.
+
+Both ESA and IRSA include AB and Vega magnitudes and their propagated uncertainties. Existing PSF (VIS) and
+template-fit (Y, J, H) columns retain names such as `VIS_AB_mag`, `VIS_AB_err`, `Y_Vega_mag`, and `Y_Vega_err`.
+Additional aperture measurements use these input columns and output prefixes:
+
+| Flux column | Flux uncertainty column | Output prefix |
+| --- | --- | --- |
+| `flux_vis_4fwhm_aper` | `fluxerr_vis_4fwhm_aper` | `VIS_4fwhm_aper` |
+| `flux_y_2fwhm_aper` | `fluxerr_y_2fwhm_aper` | `Y_2fwhm_aper` |
+| `flux_j_2fwhm_aper` | `fluxerr_j_2fwhm_aper` | `J_2fwhm_aper` |
+| `flux_h_2fwhm_aper` | `fluxerr_h_2fwhm_aper` | `H_2fwhm_aper` |
+
+Each prefix has four output columns: `<prefix>_AB_mag`, `<prefix>_AB_err`, `<prefix>_Vega_mag`, and
+`<prefix>_Vega_err`. For example, the VIS aperture AB magnitude and uncertainty are `VIS_4fwhm_aper_AB_mag`
+and `VIS_4fwhm_aper_AB_err`. All magnitude and uncertainty columns have units of `mag` and are rounded to
+three decimal places.
 
 ### 2. `retrieve_spectrum()`
 
