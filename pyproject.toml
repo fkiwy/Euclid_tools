@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "Euclid_tools"
-version = "0.1.0"
+version = "0.2.0"
 description = "Package for Euclid Q1 spectra, catalog queries, and image cutouts."
 readme = "README.md"
 requires-python = ">=3.10"
