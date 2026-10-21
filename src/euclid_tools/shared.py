@@ -171,6 +171,7 @@ def print_results(results):
     Only selected columns are printed, covering:
     - Object ID and coordinates
     - AB and Vega magnitudes and errors for VIS, Y, J, H bands
+    - Aperture AB and Vega magnitudes and errors (VIS 4 FWHM; Y, J, H 2 FWHM)
     - Separation (if present)
     """
 
@@ -182,18 +183,34 @@ def print_results(results):
         "VIS_AB_err",
         "VIS_Vega_mag",
         "VIS_Vega_err",
+        "VIS_4fwhm_aper_AB_mag",
+        "VIS_4fwhm_aper_AB_err",
+        "VIS_4fwhm_aper_Vega_mag",
+        "VIS_4fwhm_aper_Vega_err",
         "Y_AB_mag",
         "Y_AB_err",
         "Y_Vega_mag",
         "Y_Vega_err",
+        "Y_2fwhm_aper_AB_mag",
+        "Y_2fwhm_aper_AB_err",
+        "Y_2fwhm_aper_Vega_mag",
+        "Y_2fwhm_aper_Vega_err",
         "J_AB_mag",
         "J_AB_err",
         "J_Vega_mag",
         "J_Vega_err",
+        "J_2fwhm_aper_AB_mag",
+        "J_2fwhm_aper_AB_err",
+        "J_2fwhm_aper_Vega_mag",
+        "J_2fwhm_aper_Vega_err",
         "H_AB_mag",
         "H_AB_err",
         "H_Vega_mag",
         "H_Vega_err",
+        "H_2fwhm_aper_AB_mag",
+        "H_2fwhm_aper_AB_err",
+        "H_2fwhm_aper_Vega_mag",
+        "H_2fwhm_aper_Vega_err",
         "separation",
     ]
     table.pprint_all()
