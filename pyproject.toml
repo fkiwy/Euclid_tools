@@ -1,3 +1,48 @@
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "Euclid_tools"
+version = "0.1.0"
+description = "Package for Euclid Q1 spectra, catalog queries, and image cutouts."
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [{name = "Frank Kiwy", email = "frank.kiwy@outlook.com"}]
+dependencies = [
+    "aiohttp",
+    "astropy",
+    "astroquery",
+    "beautifulsoup4",
+    "matplotlib",
+    "numpy",
+    "requests",
+    "reproject",
+    "scipy",
+    "Pillow",
+    "pyvo",
+]
+
+[project.urls]
+Homepage = "https://github.com/fkiwy/Euclid_tools"
+
+[project.optional-dependencies]
+dev = ["build", "pytest"]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+include-package-data = false
+zip-safe = false
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["euclid_tools*", "flux_comp*"]
+namespaces = false
+
+[tool.setuptools.package-data]
+flux_comp = ["templates/*/*.fits", "templates/*/*.txt"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

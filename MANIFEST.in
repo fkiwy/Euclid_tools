@@ -1,3 +1,5 @@
-include flux_comp/templates/Burgasser+2017/*.fits
-include flux_comp/templates/Kesseli+2017/*.fits
-include flux_comp/templates/Theissen+2022/*.fits
+include LICENSE
+recursive-include src/flux_comp/templates *.fits *.txt
+recursive-include tests *.py
+include euclid_tools/__init__.py flux_comp/__init__.py
+include *_example.py

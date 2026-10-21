@@ -56,17 +56,23 @@ This toolkit provides the following core functionality:
 
 ### Folder Structure:
 
+Implementation code lives in `src/`, tests in `tests/`, and package metadata and
+dependencies in `pyproject.toml`. The root-level `euclid_tools/` and `flux_comp/`
+directories are compatibility loaders for users importing directly from a clone;
+they are not included in installed distributions. Both public package names and
+their existing APIs are preserved.
+
 The toolset consists of several scripts and modules:
 
 - **`compare_spectrum_example.py`**: Example script to compare a spectrum with template SEDs.
 - **`esa_tools_example.py`**: Example script for retrieving and plotting data from the ESA archive.
 - **`irsa_tools_example.py`**: Example script for retrieving and plotting data from the IRSA archive.
-- **`euclid_tools/esa_tools.py`**: Contains functions for interacting with the ESA archive.
-- **`euclid_tools/irsa_tools.py`**: Contains functions for interacting with the IRSA archive.
-- **`euclid_tools/image_plotter.py`**: Functions for plotting image cutouts.
-- **`euclid_tools/backends.py`**: Backend factory and adapters (`get_backend`)
-- **`euclid_tools/shared.py`**: Shared utility functions used across the toolset.
-- **`flux_comp/core.py`**: Core functions for spectrum comparison and plotting (SED, WaveFlux)
+- **`src/euclid_tools/esa_tools.py`**: Contains functions for interacting with the ESA archive.
+- **`src/euclid_tools/irsa_tools.py`**: Contains functions for interacting with the IRSA archive.
+- **`src/euclid_tools/image_plotter.py`**: Functions for plotting image cutouts.
+- **`src/euclid_tools/backends.py`**: Backend factory and adapters (`get_backend`)
+- **`src/euclid_tools/shared.py`**: Shared utility functions used across the toolset.
+- **`src/flux_comp/core.py`**: Core functions for spectrum comparison and plotting (SED, WaveFlux)
 
 ### 1. `retrieve_objects()`
 
@@ -334,13 +340,33 @@ sed.plot(reference_on_top=False, spec_uncertainty=True)
 
 ## Installation
 
-To install the Euclid Tools package, clone the repository and install the dependencies:
+Requires Python 3.10 or newer. Clone the repository and install the package
+(dependencies and bundled spectral templates are included automatically):
 
 ```bash
 git clone https://github.com/fkiwy/Euclid_tools.git
 cd Euclid_tools
-pip install .
+python -m pip install .
 ```
+
+For development, use an editable installation:
+
+```bash
+python -m pip install -e ".[dev]"
+python -m pytest
+python -m build
+```
+
+Existing imports such as `from euclid_tools.backends import get_backend`,
+`from euclid_tools import esa_tools`, and `from flux_comp.core import SED` keep
+working. Users running scripts from a repository checkout can continue doing so
+with the compatibility loaders, provided dependencies are already installed.
+The example scripts retain their original filenames and locations. New code
+should use an installation (regular or editable); no `sys.path` changes are needed.
+
+The root `setup.py` remains as a compatibility entry point for older tooling;
+`pyproject.toml` is the single source of packaging metadata. Spectral templates
+remain alongside `flux_comp` in wheels and source distributions.
 
 ## Citation
 
