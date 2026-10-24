@@ -51,12 +51,12 @@ import sys
 import warnings
 
 from astropy.utils.exceptions import AstropyWarning
-
-from euclid_tools import get_backend
 from euclid_tools.image_plotter import plot_images
 from euclid_tools.irsa_tools import print_catalog_info
 from euclid_tools.shared import print_results, print_message, create_object_name
 from flux_comp.core import SED, WaveFlux
+
+from euclid_tools import get_backend
 
 backend = get_backend('irsa')
 
@@ -95,12 +95,21 @@ if not results:
 print_results(results)
 
 # ------------------------------
-# Retrieve spectrum
+# Retrieve object by ID
 # ------------------------------
 
-# Select the first object from the results
+# Select the first object from the cone search results
 result = results[0]
 object_id = str(result["object_id"])
+
+# Retrieve the catalog entry for the selected object
+object_by_id = backend.retrieve_object_by_id(object_id)
+if object_by_id is not None:
+    print_results(object_by_id)
+
+# ------------------------------
+# Retrieve spectrum
+# ------------------------------
 
 # Retrieve the spectrum for the selected object
 data = backend.retrieve_spectrum(object_id)

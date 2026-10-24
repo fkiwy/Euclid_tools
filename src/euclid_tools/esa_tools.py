@@ -64,6 +64,39 @@ def retrieve_objects(ra: float, dec: float, radius: float = None, search_radius:
     if len(table) == 0:
         return None
 
+    table = _prepare_catalog_table(table)
+
+    table.rename_column("dist", "separation")
+
+    separation = (table["separation"] * u.deg).to(u.arcsec)
+    table["separation"] = np.round(separation, 3)
+
+    table.sort("separation")
+
+    return table
+
+
+def retrieve_object_by_id(object_id: str) -> Table:
+    """Retrieve a Euclid Q1 MER object by its numeric ``object_id``.
+
+    Returns an Astropy Table with the same catalog columns and AB/Vega
+    magnitudes as :func:`retrieve_objects`, without a separation column.
+    Returns ``None`` if no matching object is found. Invalid IDs raise
+    ``ValueError`` before querying the archive.
+    """
+    object_id = str(object_id)
+    if not object_id or not object_id.isascii() or not object_id.isdecimal():
+        raise ValueError("object_id must contain only decimal digits")
+
+    query = f"SELECT * FROM catalogue.mer_catalogue WHERE object_id = {object_id}"
+    table = Euclid.launch_job(query).get_results()
+    if len(table) == 0:
+        return None
+    return _prepare_catalog_table(table)
+
+
+def _prepare_catalog_table(table: Table) -> Table:
+    """Apply the catalog formatting shared by cone searches and ID lookups."""
     table.remove_columns(COLUMNS_TO_REMOVE)
 
     add_magnitude(table, table["flux_vis_psf"], table["fluxerr_vis_psf"], "VIS")
@@ -77,12 +110,6 @@ def retrieve_objects(ra: float, dec: float, radius: float = None, search_radius:
 
     table.rename_column("right_ascension", "ra")
     table.rename_column("declination", "dec")
-    table.rename_column("dist", "separation")
-
-    separation = (table["separation"] * u.deg).to(u.arcsec)
-    table["separation"] = np.round(separation, 3)
-
-    table.sort("separation")
 
     return table
 

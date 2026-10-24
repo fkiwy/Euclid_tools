@@ -175,7 +175,7 @@ def print_results(results):
     - Separation (if present)
     """
 
-    table = results[
+    columns = [
         "object_id",
         "ra",
         "dec",
@@ -211,8 +211,11 @@ def print_results(results):
         "H_2fwhm_aper_AB_err",
         "H_2fwhm_aper_Vega_mag",
         "H_2fwhm_aper_Vega_err",
-        "separation",
     ]
+    if "separation" in results.colnames:
+        columns.append("separation")
+
+    table = results[columns]
     table.pprint_all()
 
 

@@ -74,6 +74,24 @@ The toolset consists of several scripts and modules:
 - **`src/euclid_tools/shared.py`**: Shared utility functions used across the toolset.
 - **`src/flux_comp/core.py`**: Core functions for spectrum comparison and plotting (SED, WaveFlux)
 
+### Retrieve an object by ID
+
+Both `esa_tools` and `irsa_tools`, as well as `get_backend("esa")` and
+`get_backend("irsa")`, provide `retrieve_object_by_id(object_id)`:
+
+```python
+from euclid_tools import esa_tools
+
+result = esa_tools.retrieve_object_by_id("123456789")
+if result is not None:
+    print(result[0])
+```
+
+Pass the numeric MER `object_id` as a string. The result is an Astropy Table
+with the same catalog formatting and added magnitudes as `retrieve_objects()`,
+without `separation`. A missing object returns `None`; an invalid ID raises
+`ValueError`.
+
 ### 1. `retrieve_objects()`
 
 Access via `get_backend('esa')` or `get_backend('irsa')` — backends implement this method.
