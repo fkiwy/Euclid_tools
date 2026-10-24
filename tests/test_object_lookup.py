@@ -45,9 +45,24 @@ class ObjectLookupTests(unittest.TestCase):
                 with patch.object(client, method, return_value=response):
                     self.assertIsNone(module.retrieve_object_by_id("123"))
 
+    def test_negative_ids_are_preserved_in_queries(self):
+        for name, module, client, method, result_method, catalog in (
+            ("esa", esa_tools, esa_tools.Euclid, "launch_job", "get_results", "catalogue.mer_catalogue"),
+            ("irsa", irsa_tools, irsa_tools.Irsa, "query_tap", "to_table", irsa_tools.TABLE_MER),
+        ):
+            with self.subTest(archive=name):
+                response = Mock()
+                catalog_table = self.catalog_table(module)
+                catalog_table["object_id"] = [-123]
+                getattr(response, result_method).return_value = catalog_table
+                with patch.object(client, method, return_value=response) as query:
+                    table = get_backend(name).retrieve_object_by_id("-123")
+                query.assert_called_once_with(f"SELECT * FROM {catalog} WHERE object_id = -123")
+                self.assertEqual(table["object_id"][0], -123)
+
     def test_invalid_ids_are_rejected_before_querying(self):
         for module in (esa_tools, irsa_tools):
-            for object_id in ("", "1 OR 1=1", "1.0", "-1", "???", None):
+            for object_id in ("", "1 OR 1=1", "1.0", "-", "--1", "1-2", "-1 OR 1=1", "???", None):
                 with self.subTest(module=module.__name__, object_id=object_id):
                     with self.assertRaises(ValueError):
                         module.retrieve_object_by_id(object_id)

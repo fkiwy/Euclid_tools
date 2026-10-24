@@ -85,8 +85,9 @@ def retrieve_object_by_id(object_id: str) -> Table:
     ``ValueError`` before querying the archive.
     """
     object_id = str(object_id)
-    if not object_id or not object_id.isascii() or not object_id.isdecimal():
-        raise ValueError("object_id must contain only decimal digits")
+    digits = object_id[1:] if object_id.startswith("-") else object_id
+    if not digits or not digits.isascii() or not digits.isdecimal():
+        raise ValueError("object_id must contain decimal digits with an optional leading minus sign")
 
     query = f"SELECT * FROM catalogue.mer_catalogue WHERE object_id = {object_id}"
     table = Euclid.launch_job(query).get_results()

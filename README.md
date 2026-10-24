@@ -87,7 +87,7 @@ if result is not None:
     print(result[0])
 ```
 
-Pass the numeric MER `object_id` as a string. The result is an Astropy Table
+Pass the numeric MER `object_id` as a string, optionally with a leading minus sign. The result is an Astropy Table
 with the same catalog formatting and added magnitudes as `retrieve_objects()`,
 without `separation`. A missing object returns `None`; an invalid ID raises
 `ValueError`.
