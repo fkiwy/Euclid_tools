@@ -2,28 +2,81 @@
 
 [![astropy](https://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat)](https://www.astropy.org/)
 
-A collection of tools to work with spectral and imaging data from the **ESA Euclid mission**, specifically tailored to
-handle data from the **Euclid Quick Release 1 (Q1)**. This package supports the retrieval, visualization, and comparison
-of Euclid spectra, as well as the retrieval and visualization of image cutouts.
+Python tools for retrieving, visualizing, and comparing spectra and image cutouts
+from the **Euclid Quick Release 1 (Q1)**. Query the MER catalog through ESA or
+IRSA, plot NISP spectra and VIS/Y/J/H images, and compare spectra with bundled
+template libraries.
 
-The archive-facing API is intentionally backend-agnostic: both the ESA and IRSA implementations share the same public
-contract, with `radius` and `search_radius` accepted as equivalent aliases for search size. This keeps code portable
-across archive backends while preserving the underlying data access implementation details.
+## Contents
 
-The toolkit is written in Python and is designed to be lightweight, modular, and extensible. It includes high-level
-convenience functions for accessing and processing data, making it suitable for both exploratory data analysis and more
-in-depth scientific research.
+- [Installation](#installation)
+- [Quick start](#quick-start)
+- [Functionality overview](#functionality-overview)
+- [API guide](#api-guide)
+- [Examples](#examples)
+- [Development](#development)
+- [Troubleshooting](#troubleshooting)
+- [Citation](#citation)
 
-> **Note:** The tools are designed to support both **ESA** and **IRSA** data access. While functionality is similar
-> between the two, **ESA services are significantly faster** and are preferred for most use cases.
+## Installation
 
-The tools allow users to:
+Requires **Python 3.10 or newer**. From a terminal:
 
-- Retrieve catalog objects, spectra, and image cutouts.
-- Visualize spectra and images (RGB composites).
-- Compare observed spectra to predefined templates.
+```bash
+git clone https://github.com/fkiwy/Euclid_tools.git
+cd Euclid_tools
+python -m venv .venv
+```
 
-## Functionality Overview
+Activate the virtual environment:
+
+```bash
+# Linux / macOS
+source .venv/bin/activate
+
+# Windows PowerShell
+.venv\Scripts\Activate.ps1
+```
+
+Install the package, its dependencies, and bundled spectral templates:
+
+```bash
+python -m pip install .
+```
+
+Archive queries and data downloads require Internet access to the selected
+archive. Local spectrum processing, plotting, and bundled template loading can
+be used without an archive connection.
+
+## Quick start
+
+Search around a sky position, with coordinates in **degrees** and the search
+radius in **arcseconds**:
+
+```python
+from euclid_tools.backends import get_backend
+
+backend = get_backend("esa")  # Use "irsa" to query IRSA instead.
+objects = backend.retrieve_objects(
+    ra=266.4850113, dec=64.9936424, search_radius=5
+)
+if objects is not None and len(objects) > 0:
+    print(objects)
+    object_id = str(objects[0]["object_id"])
+    spectrum = backend.retrieve_spectrum(object_id)
+    if spectrum is not None:
+        print(spectrum)
+else:
+    print("No objects found in this search region.")
+```
+
+Both backends expose the same core methods. `radius` and `search_radius` are
+aliases: supply either one; if both are provided, their values must agree.
+Backend-specific options can differ (for example, ESA supports a catalog row
+`limit`). ESA is the recommended starting backend; response times depend on the
+archive and request.
+
+## Functionality overview
 
 This toolkit provides the following core functionality:
 
@@ -52,9 +105,9 @@ This toolkit provides the following core functionality:
     - Automatically evaluate fits using reduced χ² or other metrics.
     - Generate labeled and customizable comparison plots.
 
-## Detailed Description
+## API guide
 
-### Folder Structure:
+### Repository layout
 
 Implementation code lives in `src/`, tests in `tests/`, and package metadata and
 dependencies in `pyproject.toml`. The root-level `euclid_tools/` and `flux_comp/`
@@ -101,13 +154,14 @@ search radius.
 
 #### Parameters:
 
-- `ra`: Right Ascension of the target object.
-- `dec`: Declination of the target object.
+- `ra`: Right Ascension of the target object, in degrees.
+- `dec`: Declination of the target object, in degrees.
 - `search_radius`: Radius (in arcseconds) around the target to search for objects.
 
 #### Returns:
 
-- An Astropy Table containing objects that are found within the specified search radius.
+- An Astropy Table containing objects within the search radius, or `None`
+  when no objects are found.
 
 Both ESA and IRSA include AB and Vega magnitudes and their propagated uncertainties. Existing PSF (VIS) and
 template-fit (Y, J, H) columns retain names such as `VIS_AB_mag`, `VIS_AB_err`, `Y_Vega_mag`, and `Y_Vega_err`.
@@ -145,10 +199,10 @@ This function retrieves the spectrum of a given object from the Euclid archive b
 
 ### 3. `remove_bad_values()`
 
-Access via `get_backend('esa')` or `get_backend('irsa')` — backends implement this method (helper function is provided
-in `euclid_tools.shared`).
+Import this helper directly with `from euclid_tools.shared import remove_bad_values`.
 
-This function mask bad values in the spectrum data based on the MASK column.
+This function removes rows flagged by your predicate on the `MASK` column,
+and rows whose wavelength is not finite. It preserves the units of the retained data.
 
 #### Parameters:
 
@@ -158,7 +212,11 @@ This function mask bad values in the spectrum data based on the MASK column.
 
 #### Returns:
 
-- The modified spectrum data table with masked values replaced by NaN.
+- A new Astropy `QTable` containing only retained rows and the columns
+  `WAVELENGTH`, `FLUX`, and `ERROR`. The `MASK` column is not retained.
+
+The predicate must return `True` for rows to discard. The example predicate is
+a choice of quality filter, not a universal recommendation for every analysis.
 
 ### 4. `retrieve_cutout()`
 
@@ -169,8 +227,8 @@ H).
 
 #### Parameters:
 
-- `ra`: Right Ascension of the target object.
-- `dec`: Declination of the target object.
+- `ra`: Right Ascension of the target object, in degrees.
+- `dec`: Declination of the target object, in degrees.
 - `search_radius`: Radius (in arcseconds) to define the region of interest.
 - `cutout_size`: Size (in arcseconds) of the cutout.
 - `band`: The band (e.g., "VIS", "Y", "J", "H") to retrieve.
@@ -205,8 +263,8 @@ images can be combined into RGB composites.
 
 #### Parameters:
 
-- `ra`: Right Ascension of the target object.
-- `dec`: Declination of the target object.
+- `ra`: Right Ascension of the target object, in degrees.
+- `dec`: Declination of the target object, in degrees.
 - `images`: A list of dictionaries containing image data for each band.
 - `img_size`: The size of the image cutout (in arcseconds).
 - `image_contrast`: Contrast level to adjust the image brightness.
@@ -231,7 +289,7 @@ To compare an observed spectrum to a template, the `flux_comp` package is used. 
 4. Compare the spectrum to the templates using the reduced chi-squared metric.
 5. Plot the comparison.
 
-## Example Usages
+## Examples
 
 ### Example 1: Retrieving and Plotting a Spectrum
 
@@ -254,12 +312,15 @@ search_radius = 5
 backend = get_backend('esa')
 results = backend.retrieve_objects(ra, dec, search_radius=search_radius)
 
-if results:
+if results is not None and len(results) > 0:
     result = results[0]
     object_id = str(result["object_id"])
 
     # Retrieve spectrum data
     spectrum_data = backend.retrieve_spectrum(object_id)
+
+    if spectrum_data is None:
+        raise RuntimeError("No spectrum is available for this object.")
 
     # Build a WaveFlux and SED and plot
     wf = WaveFlux(label="Spectrum", wavelength=spectrum_data["WAVELENGTH"], flux=spectrum_data["FLUX"],
@@ -267,7 +328,7 @@ if results:
     sed = SED("Object")
     sed.add(wf)
     sed.to_flux_lambda()
-    sed.plot(spec_uncertainty=True, plot_format="pdf")
+    sed.plot(spec_uncertainty=True, plot_format="pdf", open_plot=False, output_dir=".")
 else:
     print("No object found for the given coordinates and radius.")
 ```
@@ -308,7 +369,10 @@ images = [
 ]
 
 # Plot the images in a single figure
-plot_images(ra, dec, images, cutout_size, plot_format="pdf")
+if any(image["hdu"] is None for image in images):
+    raise RuntimeError("One or more requested cutouts are unavailable.")
+
+plot_images(ra, dec, images, cutout_size, plot_format="pdf", open_plot=False, output_dir=".")
 ```
 
 ![Images1](example_plots/J035231.98-491058.81_images.png)
@@ -329,8 +393,14 @@ from euclid_tools.shared import remove_bad_values
 # use backend factory
 backend = get_backend('esa')
 
-# Retrieve spectrum for an object
+# Find an object and retrieve its spectrum.
+objects = backend.retrieve_objects(266.4850113, 64.9936424, search_radius=5)
+if objects is None or len(objects) == 0:
+    raise RuntimeError("No objects found in this search region.")
+object_id = str(objects[0]["object_id"])
 data = backend.retrieve_spectrum(object_id)
+if data is None:
+    raise RuntimeError("No spectrum is available for this object.")
 
 # Remove bad values from the spectrum to improve comparison results
 data = remove_bad_values(data, mask_func=lambda mask: (mask % 2 == 1) | (mask >= 64))
@@ -342,38 +412,35 @@ templates = provider.get_Theissen_2022_templates(smooth_window=10)
 
 # Create a WaveFlux object
 spectrum = WaveFlux(
-    label="Spectrum", wavelength=data["WAVELENGTH"].filled(np.nan), flux=data["FLUX"], uncertainty=data["ERROR"]
+    label="Spectrum", wavelength=data["WAVELENGTH"], flux=data["FLUX"], uncertainty=data["ERROR"]
 )
 
 # Compare the spectrum to the templates
 sed = SED("Object vs. " + template_name)
 sed.compare(spectrum, templates, trim_wave=True, metric="reduced-chi2")
 sed.to_flux_lambda()
-sed.plot(reference_on_top=False, spec_uncertainty=True)
+sed.plot(reference_on_top=False, spec_uncertainty=True, open_plot=False, output_dir=".")
 ```
 
 ![Comparison1](example_plots/J035231.98-491058.81_vs._Theissen+2022.png)
 ![Comparison2](example_plots/J035909.93-474057.42_vs._Theissen+2022.png)
 ![Comparison3](example_plots/J174556.40+645937.11_vs._Theissen+2022.png)
 
-## Installation
+## Development
 
-Requires Python 3.10 or newer. Clone the repository and install the package
-(dependencies and bundled spectral templates are included automatically):
-
-```bash
-git clone https://github.com/fkiwy/Euclid_tools.git
-cd Euclid_tools
-python -m pip install .
-```
-
-For development, use an editable installation:
+From the repository root, with your virtual environment activated:
 
 ```bash
 python -m pip install -e ".[dev]"
 python -m pytest
 python -m build
 ```
+
+The editable installation uses your working source files directly. The test suite
+checks the backend API, object-ID queries with mocked archive responses, and
+import compatibility; it does not establish live archive availability. The build
+command creates a wheel and source distribution in `dist/`, including spectral
+templates.
 
 Existing imports such as `from euclid_tools.backends import get_backend`,
 `from euclid_tools import esa_tools`, and `from flux_comp.core import SED` keep
@@ -385,6 +452,20 @@ should use an installation (regular or editable); no `sys.path` changes are need
 The root `setup.py` remains as a compatibility entry point for older tooling;
 `pyproject.toml` is the single source of packaging metadata. Spectral templates
 remain alongside `flux_comp` in wheels and source distributions.
+
+## Troubleshooting
+
+- **No catalog match or spectrum:** check for `None` before indexing a result.
+  A catalog match does not guarantee an available spectrum or image cutout.
+- **Archive connection failures:** check connectivity to ESA or IRSA and any
+  proxy or firewall restrictions. An unavailable service is different from a
+  successful query with no matching rows.
+- **Plotting on a server or cloud workspace:** use `MPLBACKEND=Agg` and pass
+  `open_plot=False` to plotting functions. Set `output_dir` explicitly; the
+  default is the system temporary directory. The examples above save to the
+  current directory. Missing Arial fonts may fall back to an installed font.
+- **Import errors:** activate the environment used for installation and run
+  `python -m pip check` to check dependency consistency.
 
 ## Citation
 
