@@ -1,3 +1,6 @@
+> DR1-Foundation: ESA catalog helpers now accept `release="dr1"`; Q1 remains the default.
+> See [supported fields, validation and product limitations](docs/DR1_FOUNDATION.md).
+
 # Euclid Tools
 
 [![astropy](https://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat)](https://www.astropy.org/)

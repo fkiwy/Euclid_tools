@@ -10,14 +10,19 @@ from astropy.table import Table, QTable
 from astroquery.esa.euclid import Euclid
 
 from euclid_tools.backends import resolve_radius
-from euclid_tools.shared import add_magnitude, normalize_spectrum_table
+from euclid_tools.shared import add_magnitude, normalize_spectrum_table, convert_flux_to_mag, MagnitudeSystem
+from euclid_tools.releases import catalog_table, normalize_release, require_product_support
 
 COLUMNS_TO_REMOVE = ["basic_download_data_oid", "to_be_published"]
 
 
-def retrieve_objects(ra: float, dec: float, radius: float = None, search_radius: float = None, limit: int = -1) -> Table:
+def retrieve_objects(ra: float, dec: float, radius: float = None, search_radius: float = None, limit: int = -1, *, release: str = "q1", client=None) -> Table:
     """
-    Perform a cone search on the Euclid Q1 MER catalog and return nearby objects.
+    Perform a cone search on the explicitly selected ESA MER catalog.
+
+    ``release="q1"`` (default) preserves legacy outputs. ``release="dr1"``
+    selects DR1 wide-survey profile photometry with AB magnitudes only.
+    ``client`` optionally supplies an authenticated Astroquery-compatible client.
 
     Parameters
     ----------
@@ -33,38 +38,42 @@ def retrieve_objects(ra: float, dec: float, radius: float = None, search_radius:
     Returns
     -------
     Table
-        Astropy Table containing catalog entries with added AB and Vega magnitudes.
+        Astropy Table containing catalog entries with AB magnitudes (and Vega for Q1).
         Returns `None` if no objects are found.
 
     Notes
     -----
     - Columns `basic_download_data_oid` and `to_be_published` are removed.
-    - Adds VIS, Y, J, and H magnitudes using `add_magnitude`.
-    - Adds aperture AB/Vega magnitudes and errors with prefixes
+    - Q1 adds VIS, Y, J, and H AB/Vega magnitudes using `add_magnitude`.
+    - Q1 adds aperture AB/Vega magnitudes and errors with prefixes
       `VIS_4fwhm_aper`, `Y_2fwhm_aper`, `J_2fwhm_aper`, and `H_2fwhm_aper`.
     - Results are sorted by angular separation in arcseconds.
     """
 
+    table_name = catalog_table(release)
+    client = Euclid if client is None else client
     radius = u.Quantity(resolve_radius(radius=radius, search_radius=search_radius), u.arcsec)
     coord = SkyCoord(ra=ra, dec=dec, unit=(u.deg, u.deg), frame="icrs")
 
-    Euclid.ROW_LIMIT = limit
+    client.ROW_LIMIT = limit
 
-    job = Euclid.cone_search(
+    job = client.cone_search(
         coordinate=coord,
         radius=radius,
-        table_name="catalogue.mer_catalogue",
+        table_name=table_name,
         ra_column_name="right_ascension",
         dec_column_name="declination",
         columns="*",
         async_job=False,
     )
+    if job is None:
+        raise RuntimeError("ESA catalog query failed; check archive access and client diagnostics")
     table = job.get_results()
 
     if len(table) == 0:
         return None
 
-    table = _prepare_catalog_table(table)
+    table = _prepare_catalog_table(table, release=release)
 
     table.rename_column("dist", "separation")
 
@@ -76,29 +85,52 @@ def retrieve_objects(ra: float, dec: float, radius: float = None, search_radius:
     return table
 
 
-def retrieve_object_by_id(object_id: str) -> Table:
-    """Retrieve a Euclid Q1 MER object by its numeric ``object_id``.
+def retrieve_object_by_id(object_id: str, *, release: str = "q1", client=None) -> Table:
+    """Retrieve an object by numeric ID from ``release="q1"`` or ``"dr1"``.
 
-    Returns an Astropy Table with the same catalog columns and AB/Vega
+    DR1 returns verified profile AB photometry only; Q1 retains AB/Vega and
+    aperture outputs. An optional ``client`` supplies the archive connection.
+
+    Returns an Astropy Table with the same release-specific catalog columns and derived
     magnitudes as :func:`retrieve_objects`, without a separation column.
     Returns ``None`` if no matching object is found. Invalid IDs raise
     ``ValueError`` before querying the archive.
     """
+    table_name = catalog_table(release)
+    client = Euclid if client is None else client
     object_id = str(object_id)
     digits = object_id[1:] if object_id.startswith("-") else object_id
     if not digits or not digits.isascii() or not digits.isdecimal():
         raise ValueError("object_id must contain decimal digits with an optional leading minus sign")
 
-    query = f"SELECT * FROM catalogue.mer_catalogue WHERE object_id = {object_id}"
-    table = Euclid.launch_job(query).get_results()
+    query = f"SELECT * FROM {table_name} WHERE object_id = {object_id}"
+    job = client.launch_job(query)
+    if job is None:
+        raise RuntimeError("ESA catalog query failed; check archive access and client diagnostics")
+    table = job.get_results()
     if len(table) == 0:
         return None
-    return _prepare_catalog_table(table)
+    return _prepare_catalog_table(table, release=release)
 
 
-def _prepare_catalog_table(table: Table) -> Table:
+def _prepare_catalog_table(table: Table, *, release: str = "q1") -> Table:
     """Apply the catalog formatting shared by cone searches and ID lookups."""
-    table.remove_columns(COLUMNS_TO_REMOVE)
+    release = normalize_release(release)
+    table.remove_columns([name for name in COLUMNS_TO_REMOVE if name in table.colnames])
+    if release == "dr1":
+        # Only verified profile photometry: no inferred aperture units or Vega calibration.
+        for band, suffix in (("VIS", "psf"), ("Y", "templfit"), ("J", "templfit"), ("H", "templfit")):
+            mag, err = convert_flux_to_mag(table[f"flux_{band.lower()}_{suffix}"],
+                                           table[f"fluxerr_{band.lower()}_{suffix}"], MagnitudeSystem.AB)
+            table[f"{band}_AB_mag"] = mag
+            table[f"{band}_AB_err"] = err
+            table[f"{band}_AB_mag"].unit = u.mag
+            table[f"{band}_AB_err"].unit = u.mag
+        table.rename_column("right_ascension", "ra")
+        table.rename_column("declination", "dec")
+        table.meta["release"] = "DR1"
+        table.meta["catalogue_table"] = catalog_table(release)
+        return table
 
     add_magnitude(table, table["flux_vis_psf"], table["fluxerr_vis_psf"], "VIS")
     add_magnitude(table, table["flux_y_templfit"], table["fluxerr_y_templfit"], "Y")
@@ -115,7 +147,7 @@ def _prepare_catalog_table(table: Table) -> Table:
     return table
 
 
-def retrieve_spectrum(object_id: str, save_spectrum: bool = False, output_dir: str = tempfile.gettempdir(), object_name: str = None) -> QTable:
+def retrieve_spectrum(object_id: str, save_spectrum: bool = False, output_dir: str = tempfile.gettempdir(), object_name: str = None, *, release: str = "q1") -> QTable:
     """
     Retrieve the 1D spectrum for a given object ID from the Euclid archive.
 
@@ -146,6 +178,7 @@ def retrieve_spectrum(object_id: str, save_spectrum: bool = False, output_dir: s
     - The output directory defaults to a temporary directory if not specified.
     """
 
+    require_product_support(release, "spectrum")
     filename = _generate_filename(tempfile.gettempdir(), object_id)
     results = Euclid.get_spectrum(retrieval_type="SPECTRA_RGS", source_id=object_id, output_file=filename)
 
@@ -212,7 +245,7 @@ def retrieve_spectrum(object_id: str, save_spectrum: bool = False, output_dir: s
     return result
 
 
-def retrieve_cutout(ra: float, dec: float, search_radius: float = None, cutout_size: float = None, band: str = None, radius: float = None) -> fits.PrimaryHDU:
+def retrieve_cutout(ra: float, dec: float, search_radius: float = None, cutout_size: float = None, band: str = None, radius: float = None, *, release: str = "q1") -> fits.PrimaryHDU:
     """
     Retrieve an image cutout from Euclid imaging data.
 
@@ -241,6 +274,7 @@ def retrieve_cutout(ra: float, dec: float, search_radius: float = None, cutout_s
         If the provided band is not one of the allowed options.
     """
 
+    require_product_support(release, "cutout")
     if band not in ["VIS", "Y", "J", "H"]:
         raise ValueError("Invalid band. Choose from 'VIS', 'Y', 'J', or 'H'.")
     if cutout_size is None:
@@ -303,7 +337,7 @@ def retrieve_cutout(ra: float, dec: float, search_radius: float = None, cutout_s
     return hdul[0]
 
 
-def print_catalog_info():
+def print_catalog_info(*, release: str = "q1"):
     """
     Print metadata information for each column in the Euclid MER catalog.
 
@@ -314,7 +348,7 @@ def print_catalog_info():
     - Prints column name, unit, and description.
     """
 
-    table = Euclid.load_table("catalogue.mer_catalogue")
+    table = Euclid.load_table(catalog_table(release))
 
     for col in table.columns:
         if col.name in COLUMNS_TO_REMOVE:
