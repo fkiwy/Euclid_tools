@@ -5,7 +5,8 @@
 ESA `retrieve_objects`, `retrieve_object_by_id`, and `print_catalog_info` accept
 keyword-only `release="q1"` (default) or `release="dr1"`, case insensitive.
 The ESA backend forwards release arguments. Invalid releases fail before a query.
-The IRSA backend is unchanged and remains Q1-only.
+IRSA catalog/image APIs remain Q1-only. Explicit DR1 spectrum retrieval is now
+available; see [IRSA DR1 spectra](IRSA_DR1_SPECTRA.md) for the 13 November extension.
 
 Q1 retains positional arguments,
 aperture/profile outputs, AB/Vega zero points and rounding. Its table is now
@@ -67,9 +68,9 @@ is attempted on failure. Existing Q1 tests remain part of the regression suite.
 
 ## Product interfaces and scientific limits
 
-DR1 spectrum and cutout calls accept the release argument but raise
+ESA DR1 spectrum and cutout calls accept the release argument but raise
 `NotImplementedError` **before network access**. They never use the Q1 product
-paths for a DR1 request. This is a deliberate catalog-only foundation.
+paths for a DR1 request. This is the ESA catalog-only foundation; IRSA spectra are a separately enabled route.
 
 Live TAP exposes `dr1.spectra_source`, `dr1.mosaic_product` and
 `dr1.mer_cutouts_wide_survey`; their existence does not verify the DataLink
@@ -83,8 +84,8 @@ The official DR1 combined-spectra DPDD describes multiple source/dither and
 combined extensions. For `m_COMBINED1D_SIGNAL`, WAVELENGTH is Angstrom, SIGNAL
 has units `10**-16 erg/s/cm2/Angstrom`, VAR has the squared unit, and FSCALE is
 **deprecated, with scaling embedded in the unit**. Reusing the Q1 decoder's
-FSCALE multiplication could double-scale DR1 data. No DR1 spectral decoder,
-mask interpretation or image calibration has been enabled or claimed tested.
+FSCALE multiplication could double-scale DR1 data. No ESA DR1 spectral decoder or DR1 image calibration has been enabled.
+The separately documented IRSA SpectrumDM decoder preserves native units and bins.
 
 DR1 aperture fields and `fwhm` exist in live TAP but had empty unit/description
 metadata. They are not substitutes for the verified profile measurements.
@@ -132,7 +133,7 @@ PYTHONPATH=/path/Euclid_tools/src:/path/Euclid_search python -m pytest \
 The search branch requires this tools change for DR1. Q1 workflows can keep
 using their existing configuration. No PR should be merged automatically.
 
-Final combined validation: **101 passed, 24 subtests passed** (Python 3.12,
+Initial catalog migration validation (12 November): **101 passed, 24 subtests passed** (Python 3.12,
 12 November 2026). Both repository diffs passed `git diff --check`.
 The exact search sample SQL also returned three live DR1 rows; its first row's
 profile photometry passed through `gather_data.photometry` successfully.

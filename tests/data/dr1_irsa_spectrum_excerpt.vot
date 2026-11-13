@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Produced with astropy.io.votable version 8.0.2
+     http://www.astropy.org/ -->
+<VOTABLE version="1.4" xmlns="http://www.ivoa.net/xml/VOTable/v1.3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.ivoa.net/xml/VOTable/v1.3 http://www.ivoa.net/xml/VOTable/VOTable-1.4.xsd">
+ <RESOURCE type="results">
+  <TABLE ID="Euclid_2730189294682318706_Combined" name="Euclid_2730189294682318706_Combined" utype="spec:Spectrum">
+   <FIELD ID="WAVELENGTH" datatype="float" name="WAVELENGTH" ucd="em.wl" unit="Angstrom" utype="spec:Spectrum.Data.SpectralAxis.Value"/>
+   <FIELD ID="SIGNAL" datatype="float" name="SIGNAL" ucd="phot.flux.density;em.IR.NIR" unit="1e-16erg.Angstrom**-1.s**-1.cm**-2" utype="spec:Spectrum.Data.FluxAxis.Value"/>
+   <FIELD ID="MASK" datatype="int" name="MASK" ucd="meta.code.mask" utype="spec:Spectrum.Data.FluxAxis.Mask">
+    <DESCRIPTION>
+     Euclid spectral pixel quality bitmask; see MaskDefinitions.
+    </DESCRIPTION>
+   </FIELD>
+   <FIELD ID="QUALITY" datatype="float" name="QUALITY" ucd="meta.code.qual" utype="spec:Spectrum.Data.FluxAxis.Quality"/>
+   <FIELD ID="VAR" datatype="float" name="VAR" ucd="stat.variance" unit="1e-32erg**2.Angstrom**-2.s**-2.cm**-4" utype="spec:Spectrum.Data.FluxAxis.Variance"/>
+   <FIELD ID="NDITH" datatype="int" name="NDITH" ucd="meta.number" utype="spec:Spectrum.Data.Fluxaxis.Ndith"/>
+   <FIELD ID="UNCERTAINTY" datatype="float" name="UNCERTAINTY" ucd="stat.error;phot.flux.density;em.IR.NIR" unit="1e-16erg.Angstrom**-1.s**-1.cm**-2" utype="spec:Spectrum.Data.FluxAxis.Accuracy.StatError">
+    <DESCRIPTION>
+     (DERIVED_FROM=sqrt("VAR"))
+    </DESCRIPTION>
+   </FIELD>
+   <DATA>
+    <TABLEDATA>
+     <TR>
+      <TD>11900</TD>
+      <TD>0</TD>
+      <TD>1</TD>
+      <TD>0</TD>
+      <TD>0</TD>
+      <TD>0</TD>
+      <TD>0</TD>
+     </TR>
+     <TR>
+      <TD>11913.4</TD>
+      <TD>0</TD>
+      <TD>1</TD>
+      <TD>0</TD>
+      <TD>0</TD>
+      <TD>0</TD>
+      <TD>0</TD>
+     </TR>
+     <TR>
+      <TD>11926.8</TD>
+      <TD>0</TD>
+      <TD>1</TD>
+      <TD>0</TD>
+      <TD>0</TD>
+      <TD>0</TD>
+      <TD>0</TD>
+     </TR>
+     <TR>
+      <TD>12570</TD>
+      <TD>9.47389</TD>
+      <TD>2</TD>
+      <TD>0.6841725</TD>
+      <TD>0.00054636796</TD>
+      <TD>13</TD>
+      <TD>0.023374515</TD>
+     </TR>
+     <TR>
+      <TD>13240</TD>
+      <TD>8.58892</TD>
+      <TD>6</TD>
+      <TD>0.76256764</TD>
+      <TD>0.0004142977</TD>
+      <TD>13</TD>
+      <TD>0.020354304</TD>
+     </TR>
+     <TR>
+      <TD>13910</TD>
+      <TD>8.168478</TD>
+      <TD>6</TD>
+      <TD>0.7822394</TD>
+      <TD>0.00033545357</TD>
+      <TD>14</TD>
+      <TD>0.018315392</TD>
+     </TR>
+     <TR>
+      <TD>14580</TD>
+      <TD>7.4982667</TD>
+      <TD>2</TD>
+      <TD>0.7937094</TD>
+      <TD>0.000276407</TD>
+      <TD>15</TD>
+      <TD>0.016625492</TD>
+     </TR>
+     <TR>
+      <TD>15250</TD>
+      <TD>7.0003633</TD>
+      <TD>2</TD>
+      <TD>0.85068864</TD>
+      <TD>0.00025090354</TD>
+      <TD>15</TD>
+      <TD>0.015839934</TD>
+     </TR>
+     <TR>
+      <TD>15920</TD>
+      <TD>6.523793</TD>
+      <TD>2</TD>
+      <TD>0.8566469</TD>
+      <TD>0.00021622436</TD>
+      <TD>16</TD>
+      <TD>0.014704569</TD>
+     </TR>
+     <TR>
+      <TD>16590</TD>
+      <TD>6.6808577</TD>
+      <TD>2</TD>
+      <TD>0.87519395</TD>
+      <TD>0.00022939795</TD>
+      <TD>15</TD>
+      <TD>0.015145889</TD>
+     </TR>
+     <TR>
+      <TD>17260</TD>
+      <TD>6.290303</TD>
+      <TD>2</TD>
+      <TD>0.82673657</TD>
+      <TD>0.00023470198</TD>
+      <TD>14</TD>
+      <TD>0.015319986</TD>
+     </TR>
+     <TR>
+      <TD>19002</TD>
+      <TD>0</TD>
+      <TD>1</TD>
+      <TD>0</TD>
+      <TD>0</TD>
+      <TD>0</TD>
+      <TD>0</TD>
+     </TR>
+    </TABLEDATA>
+   </DATA>
+  </TABLE>
+ </RESOURCE>
+</VOTABLE>

@@ -120,9 +120,15 @@ def _prepare_catalog_table(table: Table) -> Table:
     return table
 
 
-def retrieve_spectrum(object_id: str, save_spectrum: bool = False, output_dir: str = tempfile.gettempdir(), object_name: str = None) -> QTable:
+def retrieve_spectrum(object_id: str, save_spectrum: bool = False, output_dir: str = tempfile.gettempdir(), object_name: str = None, *, release: str = "q1", grism=None, product=None,
+                      client=None, session=None, timeout=120) -> QTable:
     """
-    Retrieve the 1D spectrum for a given object ID from the Euclid archive.
+    Retrieve a Q1 (default) or explicitly selected DR1 spectrum from IRSA.
+
+    DR1 uses SpectrumDM with supplied units, returns one unambiguous product,
+    and preserves all bins. Select ``grism='red'``/``'blue'`` or an exact
+    ``product=(path, hdu)`` if necessary. Use ``retrieve_spectra`` for all products.
+    No SSA or Q1 fallback occurs for DR1. See docs/IRSA_DR1_SPECTRA.md.
 
     Parameters
     ----------
@@ -149,6 +155,23 @@ def retrieve_spectrum(object_id: str, save_spectrum: bool = False, output_dir: s
     - The output FITS file is named using the object's RA and DEC coordinates, formatted as 'E{ra}{dec}_spectrum.fits'.
     - The output directory defaults to a temporary directory if not specified.
     """
+
+    from euclid_tools.releases import normalize_release
+    if normalize_release(release) == "dr1":
+        spectra = retrieve_spectra(object_id, grism=grism, product=product,
+                                   client=client, session=session, timeout=timeout)
+        if not spectra:
+            return None
+        if len(spectra) != 1:
+            raise ValueError(f"Ambiguous DR1 spectrum: {len(spectra)} products; use "
+                             "retrieve_spectra or select grism and exact product=(path, hdu)")
+        result = spectra[0]
+        if save_spectrum:
+            filename = (object_name or f"E{object_id}") + "_spectrum.fits"
+            result.write(os.path.join(output_dir, filename), format="fits", overwrite=True)
+        return result
+    if grism is not None or product is not None or client is not None or session is not None:
+        raise ValueError("Product selectors and injected clients are supported only for DR1 spectra")
 
     adql = f"""
     SELECT *
@@ -286,3 +309,10 @@ def print_catalog_info():
             continue
 
         print(f'{f"{col.name}":45s} {f"{col.unit}":12s} {col.description}')
+
+
+def retrieve_spectra(object_id, *, grism=None, product=None, client=None, session=None, timeout=120):
+    """Return every matching DR1 spectrum; Q1's singular API remains unchanged."""
+    from euclid_tools.irsa_spectra import retrieve_spectra as retrieve_dr1
+    return retrieve_dr1(object_id, grism=grism, product=product, client=client,
+                        session=session, timeout=timeout)
