@@ -215,7 +215,8 @@ def print_results(results):
     if "separation" in results.colnames:
         columns.append("separation")
 
-    table = results[columns]
+    # DR1 provides verified profile AB columns without Q1 aperture/Vega fields.
+    table = results[[name for name in columns if name in results.colnames]]
     table.pprint_all()
 
 

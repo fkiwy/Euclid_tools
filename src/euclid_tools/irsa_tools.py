@@ -13,16 +13,27 @@ from astropy.wcs import WCS
 from astroquery.ipac.irsa import Irsa
 
 from euclid_tools.backends import resolve_radius
-from euclid_tools.shared import add_magnitude, normalize_spectrum_table
+from euclid_tools.shared import add_magnitude, normalize_spectrum_table, convert_flux_to_mag, MagnitudeSystem
+from euclid_tools.releases import normalize_release
 
 COLUMNS_TO_REMOVE = ["tileid", "x", "y", "z", "spt_ind", "htm20", "cntr"]
 
 TABLE_MER = "euclid_q1_mer_catalogue"
+TABLE_MER_DR1 = "euclid_dr1_mer_catalogue_wide_survey"
 
 
-def retrieve_objects(ra: float, dec: float, radius: float = None, search_radius: float = None) -> Table:
+def catalog_table(release="q1"):
+    """Select the documented IRSA Q1 or DR1 Wide Survey catalog."""
+    return {"q1": TABLE_MER, "dr1": TABLE_MER_DR1}[normalize_release(release)]
+
+
+def retrieve_objects(ra: float, dec: float, radius: float = None, search_radius: float = None, *, release: str = "q1", client=None) -> Table:
     """
-    Perform a cone search on the Euclid Q1 MER catalog and return nearby objects.
+    Perform a cone search on the explicitly selected IRSA MER catalog.
+
+    Q1 (default) retains profile/aperture AB and Vega outputs. DR1 selects
+    the Wide Survey table, preserves raw columns and derives profile AB only.
+    ``client`` optionally supplies an Astroquery IRSA-compatible client.
 
     Parameters
     ----------
@@ -36,27 +47,29 @@ def retrieve_objects(ra: float, dec: float, radius: float = None, search_radius:
     Returns
     -------
     Table
-        Astropy Table containing catalog entries with added AB and Vega magnitudes.
+        Astropy Table with profile AB magnitudes (and Q1 Vega/aperture magnitudes).
         Returns `None` if no objects are found.
 
     Notes
     -----
-    - Columns `tileid`, `x`, `y`, `z`, `spt_ind`, `htm20`, `cntr`are removed.
-    - Adds VIS, Y, J, and H magnitudes using `add_magnitude`.
-    - Adds aperture AB/Vega magnitudes and errors with prefixes
+    - Q1 removes `tileid`, `x`, `y`, `z`, `spt_ind`, `htm20`, `cntr`; DR1 retains raw columns.
+    - Q1 adds VIS, Y, J, and H AB/Vega magnitudes using `add_magnitude`.
+    - Q1 adds aperture AB/Vega magnitudes and errors with prefixes
       `VIS_4fwhm_aper`, `Y_2fwhm_aper`, `J_2fwhm_aper`, and `H_2fwhm_aper`.
     - Results are sorted by angular separation in arcseconds.
     """
 
+    table_name = catalog_table(release)
+    client = Irsa if client is None else client
     radius = resolve_radius(radius=radius, search_radius=search_radius) * u.arcsec
     position = SkyCoord(ra, dec, unit=(u.deg, u.deg), frame="icrs")
 
-    table = Irsa.query_region(coordinates=position, spatial="Cone", catalog=TABLE_MER, radius=radius)
+    table = client.query_region(coordinates=position, spatial="Cone", catalog=table_name, radius=radius)
 
     if len(table) == 0:
         return None
 
-    table = _prepare_catalog_table(table)
+    table = _prepare_catalog_table(table, release=release)
 
     # Create a SkyCoord object for the target
     target_coord = SkyCoord(ra, dec, unit=(u.deg, u.deg), frame="icrs")
@@ -79,28 +92,42 @@ def retrieve_objects(ra: float, dec: float, radius: float = None, search_radius:
     return table
 
 
-def retrieve_object_by_id(object_id: str) -> Table:
-    """Retrieve a Euclid Q1 MER object by its numeric ``object_id``.
+def retrieve_object_by_id(object_id: str, *, release: str = "q1", client=None) -> Table:
+    """Retrieve an IRSA Q1 (default) or DR1 Wide Survey object by numeric ID.
 
-    Returns an Astropy Table with the same catalog columns and AB/Vega
+    Returns an Astropy Table with the same release-specific catalog columns and derived
     magnitudes as :func:`retrieve_objects`, without a separation column.
     Returns ``None`` if no matching object is found. Invalid IDs raise
     ``ValueError`` before querying the archive.
     """
+    table_name = catalog_table(release)
+    client = Irsa if client is None else client
     object_id = str(object_id)
     digits = object_id[1:] if object_id.startswith("-") else object_id
     if not digits or not digits.isascii() or not digits.isdecimal():
         raise ValueError("object_id must contain decimal digits with an optional leading minus sign")
 
-    query = f"SELECT * FROM {TABLE_MER} WHERE object_id = {object_id}"
-    table = Irsa.query_tap(query).to_table()
+    query = f"SELECT * FROM {table_name} WHERE object_id = {object_id}"
+    table = client.query_tap(query).to_table()
     if len(table) == 0:
         return None
-    return _prepare_catalog_table(table)
+    return _prepare_catalog_table(table, release=release)
 
 
-def _prepare_catalog_table(table: Table) -> Table:
+def _prepare_catalog_table(table: Table, *, release: str = "q1") -> Table:
     """Apply the catalog formatting shared by cone searches and ID lookups."""
+    if normalize_release(release) == "dr1":
+        # IRSA supplies ra/dec in degrees, and these verified flux pairs in uJy.
+        # Do not infer aperture or Vega calibrations from Q1.
+        for band, suffix in (("VIS", "psf"), ("Y", "templfit"), ("J", "templfit"), ("H", "templfit")):
+            mag, err = convert_flux_to_mag(table[f"flux_{band.lower()}_{suffix}"],
+                                           table[f"fluxerr_{band.lower()}_{suffix}"], MagnitudeSystem.AB)
+            table[f"{band}_AB_mag"] = mag
+            table[f"{band}_AB_err"] = err
+            table[f"{band}_AB_mag"].unit = u.mag
+            table[f"{band}_AB_err"].unit = u.mag
+        table.meta.update(release="DR1", catalogue_table=TABLE_MER_DR1, archive="IRSA")
+        return table
     table.remove_columns(COLUMNS_TO_REMOVE)
 
     add_magnitude(table, table["flux_vis_psf"], table["fluxerr_vis_psf"], "VIS")
@@ -156,7 +183,6 @@ def retrieve_spectrum(object_id: str, save_spectrum: bool = False, output_dir: s
     - The output directory defaults to a temporary directory if not specified.
     """
 
-    from euclid_tools.releases import normalize_release
     if normalize_release(release) == "dr1":
         spectra = retrieve_spectra(object_id, grism=grism, product=product,
                                    client=client, session=session, timeout=timeout)
@@ -291,7 +317,7 @@ def retrieve_cutout(ra: float, dec: float, search_radius: float = None, cutout_s
     return hdu
 
 
-def print_catalog_info():
+def print_catalog_info(*, release: str = "q1"):
     """
     Print metadata information for each column in the Euclid MER catalog.
 
@@ -301,8 +327,9 @@ def print_catalog_info():
     - Prints column name, unit, and description.
     """
 
+    table_name = catalog_table(release)
     service = vo.dal.TAPService("https://irsa.ipac.caltech.edu/TAP")
-    table = service.tables[TABLE_MER]
+    table = service.tables[table_name]
 
     for col in table.columns:
         if col.name in COLUMNS_TO_REMOVE:

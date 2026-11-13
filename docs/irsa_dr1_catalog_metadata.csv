@@ -1,0 +1,20 @@
+table_name,column_name,unit,description
+euclid_dr1_mer_catalogue_wide_survey,object_id,,Identifier assigned to a detected source by the Euclid MER processing pipeline. The identifier is not guaranteed to be unique.
+euclid_dr1_mer_catalogue_wide_survey,ra,deg,Source barycenter RA coordinate (SExtractor ALPHA_J2000) decimal degrees
+euclid_dr1_mer_catalogue_wide_survey,dec,deg,Source barycenter DEC coordinate (SExtractor DELTA_J2000) decimal degrees
+euclid_dr1_mer_catalogue_wide_survey,flux_y_templfit,uJy,NIR Y band source template fitting flux (TPHOT measurement)
+euclid_dr1_mer_catalogue_wide_survey,flux_j_templfit,uJy,NIR J band source template fitting flux (TPHOT measurement)
+euclid_dr1_mer_catalogue_wide_survey,flux_h_templfit,uJy,NIR H band source template fitting flux (TPHOT measurement)
+euclid_dr1_mer_catalogue_wide_survey,fluxerr_y_templfit,uJy,NIR Y band source template fitting flux error (TPHOT measurement)
+euclid_dr1_mer_catalogue_wide_survey,fluxerr_j_templfit,uJy,NIR J band source template fitting flux error (TPHOT measurement)
+euclid_dr1_mer_catalogue_wide_survey,fluxerr_h_templfit,uJy,NIR H band source template fitting flux error (TPHOT measurement)
+euclid_dr1_mer_catalogue_wide_survey,flux_vis_psf,uJy,VIS band source PSF-fitting photometry flux (TPHOT measurement)
+euclid_dr1_mer_catalogue_wide_survey,fluxerr_vis_psf,uJy,VIS band source PSF-fitting photometry flux error (TPHOT measurement)
+euclid_dr1_mer_catalogue_wide_survey,flag_vis,,Objects flag keeping track of the flagged pixels in the VIS flag image
+euclid_dr1_mer_catalogue_wide_survey,flag_y,,Objects flag keeping track of the flagged pixels in the NIR Y flag image
+euclid_dr1_mer_catalogue_wide_survey,flag_j,,Objects flag keeping track of the flagged pixels in the NIR J flag image
+euclid_dr1_mer_catalogue_wide_survey,flag_h,,Objects flag keeping track of the flagged pixels in the NIR H flag image
+euclid_dr1_mer_catalogue_wide_survey,point_like_flag,,"Point-like flag : flag set to 1 for VIS detections with (DET_QUALITY_FLAG==0) AND (POINT_LIKE_PROBA>threshold), otherwise set to NaN"
+euclid_dr1_mer_catalogue_wide_survey,point_like_prob,,Probability between 0 and 1 that the source is point-like (the estimation uses a 'star probability cub' defined in the MDB). Value is set to NaN for ...
+euclid_dr1_mer_catalogue_wide_survey,det_quality_flag,,Detection step flags that could indicate the possible corruption of the MAG_STARGAL_SEP values
+euclid_dr1_mer_catalogue_wide_survey,gaia_match_quality,,The quality of the GAIA match

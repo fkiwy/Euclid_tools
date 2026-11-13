@@ -1,4 +1,5 @@
-> DR1-Foundation: ESA catalog helpers now accept `release="dr1"`; Q1 remains the default.
+> DR1-Foundation: ESA and IRSA catalog helpers accept `release="dr1"`; Q1 remains the default.
+> See [IRSA catalog mappings and example usage](docs/IRSA_DR1_CATALOG.md).
 > IRSA DR1 spectra are available through [individual SpectrumDM downloads](docs/IRSA_DR1_SPECTRA.md).
 > See [catalog fields, validation and remaining product limitations](docs/DR1_FOUNDATION.md).
 

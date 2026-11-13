@@ -78,10 +78,10 @@ class IRSABackend(EuclidArchiveBackend):
 
         return irsa_tools.retrieve_objects(ra=ra, dec=dec, radius=resolve_radius(radius, search_radius), **kwargs)
 
-    def retrieve_object_by_id(self, object_id):
+    def retrieve_object_by_id(self, object_id, **kwargs):
         from euclid_tools import irsa_tools
 
-        return irsa_tools.retrieve_object_by_id(object_id)
+        return irsa_tools.retrieve_object_by_id(object_id, **kwargs)
 
     def retrieve_spectrum(self, object_id, **kwargs):
         from euclid_tools import irsa_tools

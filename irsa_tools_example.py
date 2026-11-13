@@ -59,6 +59,7 @@ from flux_comp.core import SED, WaveFlux
 from euclid_tools import get_backend
 
 backend = get_backend('irsa')
+release = 'q1'  # Change to 'dr1' for DR1 Wide Survey catalogs and spectra.
 
 warnings.simplefilter("ignore", category=AstropyWarning)
 
@@ -69,7 +70,7 @@ warnings.simplefilter("ignore", category=AstropyWarning)
 # ------------------------------
 # Print catalog information
 # ------------------------------
-print_catalog_info()
+print_catalog_info(release=release)
 
 # ------------------------------
 # Retrieve objects
@@ -84,7 +85,7 @@ ra, dec = 266.4850113, 64.9936424
 search_radius = 5
 
 # Perform cone search for objects
-results = backend.retrieve_objects(ra, dec, search_radius=search_radius)
+results = backend.retrieve_objects(ra, dec, search_radius=search_radius, release=release)
 
 if not results:
     # If no results are found, print message and exit
@@ -103,7 +104,7 @@ result = results[0]
 object_id = str(result["object_id"])
 
 # Retrieve the catalog entry for the selected object
-object_by_id = backend.retrieve_object_by_id(object_id)
+object_by_id = backend.retrieve_object_by_id(object_id, release=release)
 if object_by_id is not None:
     print_results(object_by_id)
 
@@ -112,7 +113,10 @@ if object_by_id is not None:
 # ------------------------------
 
 # Retrieve the spectrum for the selected object
-data = backend.retrieve_spectrum(object_id)
+spectrum_options = {"release": release}
+if release == "dr1":
+    spectrum_options["grism"] = "red"  # Ambiguous repeated red products raise.
+data = backend.retrieve_spectrum(object_id, **spectrum_options)
 
 # Plot the spectrum if data is available
 if data and len(data) > 0:
@@ -143,6 +147,10 @@ if data and len(data) > 0:
 # ------------------------------
 # Retrieve cutouts
 # ------------------------------
+
+if release == "dr1":
+    print("DR1 image retrieval is not implemented; skipping image cutouts.")
+    sys.exit(0)
 
 # Define cutout size (arcsec)
 cutout_size = 20  # arcsec
