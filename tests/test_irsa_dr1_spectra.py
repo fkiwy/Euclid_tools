@@ -212,6 +212,13 @@ def test_q1_fits_association_uses_only_requested_hdu_and_preserves_photometry():
         result = get_backend('irsa').retrieve_spectrum('2664850113649936423', release='q1', timeout=17)
     download.assert_called_once_with(dr1.SPECTRUMDM_URL + Q1_PATH.replace(':', '%3A') + '?dataset_id=euclid_combspec_q1&hdu=2338', timeout=17)
     assert len(result) == len(raw)
+    from euclid_tools.provenance import product_provenance
+    provenance = product_provenance(result)
+    assert provenance["release"] == "Q1"
+    assert provenance["retrieval_route"] == "tap-association+spectrumdm"
+    assert provenance["source_hdu"] == 2338
+    assert provenance["source_file"] == Q1_PATH
+    assert provenance["grism"] is None  # no bandpass metadata supplied
     np.testing.assert_allclose(result['WAVELENGTH'].to_value(u.AA), raw['WAVELENGTH'].to_value(u.AA))
     np.testing.assert_allclose(result['FLUX'].to_value(dr1.FLUX_UNIT), raw['SIGNAL'].to_value(dr1.FLUX_UNIT))
     np.testing.assert_allclose(result['ERROR'].to_value(dr1.FLUX_UNIT), raw['UNCERTAINTY'].to_value(dr1.FLUX_UNIT))

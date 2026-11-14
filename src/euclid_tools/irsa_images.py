@@ -253,6 +253,10 @@ def retrieve_cutout(ra, dec, *, radius=2, cutout_size=20, band="VIS", tiling="wi
                   CUTSIZE=float(cutout_size), CUTMODE=mode, CUTTRIM=tuple(cutout.shape) != tuple(cutout.shape_input),
                   ORIGNX=source_header["NAXIS1"], ORIGNY=source_header["NAXIS2"],
                   SRCX0=int(x0), SRCY0=int(y0), CUTBYTES=bytes_read)
+    from euclid_tools.provenance import stamp
+    stamp(header, product_type="image", release="DR1", archive="IRSA",
+          route="sia+s3-section", SRCPATH=str(row["product"]), SRCHDU=0,
+          SRCURL=str(row["product"]), PRODBAND=band)
     result = fits.PrimaryHDU(data=cutout.data, header=header)
     new_wcs = WCS(result.header)
     x = np.array([0., (result.data.shape[1] - 1) / 2, result.data.shape[1] - 1.])

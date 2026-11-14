@@ -230,6 +230,11 @@ def retrieve_spectrum(object_id: str, save_spectrum: bool = False, output_dir: s
 
         result = QTable(columns, names=names)
         result = normalize_spectrum_table(result)
+        from euclid_tools.provenance import stamp
+        stamp(result.meta, product_type="spectrum", release="Q1", archive="ESA",
+              route="esa-get_spectrum", OBJECTID=str(object_id), SRCHDU=1,
+              SRCPATH=hdu.header.get("FILENAME"),
+              GRISM=hdu.header.get("GRISM"))
 
         if save_spectrum:
             if not object_name:
@@ -334,6 +339,10 @@ def retrieve_cutout(ra: float, dec: float, search_radius: float = None, cutout_s
     )
     hdul = fits.open(cutout_url[0])
 
+    from euclid_tools.provenance import stamp
+    stamp(hdul[0].header, product_type="image", release="Q1", archive="ESA",
+          route="tap-mosaic+esa-get_cutout", SRCPATH=str(file_path), PRODBAND=band,
+          TILEID=str(obs_id))
     return hdul[0]
 
 

@@ -277,6 +277,17 @@ def retrieve_spectrum(object_id: str, save_spectrum: bool = False, output_dir: s
 
     result = QTable(columns, names=names)
     result = normalize_spectrum_table(result)
+    from euclid_tools.provenance import stamp
+    association = table[0]
+    stamp(result.meta, product_type="spectrum", release="Q1", archive="IRSA",
+          route="tap-association+spectrumdm" if path.endswith(".fits") else "tap-association+votable",
+          OBJECTID=str(object_id), SRCPATH=path, SRCURL=file_url,
+          SRCHDU=int(association["hdu"]) if "hdu" in table.colnames else None,
+          TILEID=str(association["tileid"]) if "tileid" in table.colnames else None,
+          GRISM=str(association["bandpass_name"]) if "bandpass_name" in table.colnames else None,
+          GRISMREF="IRSA Q1 association bandpass_name" if "bandpass_name" in table.colnames else None,
+          ASSOCTBL="euclid.objectid_spectrafile_association_q1",
+          DATASET="euclid_combspec_q1" if path.endswith(".fits") else None)
 
     if save_spectrum:
         if not object_name:
@@ -354,10 +365,18 @@ def retrieve_cutout(ra: float, dec: float, search_radius: float = None, cutout_s
 
     print(f"Downloading {band}-band cutout")
     with fits.open(image_url, use_fsspec=True) as hdul:
+        source_header = hdul[0].header.copy()
         wcs = WCS(hdul[0].header)
         cutout = Cutout2D(hdul[0].section, position=position, size=cutout_size * u.arcsec, wcs=wcs)
         hdu = fits.PrimaryHDU(data=cutout.data, header=cutout.wcs.to_header())
 
+    from euclid_tools.provenance import stamp
+    stamp(hdu.header, product_type="image", release="Q1", archive="IRSA",
+          route="sia+fsspec-section", SRCPATH=str(image_url), SRCURL=str(image_url),
+          SRCHDU=0, PRODBAND=band)
+    for key in ("DATASETR", "PPLANID", "PIPDEFID", "PSWREL"):
+        if key in source_header:
+            hdu.header[key] = source_header[key]
     return hdu
 
 

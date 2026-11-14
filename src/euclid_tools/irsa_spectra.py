@@ -129,6 +129,9 @@ def decode_spectrum(body, *, object_id, path, hdu, tileid):
                        SRCPATH=str(path), SRCHDU=_hdu(hdu), TILEID=str(tileid), GRISM=grism,
                        GRISMREF="IRSA tutorial: minimum wavelength <1.1 um identifies blue",
                        SRCURL=spectrum_url(path, hdu), RAWSHA=hashlib.sha256(body).hexdigest())
+    from euclid_tools.provenance import stamp
+    stamp(result.meta, product_type="spectrum", release="DR1", archive="IRSA",
+          route="tap-association+spectrumdm")
     return result
 
 
