@@ -97,3 +97,44 @@ def test_catalog_metadata_uses_selected_table():
     service.tables = {irsa_tools.TABLE_MER_DR1: Mock(columns=[])}
     with patch.object(irsa_tools.vo.dal, "TAPService", return_value=service):
         irsa_tools.print_catalog_info(release="dr1")
+
+
+@pytest.mark.parametrize("catalogue", ["wide_survey", "deep_survey", "wide_mode", "deep_mode"])
+def test_explicit_dr1_catalogue_is_forwarded_to_cone_id_and_metadata(catalogue):
+    client = Mock()
+    client.query_region.return_value = raw_dr1()
+    client.query_tap.return_value.to_table.return_value = raw_dr1()
+    backend = get_backend("irsa")
+    result = backend.retrieve_objects(80, -51, radius=5, release="dr1", catalogue=catalogue, client=client)
+    expected = f"euclid_dr1_mer_catalogue_{catalogue}"
+    assert client.query_region.call_args.kwargs["catalog"] == expected
+    assert result.meta["catalogue_table"] == expected
+    backend.retrieve_object_by_id("-123", release="dr1", catalogue=catalogue, client=client)
+    assert f"FROM {expected}" in client.query_tap.call_args.args[0]
+    service = Mock()
+    service.tables = {expected: Mock(columns=[])}
+    with patch.object(irsa_tools.vo.dal, "TAPService", return_value=service):
+        irsa_tools.print_catalog_info(release="dr1", catalogue=catalogue)
+
+
+@pytest.mark.parametrize("release,catalogue", [("q1", "deep_survey"), ("dr1", ""),
+                                              ("dr1", "dr1.sources"), ("dr1", 1)])
+def test_catalogue_rejection_precedes_network(release, catalogue):
+    client = Mock()
+    with pytest.raises(ValueError):
+        irsa_tools.retrieve_objects(80, -51, radius=5, release=release, catalogue=catalogue, client=client)
+    client.query_region.assert_not_called()
+
+
+def test_no_match_message_identifies_release_and_catalogue():
+    from euclid_tools.shared import print_message
+    output = StringIO()
+    with redirect_stdout(output):
+        print_message(273, 68, 5, release="dr1", catalogue=irsa_tools.TABLE_MER_DR1)
+    text = output.getvalue()
+    assert "DR1" in text and "Q1" not in text
+    assert irsa_tools.TABLE_MER_DR1 in text
+    output = StringIO()
+    with redirect_stdout(output):
+        print_message(273, 68, 5)
+    assert "Euclid Q1 MER catalog" in output.getvalue()

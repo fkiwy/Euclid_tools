@@ -1,7 +1,7 @@
 # IRSA catalog release selection
 
-IRSA catalog helpers now accept keyword-only `release="q1"` (default) or
-`release="dr1"`, case insensitive. This fixes the backend call that previously
+IRSA catalog helpers accept keyword-only `release="q1"` (default) or
+`release="dr1"`, case insensitive. DR1 also accepts explicit `catalogue=` selection. This fixes the backend call that previously
 raised `TypeError: retrieve_objects() got an unexpected keyword argument 'release'`.
 
 ```python
@@ -72,3 +72,52 @@ all four AB magnitudes/errors agreed with independent µJy calculations within
 `irsa_dr1_catalog_validation.json`. An earlier untargeted TOP 3 probe timed out
 after 30 seconds; the targeted tests succeeded without a fallback or bulk data.
 Combined regression validation: **137 passed, 24 subtests passed**.
+
+
+## Spectrum validation target: choose the Deep Survey catalog
+
+The spectrum target at RA **273.018929496624**, Dec **68.231870619389** (ICRS
+degrees), object `2730189294682318706`, is present in the **Deep Survey** catalog.
+Live 5-arcsec queries returned zero Wide Survey rows and one Deep Survey row.
+The spectrum coordinates are correct; increasing the radius or relabeling the
+empty Wide Survey result as Q1 does not address the catalog choice.
+
+```python
+results = backend.retrieve_objects(
+    273.018929496624, 68.231870619389,
+    search_radius=5, release="dr1", catalogue="deep_survey",
+)
+rows = backend.retrieve_object_by_id(
+    "2730189294682318706", release="dr1", catalogue="deep_survey",
+)
+```
+
+Set these variables in `irsa_tools_example.py` to reproduce the target:
+
+```python
+release = "dr1"
+catalogue = "deep_survey"
+ra, dec = 273.018929496624, 68.231870619389
+```
+
+The same explicit catalog is used for metadata, cone search and ID lookup.
+Choices from IRSA's official MER tutorial are `wide_survey` (the DR1 default),
+`deep_survey`, `wide_mode`, and `deep_mode`; they map to the corresponding
+`euclid_dr1_mer_catalogue_<choice>` tables. Q1 has only one catalog, so leave
+`catalogue=None` with Q1. Invalid choices fail before querying. No automatic
+fallback between catalogs or mixing of photometry from different depths occurs.
+The returned table metadata records the table actually selected.
+
+No-results messages now identify the actual release and optional table, rather
+than always printing Q1. The original three-argument `print_message` call retains
+its Q1 default. Live deep-table metadata confirmed degree coordinates and µJy
+units for all four profile flux/error pairs; those 10 metadata rows are stored
+in `irsa_dr1_deep_catalog_metadata.csv`. Coverage-check inputs/results are recorded
+in `irsa_dr1_catalog_coverage_validation.json`.
+
+After explicit collection selection and corrected messages: **146 passed, 24 subtests passed**.
+
+A separate live deep-catalog exact-ID query did not finish within a 90-second
+local validation budget. Deep ID routing is tested offline; the coverage results
+above and the actual backend cone search succeeded. Archive latency is not treated
+as an empty result and does not trigger a catalog fallback.

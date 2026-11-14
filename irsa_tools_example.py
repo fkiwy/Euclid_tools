@@ -52,14 +52,15 @@ import warnings
 
 from astropy.utils.exceptions import AstropyWarning
 from euclid_tools.image_plotter import plot_images
-from euclid_tools.irsa_tools import print_catalog_info
+from euclid_tools.irsa_tools import print_catalog_info, catalog_table
 from euclid_tools.shared import print_results, print_message, create_object_name
 from flux_comp.core import SED, WaveFlux
 
 from euclid_tools import get_backend
 
 backend = get_backend('irsa')
-release = 'q1'  # Change to 'dr1' for DR1 Wide Survey catalogs and spectra.
+release = 'q1'  # Change to 'dr1' for DR1 catalogs and spectra.
+catalogue = None  # DR1 defaults to wide_survey; use 'deep_survey' for the validated spectrum target.
 
 warnings.simplefilter("ignore", category=AstropyWarning)
 
@@ -70,13 +71,15 @@ warnings.simplefilter("ignore", category=AstropyWarning)
 # ------------------------------
 # Print catalog information
 # ------------------------------
-print_catalog_info(release=release)
+print_catalog_info(release=release, catalogue=catalogue)
 
 # ------------------------------
 # Retrieve objects
 # ------------------------------
 
 # Define object coordinates
+# Validated DR1 spectrum target: set release='dr1', catalogue='deep_survey',
+# and ra, dec = 273.018929496624, 68.231870619389.
 # ra, dec = 58.1332495, -49.1830038
 # ra, dec = 59.7913643, -47.6826163
 ra, dec = 266.4850113, 64.9936424
@@ -85,11 +88,11 @@ ra, dec = 266.4850113, 64.9936424
 search_radius = 5
 
 # Perform cone search for objects
-results = backend.retrieve_objects(ra, dec, search_radius=search_radius, release=release)
+results = backend.retrieve_objects(ra, dec, search_radius=search_radius, release=release, catalogue=catalogue)
 
 if not results:
     # If no results are found, print message and exit
-    print_message(ra, dec, search_radius)
+    print_message(ra, dec, search_radius, release=release, catalogue=catalog_table(release, catalogue))
     sys.exit()
 
 # Print the retrieved object information
@@ -104,7 +107,7 @@ result = results[0]
 object_id = str(result["object_id"])
 
 # Retrieve the catalog entry for the selected object
-object_by_id = backend.retrieve_object_by_id(object_id, release=release)
+object_by_id = backend.retrieve_object_by_id(object_id, release=release, catalogue=catalogue)
 if object_by_id is not None:
     print_results(object_by_id)
 

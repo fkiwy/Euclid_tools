@@ -22,17 +22,29 @@ TABLE_MER = "euclid_q1_mer_catalogue"
 TABLE_MER_DR1 = "euclid_dr1_mer_catalogue_wide_survey"
 
 
-def catalog_table(release="q1"):
-    """Select the documented IRSA Q1 or DR1 Wide Survey catalog."""
-    return {"q1": TABLE_MER, "dr1": TABLE_MER_DR1}[normalize_release(release)]
+DR1_CATALOGUES = {name: f"euclid_dr1_mer_catalogue_{name}" for name in
+                  ("wide_survey", "deep_survey", "wide_mode", "deep_mode")}
 
 
-def retrieve_objects(ra: float, dec: float, radius: float = None, search_radius: float = None, *, release: str = "q1", client=None) -> Table:
+def catalog_table(release="q1", catalogue=None):
+    """Select an explicit DR1 collection; retain Q1's single-table default."""
+    if normalize_release(release) == "q1":
+        if catalogue is not None:
+            raise ValueError("Q1 has one MER catalog; omit catalogue")
+        return TABLE_MER
+    name = "wide_survey" if catalogue is None else catalogue
+    if not isinstance(name, str) or name not in DR1_CATALOGUES:
+        raise ValueError("catalogue must be wide_survey, deep_survey, wide_mode or deep_mode")
+    return DR1_CATALOGUES[name]
+
+
+def retrieve_objects(ra: float, dec: float, radius: float = None, search_radius: float = None, *, release: str = "q1", catalogue=None, client=None) -> Table:
     """
     Perform a cone search on the explicitly selected IRSA MER catalog.
 
     Q1 (default) retains profile/aperture AB and Vega outputs. DR1 selects
-    the Wide Survey table, preserves raw columns and derives profile AB only.
+    the Wide Survey by default; ``catalogue="deep_survey"`` selects the Deep Survey.
+    Raw columns are preserved and derived photometry is profile AB only.
     ``client`` optionally supplies an Astroquery IRSA-compatible client.
 
     Parameters
@@ -59,7 +71,7 @@ def retrieve_objects(ra: float, dec: float, radius: float = None, search_radius:
     - Results are sorted by angular separation in arcseconds.
     """
 
-    table_name = catalog_table(release)
+    table_name = catalog_table(release, catalogue)
     client = Irsa if client is None else client
     radius = resolve_radius(radius=radius, search_radius=search_radius) * u.arcsec
     position = SkyCoord(ra, dec, unit=(u.deg, u.deg), frame="icrs")
@@ -69,7 +81,7 @@ def retrieve_objects(ra: float, dec: float, radius: float = None, search_radius:
     if len(table) == 0:
         return None
 
-    table = _prepare_catalog_table(table, release=release)
+    table = _prepare_catalog_table(table, release=release, catalogue=catalogue)
 
     # Create a SkyCoord object for the target
     target_coord = SkyCoord(ra, dec, unit=(u.deg, u.deg), frame="icrs")
@@ -92,15 +104,15 @@ def retrieve_objects(ra: float, dec: float, radius: float = None, search_radius:
     return table
 
 
-def retrieve_object_by_id(object_id: str, *, release: str = "q1", client=None) -> Table:
-    """Retrieve an IRSA Q1 (default) or DR1 Wide Survey object by numeric ID.
+def retrieve_object_by_id(object_id: str, *, release: str = "q1", catalogue=None, client=None) -> Table:
+    """Retrieve an IRSA Q1 (default) or explicitly selected DR1 catalog object by ID.
 
     Returns an Astropy Table with the same release-specific catalog columns and derived
     magnitudes as :func:`retrieve_objects`, without a separation column.
     Returns ``None`` if no matching object is found. Invalid IDs raise
     ``ValueError`` before querying the archive.
     """
-    table_name = catalog_table(release)
+    table_name = catalog_table(release, catalogue)
     client = Irsa if client is None else client
     object_id = str(object_id)
     digits = object_id[1:] if object_id.startswith("-") else object_id
@@ -111,10 +123,10 @@ def retrieve_object_by_id(object_id: str, *, release: str = "q1", client=None) -
     table = client.query_tap(query).to_table()
     if len(table) == 0:
         return None
-    return _prepare_catalog_table(table, release=release)
+    return _prepare_catalog_table(table, release=release, catalogue=catalogue)
 
 
-def _prepare_catalog_table(table: Table, *, release: str = "q1") -> Table:
+def _prepare_catalog_table(table: Table, *, release: str = "q1", catalogue=None) -> Table:
     """Apply the catalog formatting shared by cone searches and ID lookups."""
     if normalize_release(release) == "dr1":
         # IRSA supplies ra/dec in degrees, and these verified flux pairs in uJy.
@@ -126,7 +138,7 @@ def _prepare_catalog_table(table: Table, *, release: str = "q1") -> Table:
             table[f"{band}_AB_err"] = err
             table[f"{band}_AB_mag"].unit = u.mag
             table[f"{band}_AB_err"].unit = u.mag
-        table.meta.update(release="DR1", catalogue_table=TABLE_MER_DR1, archive="IRSA")
+        table.meta.update(release="DR1", catalogue_table=catalog_table(release, catalogue), archive="IRSA")
         return table
     table.remove_columns(COLUMNS_TO_REMOVE)
 
@@ -317,7 +329,7 @@ def retrieve_cutout(ra: float, dec: float, search_radius: float = None, cutout_s
     return hdu
 
 
-def print_catalog_info(*, release: str = "q1"):
+def print_catalog_info(*, release: str = "q1", catalogue=None):
     """
     Print metadata information for each column in the Euclid MER catalog.
 
@@ -327,7 +339,7 @@ def print_catalog_info(*, release: str = "q1"):
     - Prints column name, unit, and description.
     """
 
-    table_name = catalog_table(release)
+    table_name = catalog_table(release, catalogue)
     service = vo.dal.TAPService("https://irsa.ipac.caltech.edu/TAP")
     table = service.tables[table_name]
 
