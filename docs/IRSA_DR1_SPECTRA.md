@@ -127,3 +127,27 @@ and IRSA images have not been enabled for DR1 by this implementation.
 Combined validation: **128 passed, 24 subtests passed** on Python 3.12.
 The actual search `save_spectra` command also wrote a successful live manifest
 and 531-bin FITS cache for the same public object. Both diffs passed whitespace checks.
+
+
+## MaskedColumn plotting compatibility (14 November 2026)
+
+`SED.plot(spec_uncertainty=True)` now passes plain NumPy masked-array copies to
+Matplotlib's uncertainty-envelope call. Astropy `MaskedColumn` subclasses can
+become malformed during Matplotlib's polygon stack/slice operation and raise
+`AttributeError: 'MaskedColumn' object has no attribute '_mask'`. The conversion
+preserves numeric values in the existing SED display units and each array's
+missing-data mask; it does not change retrieval, flux scaling, mask-bit policies,
+interpolation, gap detection or scientific selection.
+
+Two regression tests reproduce the offending stack/slice with the public DR1
+spectrum excerpt and with genuinely masked wavelength/flux/error columns. They
+fail with the reported AttributeError before the fix and pass afterward. They
+also verify uncertainty bounds, units, masks and unchanged input data for that
+plotting step. The saved full 531-bin response was run through the example's
+WaveFlux → trim(1.21,1.89) → SED.to_flux_lambda → uncertainty plot pipeline and
+rendered successfully to PDF and PNG; the PNG was visually inspected. Tests ran
+with NumPy 2.5.4, Astropy 8.0.2 and Matplotlib 3.11.2, explicitly reproducing the
+polygon operation so the regression does not depend on Matplotlib's installed
+internal implementation. No archive download or package downgrade was needed.
+
+Combined validation after the plotting fix: **148 passed, 24 subtests passed**.
