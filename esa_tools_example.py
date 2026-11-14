@@ -62,6 +62,7 @@ from euclid_tools.shared import print_results, print_message, create_object_name
 from flux_comp.core import SED, WaveFlux
 
 from euclid_tools import get_backend
+from euclid_tools.releases import catalog_table
 
 backend = get_backend('esa')
 
@@ -74,9 +75,11 @@ warnings.simplefilter("ignore", category=AstropyWarning)
 # ------------------------------
 # Print catalog information
 # ------------------------------
-release = "q1"  # Set "dr1" for the validated wide-survey example below.
+release = "q1"  # Set "dr1" to select a DR1 survey.
+catalogue = None  # DR1 defaults to wide_survey; set deep_survey for deep stacks.
 image_tile_id = None  # Optional exact tile; DR1 overlaps require explicit selection.
-print_catalog_info(release=release)
+print(f"ESA catalog: {catalog_table(release, catalogue)}")
+print_catalog_info(release=release, catalogue=catalogue)
 
 # ------------------------------
 # Retrieve objects
@@ -85,17 +88,23 @@ print_catalog_info(release=release)
 # Define object coordinates
 # ra, dec = 58.1332495, -49.1830038
 # ra, dec = 59.7913643, -47.6826163
-ra, dec = (266.4850113, 64.9936424) if release == "q1" else (273.18378579, 64.37054921)
+if release == "q1":
+    ra, dec = 266.4850113, 64.9936424
+else:
+    ra, dec = 273.18378579, 64.37054921
+# To compare wide/deep for another source, set coordinates here and change only
+# catalogue above; selecting a different survey never changes these coordinates.
+# ra, dec = 59.7913643, -47.6826163  # Validated Q1/DR1 deep-field object.
 
 # Specify search radius in arcseconds
 search_radius = 5
 
 # Perform cone search for objects
-results = backend.retrieve_objects(ra, dec, search_radius=search_radius, release=release)
+results = backend.retrieve_objects(ra, dec, search_radius=search_radius, release=release, catalogue=catalogue)
 
 if not results:
     # If no results are found, print message and exit
-    print_message(ra, dec, search_radius, release=release)
+    print_message(ra, dec, search_radius, release=release, catalogue=catalog_table(release, catalogue))
     sys.exit()
 
 # Print the retrieved object information
@@ -110,7 +119,7 @@ result = results[0]
 object_id = str(result["object_id"])
 
 # Retrieve the catalog entry for the selected object
-object_by_id = backend.retrieve_object_by_id(object_id, release=release)
+object_by_id = backend.retrieve_object_by_id(object_id, release=release, catalogue=catalogue)
 if object_by_id is not None:
     print_results(object_by_id)
 
@@ -159,8 +168,11 @@ cutout_size = 20  # arcsec
 
 # Retrieve cutouts from various bands (VIS, Y, J, H)
 image_options = {"release": release}
-if release == "dr1" and image_tile_id is not None:
-    image_options["tile_id"] = image_tile_id
+if release == "dr1":
+    image_options["tiling"] = "deep" if catalogue == "deep_survey" else "wide"
+    image_options["selection"] = "deep" if catalogue == "deep_survey" else "survey"
+    if image_tile_id is not None:
+        image_options["tile_id"] = image_tile_id
 vis_hdu = backend.retrieve_cutout(ra, dec, search_radius=search_radius, cutout_size=cutout_size, band="VIS", **image_options)
 y_hdu = backend.retrieve_cutout(ra, dec, search_radius=search_radius, cutout_size=cutout_size, band="Y", **image_options)
 j_hdu = backend.retrieve_cutout(ra, dec, search_radius=search_radius, cutout_size=cutout_size, band="J", **image_options)

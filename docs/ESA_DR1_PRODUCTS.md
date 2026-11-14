@@ -16,7 +16,7 @@ mosaics = backend.discover_mosaics(ra, dec, release='dr1', band='VIS',
                                   tiling='wide', selection='survey')
 ```
 
-The ESA example now has an explicit `release` variable, defaulting to Q1. Setting it to DR1 chooses this verified wide-survey target and red spectra. Image overlaps require an explicit tile or product path; no first/nearest result is selected by the DR1 methods.
+The ESA example has explicit `release` and `catalogue` settings, defaulting to Q1 and no selector. DR1 defaults to the wide-survey catalog; `catalogue="deep_survey"` selects the deep catalog and deep mosaics. See [catalog selection](ESA_DR1_CATALOG.md) for source-ID consistency and examples. Image overlaps require an explicit tile or product path; no first/nearest result is selected by the DR1 methods.
 
 ## Spectrum association and decoding
 

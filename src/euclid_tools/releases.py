@@ -1,6 +1,7 @@
 """Verified ESA release mappings; endpoint environments do not select releases."""
 
 CATALOG_TABLES = {"q1": "q1.mer_catalogue", "dr1": "dr1.mer_catalogue_wide_survey"}
+DR1_CATALOGUES = {name: f"dr1.mer_catalogue_{name}" for name in ("wide_survey", "deep_survey")}
 
 
 def normalize_release(release):
@@ -9,9 +10,16 @@ def normalize_release(release):
     return release.lower()
 
 
-def catalog_table(release="q1"):
-    """Select the operational Q1 or DR1-wide table without changing the API."""
-    return CATALOG_TABLES[normalize_release(release)]
+def catalog_table(release="q1", catalogue=None):
+    """Select Q1 or an explicit DR1 survey; DR1 defaults to wide_survey."""
+    if normalize_release(release) == "q1":
+        if catalogue is not None:
+            raise ValueError("Q1 has one MER catalog; omit catalogue")
+        return CATALOG_TABLES["q1"]
+    name = "wide_survey" if catalogue is None else catalogue
+    if not isinstance(name, str) or name not in DR1_CATALOGUES:
+        raise ValueError("ESA catalogue must be wide_survey or deep_survey")
+    return DR1_CATALOGUES[name]
 
 
 def require_product_support(release, product):

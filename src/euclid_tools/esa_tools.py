@@ -22,12 +22,13 @@ def _spectrum_id_keyword(client):
 COLUMNS_TO_REMOVE = ["basic_download_data_oid", "to_be_published"]
 
 
-def retrieve_objects(ra: float, dec: float, radius: float = None, search_radius: float = None, limit: int = -1, *, release: str = "q1", client=None) -> Table:
+def retrieve_objects(ra: float, dec: float, radius: float = None, search_radius: float = None, limit: int = -1, *, release: str = "q1", catalogue=None, client=None) -> Table:
     """
     Perform a cone search on the explicitly selected ESA MER catalog.
 
     ``release="q1"`` (default) preserves legacy outputs. ``release="dr1"``
-    selects DR1 wide-survey profile photometry with AB magnitudes only.
+    defaults to wide-survey profile photometry with AB magnitudes only.
+    ``catalogue="deep_survey"`` explicitly selects the DR1 deep-survey stack catalog.
     ``client`` optionally supplies an authenticated Astroquery-compatible client.
 
     Parameters
@@ -56,7 +57,7 @@ def retrieve_objects(ra: float, dec: float, radius: float = None, search_radius:
     - Results are sorted by angular separation in arcseconds.
     """
 
-    table_name = catalog_table(release)
+    table_name = catalog_table(release, catalogue)
     client = Euclid if client is None else client
     radius = u.Quantity(resolve_radius(radius=radius, search_radius=search_radius), u.arcsec)
     coord = SkyCoord(ra=ra, dec=dec, unit=(u.deg, u.deg), frame="icrs")
@@ -71,6 +72,9 @@ def retrieve_objects(ra: float, dec: float, radius: float = None, search_radius:
         dec_column_name="declination",
         columns="*",
         async_job=False,
+        # ESA deep-table VOTable metadata has an invalid arraysize on
+        # calblock_id_list. CSV preserves all fields and exact integer IDs.
+        **({"output_format": "csv"} if catalogue == "deep_survey" else {}),
     )
     if job is None:
         raise RuntimeError("ESA catalog query failed; check archive access and client diagnostics")
@@ -79,7 +83,7 @@ def retrieve_objects(ra: float, dec: float, radius: float = None, search_radius:
     if len(table) == 0:
         return None
 
-    table = _prepare_catalog_table(table, release=release)
+    table = _prepare_catalog_table(table, release=release, catalogue=catalogue)
 
     table.rename_column("dist", "separation")
 
@@ -91,10 +95,11 @@ def retrieve_objects(ra: float, dec: float, radius: float = None, search_radius:
     return table
 
 
-def retrieve_object_by_id(object_id: str, *, release: str = "q1", client=None) -> Table:
+def retrieve_object_by_id(object_id: str, *, release: str = "q1", catalogue=None, client=None) -> Table:
     """Retrieve an object by numeric ID from ``release="q1"`` or ``"dr1"``.
 
-    DR1 returns verified profile AB photometry only; Q1 retains AB/Vega and
+    DR1 accepts ``catalogue="wide_survey"`` (default) or ``"deep_survey"``.
+    It returns verified profile AB photometry only; Q1 retains AB/Vega and
     aperture outputs. An optional ``client`` supplies the archive connection.
 
     Returns an Astropy Table with the same release-specific catalog columns and derived
@@ -102,7 +107,7 @@ def retrieve_object_by_id(object_id: str, *, release: str = "q1", client=None) -
     Returns ``None`` if no matching object is found. Invalid IDs raise
     ``ValueError`` before querying the archive.
     """
-    table_name = catalog_table(release)
+    table_name = catalog_table(release, catalogue)
     client = Euclid if client is None else client
     object_id = str(object_id)
     digits = object_id[1:] if object_id.startswith("-") else object_id
@@ -110,16 +115,16 @@ def retrieve_object_by_id(object_id: str, *, release: str = "q1", client=None) -
         raise ValueError("object_id must contain decimal digits with an optional leading minus sign")
 
     query = f"SELECT * FROM {table_name} WHERE object_id = {object_id}"
-    job = client.launch_job(query)
+    job = client.launch_job(query, **({"output_format": "csv"} if catalogue == "deep_survey" else {}))
     if job is None:
         raise RuntimeError("ESA catalog query failed; check archive access and client diagnostics")
     table = job.get_results()
     if len(table) == 0:
         return None
-    return _prepare_catalog_table(table, release=release)
+    return _prepare_catalog_table(table, release=release, catalogue=catalogue)
 
 
-def _prepare_catalog_table(table: Table, *, release: str = "q1") -> Table:
+def _prepare_catalog_table(table: Table, *, release: str = "q1", catalogue=None) -> Table:
     """Apply the catalog formatting shared by cone searches and ID lookups."""
     release = normalize_release(release)
     table.remove_columns([name for name in COLUMNS_TO_REMOVE if name in table.colnames])
@@ -135,7 +140,8 @@ def _prepare_catalog_table(table: Table, *, release: str = "q1") -> Table:
         table.rename_column("right_ascension", "ra")
         table.rename_column("declination", "dec")
         table.meta["release"] = "DR1"
-        table.meta["catalogue_table"] = catalog_table(release)
+        table.meta["catalogue_table"] = catalog_table(release, catalogue)
+        table.meta["catalogue"] = "wide_survey" if catalogue is None else catalogue
         return table
 
     add_magnitude(table, table["flux_vis_psf"], table["fluxerr_vis_psf"], "VIS")
@@ -378,7 +384,7 @@ def retrieve_cutout(ra: float, dec: float, search_radius: float = None, cutout_s
     return hdul[0]
 
 
-def print_catalog_info(*, release: str = "q1"):
+def print_catalog_info(*, release: str = "q1", catalogue=None):
     """
     Print metadata information for each column in the Euclid MER catalog.
 
@@ -389,7 +395,7 @@ def print_catalog_info(*, release: str = "q1"):
     - Prints column name, unit, and description.
     """
 
-    table = Euclid.load_table(catalog_table(release))
+    table = Euclid.load_table(catalog_table(release, catalogue))
 
     for col in table.columns:
         if col.name in COLUMNS_TO_REMOVE:

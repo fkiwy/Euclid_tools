@@ -139,3 +139,6 @@ Initial catalog migration validation (12 November): **101 passed, 24 subtests pa
 12 November 2026). Both repository diffs passed `git diff --check`.
 The exact search sample SQL also returned three live DR1 rows; its first row's
 profile photometry passed through `gather_data.photometry` successfully.
+
+
+ESA catalog extension: [explicit wide/deep survey selection](ESA_DR1_CATALOG.md) is now supported for cone searches, ID lookup and metadata display. Q1 remains the default, and DR1 without a selector still uses the wide survey. The 19 shared catalog columns were checked against live ESA metadata before enabling deep profile photometry; no flag/calibration equivalence or science selection is assumed.
