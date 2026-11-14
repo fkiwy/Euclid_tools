@@ -2,7 +2,7 @@
 
 Implemented 13 November 2026. This adds an opt-in DR1 spectrum route; Q1 remains
 the default of `irsa_tools.retrieve_spectrum`. IRSA catalog helpers also support explicit DR1 selection; see
-[IRSA DR1 catalogs](IRSA_DR1_CATALOG.md). IRSA DR1 images are now available via [SIA/S3 cutouts](IRSA_DR1_IMAGES.md). ESA DR1 spectrum/cutout retrieval remains disabled.
+[IRSA DR1 catalogs](IRSA_DR1_CATALOG.md). IRSA DR1 images are now available via [SIA/S3 cutouts](IRSA_DR1_IMAGES.md). ESA DR1 spectra/cutouts are also available through the [dedicated ESA route](ESA_DR1_PRODUCTS.md).
 
 ## API and explicit product selection
 

@@ -66,12 +66,15 @@ def test_dr1_cone_and_empty_results(sample):
     assert esa_tools.retrieve_object_by_id("123", release="dr1", client=client) is None
 
 
-def test_unverified_products_never_call_q1_endpoints():
+def test_dr1_product_routes_never_call_q1_endpoints():
+    from euclid_tools import esa_products
     with patch.object(esa_tools.Euclid, "get_spectrum") as spectrum, patch.object(esa_tools.Euclid, "launch_job") as job:
-        with pytest.raises(NotImplementedError, match="DR1 spectrum"):
-            get_backend("esa").retrieve_spectrum("123", release="dr1")
-        with pytest.raises(NotImplementedError, match="DR1 cutout"):
-            get_backend("esa").retrieve_cutout(80, -51, radius=2, cutout_size=10, band="Y", release="dr1")
+        with patch.object(esa_products, "retrieve_spectrum", return_value=None) as dr1_spectrum:
+            assert get_backend("esa").retrieve_spectrum("123", release="dr1") is None
+            dr1_spectrum.assert_called_once()
+        with patch.object(esa_products, "retrieve_cutout", return_value=None) as dr1_cutout:
+            assert get_backend("esa").retrieve_cutout(80, -51, radius=2, cutout_size=10, band="Y", release="dr1") is None
+            dr1_cutout.assert_called_once()
         spectrum.assert_not_called()
         job.assert_not_called()
 

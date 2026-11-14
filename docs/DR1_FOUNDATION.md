@@ -69,9 +69,10 @@ is attempted on failure. Existing Q1 tests remain part of the regression suite.
 
 ## Product interfaces and scientific limits
 
-ESA DR1 spectrum and cutout calls accept the release argument but raise
-`NotImplementedError` **before network access**. They never use the Q1 product
-paths for a DR1 request. This is the ESA catalog-only foundation; IRSA spectra are a separately enabled route.
+ESA DR1 spectra and server cutouts are now available through the separately
+validated [ESA DR1 product route](ESA_DR1_PRODUCTS.md). Q1 remains the default;
+DR1 never falls back to Q1 products. The initial access limitations below are
+historical; the new document records current live checks and remaining limits.
 
 Live TAP exposes `dr1.spectra_source`, `dr1.mosaic_product` and
 `dr1.mer_cutouts_wide_survey`; their existence does not verify the DataLink
@@ -85,7 +86,7 @@ The official DR1 combined-spectra DPDD describes multiple source/dither and
 combined extensions. For `m_COMBINED1D_SIGNAL`, WAVELENGTH is Angstrom, SIGNAL
 has units `10**-16 erg/s/cm2/Angstrom`, VAR has the squared unit, and FSCALE is
 **deprecated, with scaling embedded in the unit**. Reusing the Q1 decoder's
-FSCALE multiplication could double-scale DR1 data. No ESA DR1 spectral decoder or DR1 image calibration has been enabled.
+FSCALE multiplication could double-scale DR1 data. The dedicated ESA DR1 decoder now preserves this native scaling; image calibration headers are preserved without independent recalibration.
 The separately documented IRSA SpectrumDM decoder preserves native units and bins.
 
 DR1 aperture fields and `fwhm` exist in live TAP but had empty unit/description

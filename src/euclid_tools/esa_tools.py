@@ -147,7 +147,7 @@ def _prepare_catalog_table(table: Table, *, release: str = "q1") -> Table:
     return table
 
 
-def retrieve_spectrum(object_id: str, save_spectrum: bool = False, output_dir: str = tempfile.gettempdir(), object_name: str = None, *, release: str = "q1") -> QTable:
+def retrieve_spectrum(object_id: str, save_spectrum: bool = False, output_dir: str = tempfile.gettempdir(), object_name: str = None, *, release: str = "q1", grism=None, product=None, client=None, session=None, timeout=120) -> QTable:
     """
     Retrieve the 1D spectrum for a given object ID from the Euclid archive.
 
@@ -178,10 +178,21 @@ def retrieve_spectrum(object_id: str, save_spectrum: bool = False, output_dir: s
     - The output directory defaults to a temporary directory if not specified.
     """
 
+    if normalize_release(release) == "dr1":
+        from euclid_tools.esa_products import retrieve_spectrum as retrieve_dr1_spectrum
+        result = retrieve_dr1_spectrum(object_id, grism=grism, product=product,
+                                      client=client, session=session, timeout=timeout)
+        if result is not None and save_spectrum:
+            result.write(os.path.join(output_dir, (object_name or f"E{object_id}") + "_spectrum.fits"),
+                         format="fits", overwrite=True)
+        return result
+    if grism is not None or product is not None or client is not None or session is not None:
+        raise ValueError("ESA product selectors/injected clients require release='dr1'")
     require_product_support(release, "spectrum")
     filename = _generate_filename(tempfile.gettempdir(), object_id)
     results = Euclid.get_spectrum(retrieval_type="SPECTRA_RGS", source_id=object_id, output_file=filename)
 
+    result = None
     if results and len(results) > 0:
         try:
             hdu = fits.open(results[0])[1]
@@ -250,7 +261,7 @@ def retrieve_spectrum(object_id: str, save_spectrum: bool = False, output_dir: s
     return result
 
 
-def retrieve_cutout(ra: float, dec: float, search_radius: float = None, cutout_size: float = None, band: str = None, radius: float = None, *, release: str = "q1") -> fits.PrimaryHDU:
+def retrieve_cutout(ra: float, dec: float, search_radius: float = None, cutout_size: float = None, band: str = None, radius: float = None, *, release: str = "q1", tiling="wide", selection=None, tile_id=None, product=None, client=None, session=None, timeout=120) -> fits.PrimaryHDU:
     """
     Retrieve an image cutout from Euclid imaging data.
 
@@ -279,6 +290,14 @@ def retrieve_cutout(ra: float, dec: float, search_radius: float = None, cutout_s
         If the provided band is not one of the allowed options.
     """
 
+    if normalize_release(release) == "dr1":
+        from euclid_tools.esa_products import retrieve_cutout as retrieve_dr1_cutout
+        return retrieve_dr1_cutout(ra, dec, radius=resolve_radius(radius, search_radius),
+                                  cutout_size=cutout_size, band=band, tiling=tiling,
+                                  selection=selection, tile_id=tile_id, product=product,
+                                  client=client, session=session, timeout=timeout)
+    if tiling != "wide" or selection is not None or tile_id is not None or product is not None or client is not None or session is not None:
+        raise ValueError("ESA mosaic selectors/injected clients require release='dr1'")
     require_product_support(release, "cutout")
     if band not in ["VIS", "Y", "J", "H"]:
         raise ValueError("Invalid band. Choose from 'VIS', 'Y', 'J', or 'H'.")

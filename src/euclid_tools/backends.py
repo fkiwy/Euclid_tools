@@ -42,6 +42,20 @@ class EuclidArchiveBackend(ABC):
 class ESABackend(EuclidArchiveBackend):
     name = "esa"
 
+    def retrieve_spectra(self, object_id, *, release="dr1", **kwargs):
+        from euclid_tools.releases import normalize_release
+        if normalize_release(release) != "dr1":
+            raise ValueError("Plural ESA spectrum retrieval requires release='dr1'")
+        from euclid_tools.esa_products import retrieve_spectra
+        return retrieve_spectra(object_id, **kwargs)
+
+    def discover_mosaics(self, ra, dec, *, release="dr1", **kwargs):
+        from euclid_tools.releases import normalize_release
+        if normalize_release(release) != "dr1":
+            raise ValueError("ESA mosaic discovery requires release='dr1'")
+        from euclid_tools.esa_products import discover_mosaics
+        return discover_mosaics(ra, dec, **kwargs)
+
     def retrieve_objects(self, ra, dec, radius=None, search_radius=None, **kwargs):
         from euclid_tools import esa_tools
 

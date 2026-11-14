@@ -17,5 +17,6 @@ def catalog_table(release="q1"):
 def require_product_support(release, product):
     if normalize_release(release) == "dr1":
         raise NotImplementedError(
-            f"DR1 {product} retrieval is not verified; no fallback to Q1 products. "
-            "See docs/DR1_FOUNDATION.md for official sources and limitations.")
+            f"DR1 {product} retrieval requires an explicit verified product configuration; "
+            "the legacy Q1 product route is disabled for DR1. "
+            "See docs/ESA_DR1_PRODUCTS.md for the ESA opt-in and limitations.")

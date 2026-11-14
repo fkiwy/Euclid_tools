@@ -74,7 +74,9 @@ warnings.simplefilter("ignore", category=AstropyWarning)
 # ------------------------------
 # Print catalog information
 # ------------------------------
-print_catalog_info()
+release = "q1"  # Set "dr1" for the validated wide-survey example below.
+image_tile_id = None  # Optional exact tile; DR1 overlaps require explicit selection.
+print_catalog_info(release=release)
 
 # ------------------------------
 # Retrieve objects
@@ -83,17 +85,17 @@ print_catalog_info()
 # Define object coordinates
 # ra, dec = 58.1332495, -49.1830038
 # ra, dec = 59.7913643, -47.6826163
-ra, dec = 266.4850113, 64.9936424
+ra, dec = (266.4850113, 64.9936424) if release == "q1" else (273.18378579, 64.37054921)
 
 # Specify search radius in arcseconds
 search_radius = 5
 
 # Perform cone search for objects
-results = backend.retrieve_objects(ra, dec, search_radius=search_radius)
+results = backend.retrieve_objects(ra, dec, search_radius=search_radius, release=release)
 
 if not results:
     # If no results are found, print message and exit
-    print_message(ra, dec, search_radius)
+    print_message(ra, dec, search_radius, release=release)
     sys.exit()
 
 # Print the retrieved object information
@@ -108,7 +110,7 @@ result = results[0]
 object_id = str(result["object_id"])
 
 # Retrieve the catalog entry for the selected object
-object_by_id = backend.retrieve_object_by_id(object_id)
+object_by_id = backend.retrieve_object_by_id(object_id, release=release)
 if object_by_id is not None:
     print_results(object_by_id)
 
@@ -117,7 +119,10 @@ if object_by_id is not None:
 # ------------------------------
 
 # Retrieve the spectrum for the selected object
-data = backend.retrieve_spectrum(object_id)
+spectrum_options = {"release": release}
+if release == "dr1":
+    spectrum_options["grism"] = "red"
+data = backend.retrieve_spectrum(object_id, **spectrum_options)
 
 # Plot the spectrum if data is available
 if data and len(data) > 0:
@@ -153,10 +158,13 @@ if data and len(data) > 0:
 cutout_size = 20  # arcsec
 
 # Retrieve cutouts from various bands (VIS, Y, J, H)
-vis_hdu = backend.retrieve_cutout(ra, dec, search_radius=search_radius, cutout_size=cutout_size, band="VIS")
-y_hdu = backend.retrieve_cutout(ra, dec, search_radius=search_radius, cutout_size=cutout_size, band="Y")
-j_hdu = backend.retrieve_cutout(ra, dec, search_radius=search_radius, cutout_size=cutout_size, band="J")
-h_hdu = backend.retrieve_cutout(ra, dec, search_radius=search_radius, cutout_size=cutout_size, band="H")
+image_options = {"release": release}
+if release == "dr1" and image_tile_id is not None:
+    image_options["tile_id"] = image_tile_id
+vis_hdu = backend.retrieve_cutout(ra, dec, search_radius=search_radius, cutout_size=cutout_size, band="VIS", **image_options)
+y_hdu = backend.retrieve_cutout(ra, dec, search_radius=search_radius, cutout_size=cutout_size, band="Y", **image_options)
+j_hdu = backend.retrieve_cutout(ra, dec, search_radius=search_radius, cutout_size=cutout_size, band="J", **image_options)
+h_hdu = backend.retrieve_cutout(ra, dec, search_radius=search_radius, cutout_size=cutout_size, band="H", **image_options)
 
 # Collect the images in a list with band and RGB mapping information
 images = []

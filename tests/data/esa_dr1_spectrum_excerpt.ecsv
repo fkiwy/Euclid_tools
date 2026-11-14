@@ -1,0 +1,39 @@
+# %ECSV 1.0
+# ---
+# datatype:
+# - {name: WAVELENGTH, unit: Angstrom, datatype: float32}
+# - {name: SIGNAL, unit: 1e-16 erg / (Angstrom s cm2), datatype: float32}
+# - {name: MASK, datatype: float64}
+# - {name: QUALITY, datatype: float32}
+# - {name: VAR, unit: 1e-32 erg2 / (Angstrom2 s2 cm4), datatype: float32}
+# - {name: NDITH, datatype: float64}
+# meta: !!omap
+# - {WMIN: 11900.0}
+# - {BINWIDTH: 13.4}
+# - {BINCOUNT: 531}
+# - {FSCALE: 1.0e-16}
+# - {EXPTIME: 2198.569}
+# - {LSF_SIG: 12.25518}
+# - {EXT_PROF: NONE}
+# - {SOURC_ID: 2731837857643705492}
+# - {EXTNAME: '2731837857643705492'}
+# - __serialized_columns__:
+#     SIGNAL:
+#       __class__: astropy.units.quantity.Quantity
+#       unit: !astropy.units.Unit {unit: 1e-16 erg / (Angstrom s cm2)}
+#       value: !astropy.table.SerializedColumn {name: SIGNAL}
+#     VAR:
+#       __class__: astropy.units.quantity.Quantity
+#       unit: !astropy.units.Unit {unit: 1e-32 erg2 / (Angstrom2 s2 cm4)}
+#       value: !astropy.table.SerializedColumn {name: VAR}
+#     WAVELENGTH:
+#       __class__: astropy.units.quantity.Quantity
+#       unit: !astropy.units.Unit {unit: Angstrom}
+#       value: !astropy.table.SerializedColumn {name: WAVELENGTH}
+# schema: astropy-2.0
+WAVELENGTH SIGNAL MASK QUALITY VAR NDITH
+11900.0 0.0 1.0 0.0 0.0 0.0
+11913.4 0.0 1.0 0.0 0.0 0.0
+11926.8 0.0 1.0 0.0 0.0 0.0
+11940.2 -0.00014697104 65.0 1.0 6.3144944e-05 1.0
+11953.6 -0.1353587 65.0 0.0 0.006336842 1.0

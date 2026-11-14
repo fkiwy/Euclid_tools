@@ -157,7 +157,7 @@ Inspected 14 November 2026:
   are recorded in the validation JSON. In particular the live official wide VIS
   header verifies DR1_R2, beyond the DR1_R1 deep header shown in the tutorial.
 
-ESA DR1 product retrieval remains disabled. No scientific thresholds or catalog
+ESA DR1 products now have a [separately verified route](ESA_DR1_PRODUCTS.md). No scientific thresholds or catalog
 selection criteria were changed by this implementation.
 
 

@@ -18,6 +18,7 @@ FIELDS = {
     "processing_dataset": "DATASETR", "processing_plan": "PPLANID",
     "processing_pipeline": "PIPDEFID", "processing_version": "PSWREL",
     "raw_sha256": "RAWSHA", "source_header_sha256": "RAWHDR",
+    "cutout_header_sha256": "CUTHDR",
 }
 
 
