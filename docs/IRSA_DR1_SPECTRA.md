@@ -151,3 +151,15 @@ polygon operation so the regression does not depend on Matplotlib's installed
 internal implementation. No archive download or package downgrade was needed.
 
 Combined validation after the plotting fix: **148 passed, 24 subtests passed**.
+
+
+## Q1 FITS association compatibility
+
+Q1 association rows can now contain a parent FITS path plus `hdu`, rather than a direct VOTable URL. These use the same bounded single-HDU converter with the explicit `euclid_combspec_q1` dataset; the original direct-VOTable route remains supported. Multiple FITS associations fail explicitly instead of choosing a spectrum arbitrarily. No parent FITS download, flux rescaling, bin filtering or Q1 scientific selection change is introduced.
+
+Official sources checked on 2026-11-14:
+- [IRSA SpectrumDM OpenAPI](https://irsacloud.ipac.caltech.edu/api/spectrumdm/openapi.json): `/convert/{file_path}` accepts `dataset_id` and `hdu`; `DataSet` lists `euclid_combspec_q1` separately from DR1.
+- [Official historical Q1 tutorial](https://github.com/Caltech-IPAC/irsa-tutorials/blob/b0a451f84fee74c04a41fa9383ca839afa34f88d/tutorials/euclid/3_Euclid_intro_1D_spectra.md): Q1 VOTable spectrum interface and physical columns.
+- Live IRSA TAP association `euclid.objectid_spectrafile_association_q1`, object `2664850113649936423`, coordinates `(266.48501135, 64.99364238)`, tile `102158582`: file `euclid/q1/SIR/102158582/EUC_SIR_W-COMBSPEC_102158582_2024-11-05T16:02:47.013610Z.fits`, HDU `2338`.
+
+The exact single-HDU request returned 108,675 bytes and 531 bins. Wavelength is Angstrom before conversion to microns; SIGNAL/UNCERTAINTY carry scaled `1e-16 erg / (Angstrom s cm2)` units. The explicit Q1 dataset and legacy `euclid_combspec` alias returned identical wavelength, signal and uncertainty arrays. The actual retrieval adapter also returned all 531 bins. TAP/SSA requests were intermittently slow or timed out; the successful association lookup and bounded cloud conversion were verified separately. Automated regression tests cover the adapter, exact dataset/HDU URL, physical values, masks, invalid metadata, ambiguity and the legacy route.

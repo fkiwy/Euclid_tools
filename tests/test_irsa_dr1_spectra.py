@@ -198,3 +198,37 @@ def test_service_votable_errors_are_not_valid_products(status):
         f'<INFO name="QUERY_STATUS" value="{status}">test failure</INFO></RESOURCE>'.encode())
     with pytest.raises(ValueError, match="QUERY_STATUS"):
         decode(body)
+
+
+Q1_PATH = 'euclid/q1/SIR/102158582/EUC_SIR_W-COMBSPEC_102158582_2024-11-05T16:02:47.013610Z.fits'
+
+
+def test_q1_fits_association_uses_only_requested_hdu_and_preserves_photometry():
+    client = Mock()
+    client.query_tap.return_value.to_table.return_value = Table({'path': [Q1_PATH], 'hdu': [2338]})
+    body = votable()
+    raw = QTable.read(io.BytesIO(body), format='votable')
+    with patch.object(irsa_tools, 'Irsa', client), patch.object(dr1, '_download', return_value=body) as download:
+        result = get_backend('irsa').retrieve_spectrum('2664850113649936423', release='q1', timeout=17)
+    download.assert_called_once_with(dr1.SPECTRUMDM_URL + Q1_PATH.replace(':', '%3A') + '?dataset_id=euclid_combspec_q1&hdu=2338', timeout=17)
+    assert len(result) == len(raw)
+    np.testing.assert_allclose(result['WAVELENGTH'].to_value(u.AA), raw['WAVELENGTH'].to_value(u.AA))
+    np.testing.assert_allclose(result['FLUX'].to_value(dr1.FLUX_UNIT), raw['SIGNAL'].to_value(dr1.FLUX_UNIT))
+    np.testing.assert_allclose(result['ERROR'].to_value(dr1.FLUX_UNIT), raw['UNCERTAINTY'].to_value(dr1.FLUX_UNIT))
+    np.testing.assert_array_equal(result['MASK'], raw['MASK'])
+
+
+@pytest.mark.parametrize('paths,hdus', [([Q1_PATH], None), ([Q1_PATH], [-1]),
+    ([Q1_PATH.replace('/q1/', '/dr1/')], [2338]),
+    ([Q1_PATH.replace('/SIR/', '/../SIR/')], [2338]),
+    ([Q1_PATH, Q1_PATH], [2338, 2339])])
+def test_q1_invalid_or_ambiguous_fits_association_never_downloads(paths, hdus):
+    client = Mock()
+    columns = {'path': paths}
+    if hdus is not None:
+        columns['hdu'] = hdus
+    client.query_tap.return_value.to_table.return_value = Table(columns)
+    with patch.object(irsa_tools, 'Irsa', client), patch.object(dr1, '_download') as download:
+        with pytest.raises(ValueError):
+            irsa_tools.retrieve_spectrum('2664850113649936423')
+    download.assert_not_called()

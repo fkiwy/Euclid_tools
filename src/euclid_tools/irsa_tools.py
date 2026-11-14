@@ -1,4 +1,6 @@
 import os
+import io
+from pathlib import PurePosixPath
 import tempfile
 import urllib
 
@@ -223,8 +225,24 @@ def retrieve_spectrum(object_id: str, save_spectrum: bool = False, output_dir: s
     if len(table) == 0:
         return None
 
-    file_url = urllib.parse.urljoin(Irsa.tap_url, table["path"][0])
-    spectrum = QTable.read(file_url, format="votable")
+    path = str(table["path"][0])
+    if path.endswith(".fits"):
+        # Current Q1 associations identify a parent FITS file and one HDU,
+        # not a directly readable VOTable. Never download the parent file.
+        from euclid_tools.irsa_spectra import SPECTRUMDM_URL, _download, _hdu
+        if len(table) != 1:
+            raise ValueError("Ambiguous Q1 spectrum: multiple file/HDU associations")
+        if (not path.startswith("euclid/q1/") or ".." in PurePosixPath(path).parts
+                or "hdu" not in table.colnames):
+            raise ValueError("Expected a Q1 archive FITS path and HDU")
+        file_url = (SPECTRUMDM_URL + urllib.parse.quote(path, safe="/") + "?"
+                    + urllib.parse.urlencode({"dataset_id": "euclid_combspec_q1",
+                                              "hdu": _hdu(table["hdu"][0])}))
+        spectrum = QTable.read(io.BytesIO(_download(file_url, timeout=timeout)), format="votable")
+    else:
+        # Preserve the original Q1 direct-VOTable association format.
+        file_url = urllib.parse.urljoin(Irsa.tap_url, path)
+        spectrum = QTable.read(file_url, format="votable")
 
     # Check if the spectrum contains valid data
     if np.isnan(spectrum["WAVELENGTH"]).all():
