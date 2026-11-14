@@ -1,4 +1,6 @@
 import os
+import io
+from pathlib import PurePosixPath
 import tempfile
 import urllib
 
@@ -13,16 +15,39 @@ from astropy.wcs import WCS
 from astroquery.ipac.irsa import Irsa
 
 from euclid_tools.backends import resolve_radius
-from euclid_tools.shared import add_magnitude, normalize_spectrum_table
+from euclid_tools.shared import add_magnitude, normalize_spectrum_table, convert_flux_to_mag, MagnitudeSystem
+from euclid_tools.releases import normalize_release
 
 COLUMNS_TO_REMOVE = ["tileid", "x", "y", "z", "spt_ind", "htm20", "cntr"]
 
 TABLE_MER = "euclid_q1_mer_catalogue"
+TABLE_MER_DR1 = "euclid_dr1_mer_catalogue_wide_survey"
 
 
-def retrieve_objects(ra: float, dec: float, radius: float = None, search_radius: float = None) -> Table:
+DR1_CATALOGUES = {name: f"euclid_dr1_mer_catalogue_{name}" for name in
+                  ("wide_survey", "deep_survey", "wide_mode", "deep_mode")}
+
+
+def catalog_table(release="q1", catalogue=None):
+    """Select an explicit DR1 collection; retain Q1's single-table default."""
+    if normalize_release(release) == "q1":
+        if catalogue is not None:
+            raise ValueError("Q1 has one MER catalog; omit catalogue")
+        return TABLE_MER
+    name = "wide_survey" if catalogue is None else catalogue
+    if not isinstance(name, str) or name not in DR1_CATALOGUES:
+        raise ValueError("catalogue must be wide_survey, deep_survey, wide_mode or deep_mode")
+    return DR1_CATALOGUES[name]
+
+
+def retrieve_objects(ra: float, dec: float, radius: float = None, search_radius: float = None, *, release: str = "q1", catalogue=None, client=None) -> Table:
     """
-    Perform a cone search on the Euclid Q1 MER catalog and return nearby objects.
+    Perform a cone search on the explicitly selected IRSA MER catalog.
+
+    Q1 (default) retains profile/aperture AB and Vega outputs. DR1 selects
+    the Wide Survey by default; ``catalogue="deep_survey"`` selects the Deep Survey.
+    Raw columns are preserved and derived photometry is profile AB only.
+    ``client`` optionally supplies an Astroquery IRSA-compatible client.
 
     Parameters
     ----------
@@ -36,27 +61,29 @@ def retrieve_objects(ra: float, dec: float, radius: float = None, search_radius:
     Returns
     -------
     Table
-        Astropy Table containing catalog entries with added AB and Vega magnitudes.
+        Astropy Table with profile AB magnitudes (and Q1 Vega/aperture magnitudes).
         Returns `None` if no objects are found.
 
     Notes
     -----
-    - Columns `tileid`, `x`, `y`, `z`, `spt_ind`, `htm20`, `cntr`are removed.
-    - Adds VIS, Y, J, and H magnitudes using `add_magnitude`.
-    - Adds aperture AB/Vega magnitudes and errors with prefixes
+    - Q1 removes `tileid`, `x`, `y`, `z`, `spt_ind`, `htm20`, `cntr`; DR1 retains raw columns.
+    - Q1 adds VIS, Y, J, and H AB/Vega magnitudes using `add_magnitude`.
+    - Q1 adds aperture AB/Vega magnitudes and errors with prefixes
       `VIS_4fwhm_aper`, `Y_2fwhm_aper`, `J_2fwhm_aper`, and `H_2fwhm_aper`.
     - Results are sorted by angular separation in arcseconds.
     """
 
+    table_name = catalog_table(release, catalogue)
+    client = Irsa if client is None else client
     radius = resolve_radius(radius=radius, search_radius=search_radius) * u.arcsec
     position = SkyCoord(ra, dec, unit=(u.deg, u.deg), frame="icrs")
 
-    table = Irsa.query_region(coordinates=position, spatial="Cone", catalog=TABLE_MER, radius=radius)
+    table = client.query_region(coordinates=position, spatial="Cone", catalog=table_name, radius=radius)
 
     if len(table) == 0:
         return None
 
-    table = _prepare_catalog_table(table)
+    table = _prepare_catalog_table(table, release=release, catalogue=catalogue)
 
     # Create a SkyCoord object for the target
     target_coord = SkyCoord(ra, dec, unit=(u.deg, u.deg), frame="icrs")
@@ -79,28 +106,42 @@ def retrieve_objects(ra: float, dec: float, radius: float = None, search_radius:
     return table
 
 
-def retrieve_object_by_id(object_id: str) -> Table:
-    """Retrieve a Euclid Q1 MER object by its numeric ``object_id``.
+def retrieve_object_by_id(object_id: str, *, release: str = "q1", catalogue=None, client=None) -> Table:
+    """Retrieve an IRSA Q1 (default) or explicitly selected DR1 catalog object by ID.
 
-    Returns an Astropy Table with the same catalog columns and AB/Vega
+    Returns an Astropy Table with the same release-specific catalog columns and derived
     magnitudes as :func:`retrieve_objects`, without a separation column.
     Returns ``None`` if no matching object is found. Invalid IDs raise
     ``ValueError`` before querying the archive.
     """
+    table_name = catalog_table(release, catalogue)
+    client = Irsa if client is None else client
     object_id = str(object_id)
     digits = object_id[1:] if object_id.startswith("-") else object_id
     if not digits or not digits.isascii() or not digits.isdecimal():
         raise ValueError("object_id must contain decimal digits with an optional leading minus sign")
 
-    query = f"SELECT * FROM {TABLE_MER} WHERE object_id = {object_id}"
-    table = Irsa.query_tap(query).to_table()
+    query = f"SELECT * FROM {table_name} WHERE object_id = {object_id}"
+    table = client.query_tap(query).to_table()
     if len(table) == 0:
         return None
-    return _prepare_catalog_table(table)
+    return _prepare_catalog_table(table, release=release, catalogue=catalogue)
 
 
-def _prepare_catalog_table(table: Table) -> Table:
+def _prepare_catalog_table(table: Table, *, release: str = "q1", catalogue=None) -> Table:
     """Apply the catalog formatting shared by cone searches and ID lookups."""
+    if normalize_release(release) == "dr1":
+        # IRSA supplies ra/dec in degrees, and these verified flux pairs in uJy.
+        # Do not infer aperture or Vega calibrations from Q1.
+        for band, suffix in (("VIS", "psf"), ("Y", "templfit"), ("J", "templfit"), ("H", "templfit")):
+            mag, err = convert_flux_to_mag(table[f"flux_{band.lower()}_{suffix}"],
+                                           table[f"fluxerr_{band.lower()}_{suffix}"], MagnitudeSystem.AB)
+            table[f"{band}_AB_mag"] = mag
+            table[f"{band}_AB_err"] = err
+            table[f"{band}_AB_mag"].unit = u.mag
+            table[f"{band}_AB_err"].unit = u.mag
+        table.meta.update(release="DR1", catalogue_table=catalog_table(release, catalogue), archive="IRSA")
+        return table
     table.remove_columns(COLUMNS_TO_REMOVE)
 
     add_magnitude(table, table["flux_vis_psf"], table["fluxerr_vis_psf"], "VIS")
@@ -120,9 +161,15 @@ def _prepare_catalog_table(table: Table) -> Table:
     return table
 
 
-def retrieve_spectrum(object_id: str, save_spectrum: bool = False, output_dir: str = tempfile.gettempdir(), object_name: str = None) -> QTable:
+def retrieve_spectrum(object_id: str, save_spectrum: bool = False, output_dir: str = tempfile.gettempdir(), object_name: str = None, *, release: str = "q1", grism=None, product=None,
+                      client=None, session=None, timeout=120) -> QTable:
     """
-    Retrieve the 1D spectrum for a given object ID from the Euclid archive.
+    Retrieve a Q1 (default) or explicitly selected DR1 spectrum from IRSA.
+
+    DR1 uses SpectrumDM with supplied units, returns one unambiguous product,
+    and preserves all bins. Select ``grism='red'``/``'blue'`` or an exact
+    ``product=(path, hdu)`` if necessary. Use ``retrieve_spectra`` for all products.
+    No SSA or Q1 fallback occurs for DR1. See docs/IRSA_DR1_SPECTRA.md.
 
     Parameters
     ----------
@@ -150,6 +197,22 @@ def retrieve_spectrum(object_id: str, save_spectrum: bool = False, output_dir: s
     - The output directory defaults to a temporary directory if not specified.
     """
 
+    if normalize_release(release) == "dr1":
+        spectra = retrieve_spectra(object_id, grism=grism, product=product,
+                                   client=client, session=session, timeout=timeout)
+        if not spectra:
+            return None
+        if len(spectra) != 1:
+            raise ValueError(f"Ambiguous DR1 spectrum: {len(spectra)} products; use "
+                             "retrieve_spectra or select grism and exact product=(path, hdu)")
+        result = spectra[0]
+        if save_spectrum:
+            filename = (object_name or f"E{object_id}") + "_spectrum.fits"
+            result.write(os.path.join(output_dir, filename), format="fits", overwrite=True)
+        return result
+    if grism is not None or product is not None or client is not None or session is not None:
+        raise ValueError("Product selectors and injected clients are supported only for DR1 spectra")
+
     adql = f"""
     SELECT *
       FROM euclid.objectid_spectrafile_association_q1
@@ -162,8 +225,24 @@ def retrieve_spectrum(object_id: str, save_spectrum: bool = False, output_dir: s
     if len(table) == 0:
         return None
 
-    file_url = urllib.parse.urljoin(Irsa.tap_url, table["path"][0])
-    spectrum = QTable.read(file_url, format="votable")
+    path = str(table["path"][0])
+    if path.endswith(".fits"):
+        # Current Q1 associations identify a parent FITS file and one HDU,
+        # not a directly readable VOTable. Never download the parent file.
+        from euclid_tools.irsa_spectra import SPECTRUMDM_URL, _download, _hdu
+        if len(table) != 1:
+            raise ValueError("Ambiguous Q1 spectrum: multiple file/HDU associations")
+        if (not path.startswith("euclid/q1/") or ".." in PurePosixPath(path).parts
+                or "hdu" not in table.colnames):
+            raise ValueError("Expected a Q1 archive FITS path and HDU")
+        file_url = (SPECTRUMDM_URL + urllib.parse.quote(path, safe="/") + "?"
+                    + urllib.parse.urlencode({"dataset_id": "euclid_combspec_q1",
+                                              "hdu": _hdu(table["hdu"][0])}))
+        spectrum = QTable.read(io.BytesIO(_download(file_url, timeout=timeout)), format="votable")
+    else:
+        # Preserve the original Q1 direct-VOTable association format.
+        file_url = urllib.parse.urljoin(Irsa.tap_url, path)
+        spectrum = QTable.read(file_url, format="votable")
 
     # Check if the spectrum contains valid data
     if np.isnan(spectrum["WAVELENGTH"]).all():
@@ -198,6 +277,17 @@ def retrieve_spectrum(object_id: str, save_spectrum: bool = False, output_dir: s
 
     result = QTable(columns, names=names)
     result = normalize_spectrum_table(result)
+    from euclid_tools.provenance import stamp
+    association = table[0]
+    stamp(result.meta, product_type="spectrum", release="Q1", archive="IRSA",
+          route="tap-association+spectrumdm" if path.endswith(".fits") else "tap-association+votable",
+          OBJECTID=str(object_id), SRCPATH=path, SRCURL=file_url,
+          SRCHDU=int(association["hdu"]) if "hdu" in table.colnames else None,
+          TILEID=str(association["tileid"]) if "tileid" in table.colnames else None,
+          GRISM=str(association["bandpass_name"]) if "bandpass_name" in table.colnames else None,
+          GRISMREF="IRSA Q1 association bandpass_name" if "bandpass_name" in table.colnames else None,
+          ASSOCTBL="euclid.objectid_spectrafile_association_q1",
+          DATASET="euclid_combspec_q1" if path.endswith(".fits") else None)
 
     if save_spectrum:
         if not object_name:
@@ -213,9 +303,15 @@ def retrieve_spectrum(object_id: str, save_spectrum: bool = False, output_dir: s
     return result
 
 
-def retrieve_cutout(ra: float, dec: float, search_radius: float = None, cutout_size: float = None, band: str = None, radius: float = None) -> fits.PrimaryHDU:
+def retrieve_cutout(ra: float, dec: float, search_radius: float = None, cutout_size: float = None, band: str = None, radius: float = None, *, release="q1", tiling="wide", selection=None,
+                    tile_id=None, product=None, mode="trim", client=None, filesystem=None) -> fits.PrimaryHDU:
     """
-    Retrieve an image cutout from Euclid imaging data.
+    Retrieve a Q1 (default) or explicitly selected IRSA DR1 image cutout.
+
+    DR1 uses SIA and bounded S3 section reads, preserves calibration headers and
+    updates WCS. Wide defaults to official survey mosaics; deep defaults to deep
+    stacks. Ambiguous results require tile_id or an exact product S3 URI.
+    See docs/IRSA_DR1_IMAGES.md for discovery, selections and limits.
 
     Parameters
     ----------
@@ -242,6 +338,14 @@ def retrieve_cutout(ra: float, dec: float, search_radius: float = None, cutout_s
         If the provided band is not one of the allowed options.
     """
 
+    if normalize_release(release) == "dr1":
+        from euclid_tools.irsa_images import retrieve_cutout as retrieve_dr1_cutout
+        return retrieve_dr1_cutout(ra, dec, radius=resolve_radius(radius, search_radius),
+                                   cutout_size=cutout_size, band=band, tiling=tiling, selection=selection,
+                                   tile_id=tile_id, product=product, mode=mode, client=client, filesystem=filesystem)
+    if tiling != "wide" or selection is not None or tile_id is not None or product is not None or client is not None or filesystem is not None or mode != "trim":
+        raise ValueError("DR1 mosaic selectors require release='dr1'")
+
     if band not in ["VIS", "Y", "J", "H"]:
         raise ValueError("Invalid band. Choose from 'VIS', 'Y', 'J', or 'H'.")
     if cutout_size is None:
@@ -261,14 +365,22 @@ def retrieve_cutout(ra: float, dec: float, search_radius: float = None, cutout_s
 
     print(f"Downloading {band}-band cutout")
     with fits.open(image_url, use_fsspec=True) as hdul:
+        source_header = hdul[0].header.copy()
         wcs = WCS(hdul[0].header)
         cutout = Cutout2D(hdul[0].section, position=position, size=cutout_size * u.arcsec, wcs=wcs)
         hdu = fits.PrimaryHDU(data=cutout.data, header=cutout.wcs.to_header())
 
+    from euclid_tools.provenance import stamp
+    stamp(hdu.header, product_type="image", release="Q1", archive="IRSA",
+          route="sia+fsspec-section", SRCPATH=str(image_url), SRCURL=str(image_url),
+          SRCHDU=0, PRODBAND=band)
+    for key in ("DATASETR", "PPLANID", "PIPDEFID", "PSWREL"):
+        if key in source_header:
+            hdu.header[key] = source_header[key]
     return hdu
 
 
-def print_catalog_info():
+def print_catalog_info(*, release: str = "q1", catalogue=None):
     """
     Print metadata information for each column in the Euclid MER catalog.
 
@@ -278,11 +390,26 @@ def print_catalog_info():
     - Prints column name, unit, and description.
     """
 
+    table_name = catalog_table(release, catalogue)
     service = vo.dal.TAPService("https://irsa.ipac.caltech.edu/TAP")
-    table = service.tables[TABLE_MER]
+    table = service.tables[table_name]
 
     for col in table.columns:
         if col.name in COLUMNS_TO_REMOVE:
             continue
 
         print(f'{f"{col.name}":45s} {f"{col.unit}":12s} {col.description}')
+
+
+def retrieve_spectra(object_id, *, grism=None, product=None, client=None, session=None, timeout=120):
+    """Return every matching DR1 spectrum; Q1's singular API remains unchanged."""
+    from euclid_tools.irsa_spectra import retrieve_spectra as retrieve_dr1
+    return retrieve_dr1(object_id, grism=grism, product=product, client=client,
+                        session=session, timeout=timeout)
+
+
+def discover_mosaics(ra, dec, radius=None, search_radius=None, **kwargs):
+    """Discover verified DR1 wide/deep science mosaics; list all candidates."""
+    from euclid_tools.irsa_images import discover_mosaics as discover_dr1
+    radius = 2 if radius is None and search_radius is None else resolve_radius(radius, search_radius)
+    return discover_dr1(ra, dec, radius=radius, **kwargs)

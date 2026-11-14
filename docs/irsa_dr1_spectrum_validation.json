@@ -1,0 +1,42 @@
+{
+  "utc": "2026-11-13T18:03:55.007737+00:00",
+  "object_id": "2730189294682318706",
+  "rows": 531,
+  "astropy": "8.0.2",
+  "astroquery": "0.4.11",
+  "association_endpoint": "https://irsa.ipac.caltech.edu/TAP",
+  "product": {
+    "ID": "Euclid_2730189294682318706_Combined",
+    "name": "Euclid_2730189294682318706_Combined",
+    "utype": "spec:Spectrum",
+    "RELEASE": "DR1",
+    "OBJECTID": "2730189294682318706",
+    "ARCHIVE": "IRSA",
+    "DATASET": "euclid_combspec_dr1",
+    "ASSOCTBL": "euclid.objectid_spectrafile_association_dr1",
+    "SRCPATH": "euclid/dr1/SIR_COMBINED_SPECTRA/101839130/EUC_SIR_W-COMBSPEC_101839130_20250908T142948.154355Z.fits",
+    "SRCHDU": 6563,
+    "TILEID": "101839130",
+    "GRISM": "red",
+    "GRISMREF": "IRSA tutorial: minimum wavelength <1.1 um identifies blue",
+    "SRCURL": "https://irsacloud.ipac.caltech.edu/api/spectrumdm/convert/euclid/dr1/SIR_COMBINED_SPECTRA/101839130/EUC_SIR_W-COMBSPEC_101839130_20250908T142948.154355Z.fits?dataset_id=euclid_combspec_dr1&hdu=6563",
+    "RAWSHA": "c581a81a4851a54304b9cdb19e063bac3bf148af3a51efcd4aad747f3afea71e"
+  },
+  "wavelength_unit": "um",
+  "flux_unit": "1e-16 erg / (Angstrom s cm2)",
+  "all_masks_preserved": true,
+  "reference_bin_200": {
+    "wavelength_um": 1.4579999446868896,
+    "flux_cgs_per_Angstrom": 7.49826705073568e-16,
+    "error_cgs_per_Angstrom": 1.662549175796988e-18
+  },
+  "limitations": "One public red spectrum; scientific calibration and live blue/repeat ambiguity are not validated",
+  "search_workflow": {
+    "entry_point": "euclid_dr1.save_spectra",
+    "config": "archive_dr1_irsa_spectra.json",
+    "status": "ok",
+    "bins": 531,
+    "spectrum_fits_sha256": "4575295223bf0476b906724e7550fd5cc1b6abc154847d1de8ae89a6a9c0a1ef",
+    "raw_votable_sha256": "c581a81a4851a54304b9cdb19e063bac3bf148af3a51efcd4aad747f3afea71e"
+  }
+}

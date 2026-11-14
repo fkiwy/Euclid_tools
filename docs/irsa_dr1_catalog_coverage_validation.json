@@ -1,0 +1,21 @@
+{
+  "utc": "2026-11-14T08:04:27.537902+00:00",
+  "endpoint": "https://irsa.ipac.caltech.edu/TAP/sync",
+  "ra": 273.018929496624,
+  "dec": 68.231870619389,
+  "radius_arcsec": 5,
+  "wide_survey_rows": 0,
+  "deep_survey_rows": [
+    {
+      "object_id": "2730189294682318706",
+      "ra": "273.01892950",
+      "dec": "68.23187062",
+      "tileid": "101839130"
+    }
+  ],
+  "actual_backend_cone_validation": "wide_survey None; deep_survey one row with the same ID and separation rounded to 0.0 arcsec",
+  "query_template": "SELECT TOP 3 object_id,ra,dec,tileid FROM euclid_dr1_mer_catalogue_<catalogue> WHERE CONTAINS(POINT('ICRS',ra,dec),CIRCLE('ICRS',273.018929496624,68.231870619389,5.0/3600))=1",
+  "limit": 3,
+  "scope": "Coverage and catalog selection; no inferred fallback, calibration changes or bulk data",
+  "deep_id_lookup_probe": "Did not complete within the 90-second local validation budget; deep ID routing is tested offline"
+}

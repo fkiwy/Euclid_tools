@@ -215,7 +215,8 @@ def print_results(results):
     if "separation" in results.colnames:
         columns.append("separation")
 
-    table = results[columns]
+    # DR1 provides verified profile AB columns without Q1 aperture/Vega fields.
+    table = results[[name for name in columns if name in results.colnames]]
     table.pprint_all()
 
 
@@ -310,9 +311,9 @@ def remove_bad_values(spectrum, mask_func):
     return QTable([wl_col, fl_col, err_col])
 
 
-def print_message(ra, dec, search_radius):
+def print_message(ra, dec, search_radius, *, release="q1", catalogue=None):
     """
-    Print a message when no object is found in the Euclid Q1 MER catalog.
+    Print the actual release and optional catalog table when no object is found.
 
     Parameters
     ----------
@@ -328,13 +329,17 @@ def print_message(ra, dec, search_radius):
     This message is intended to guide the user toward verifying or expanding the search.
     """
 
+    from euclid_tools.releases import normalize_release
+    release_label = normalize_release(release).upper()
+    catalogue_label = f" ({catalogue})" if catalogue is not None else ""
+
     print(
         f"""
-No object found in Euclid Q1 MER catalog at the specified coordinates.
+No object found in Euclid {release_label} MER catalog{catalogue_label} at the specified coordinates.
 - Right Ascension: {ra}
 - Declination: {dec}
 - Search radius: {search_radius} arcsec
 
-Please verify the coordinates or try increasing the search radius.
+Please verify the coordinates and catalog coverage, or try increasing the search radius.
 """
     )

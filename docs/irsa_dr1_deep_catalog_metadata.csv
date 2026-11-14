@@ -1,0 +1,11 @@
+column_name,unit
+ra,deg
+dec,deg
+flux_y_templfit,uJy
+flux_j_templfit,uJy
+flux_h_templfit,uJy
+fluxerr_y_templfit,uJy
+fluxerr_j_templfit,uJy
+fluxerr_h_templfit,uJy
+flux_vis_psf,uJy
+fluxerr_vis_psf,uJy

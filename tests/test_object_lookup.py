@@ -25,7 +25,7 @@ class ObjectLookupTests(unittest.TestCase):
 
     def test_lookup_formats_results_and_queries_exact_id(self):
         for name, module, client, method, result_method, catalog in (
-            ("esa", esa_tools, esa_tools.Euclid, "launch_job", "get_results", "catalogue.mer_catalogue"),
+            ("esa", esa_tools, esa_tools.Euclid, "launch_job", "get_results", "q1.mer_catalogue"),
             ("irsa", irsa_tools, irsa_tools.Irsa, "query_tap", "to_table", irsa_tools.TABLE_MER),
         ):
             with self.subTest(archive=name):
@@ -47,7 +47,7 @@ class ObjectLookupTests(unittest.TestCase):
 
     def test_negative_ids_are_preserved_in_queries(self):
         for name, module, client, method, result_method, catalog in (
-            ("esa", esa_tools, esa_tools.Euclid, "launch_job", "get_results", "catalogue.mer_catalogue"),
+            ("esa", esa_tools, esa_tools.Euclid, "launch_job", "get_results", "q1.mer_catalogue"),
             ("irsa", irsa_tools, irsa_tools.Irsa, "query_tap", "to_table", irsa_tools.TABLE_MER),
         ):
             with self.subTest(archive=name):

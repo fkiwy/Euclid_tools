@@ -50,15 +50,22 @@ The script will generate a plot that shows the spectrum of the selected object, 
 import sys
 import warnings
 
+# These examples export files and use an external viewer; never create Tk GUI
+# objects that an S3/async worker could later garbage-collect off the main thread.
+import matplotlib
+matplotlib.use("Agg")
+
 from astropy.utils.exceptions import AstropyWarning
 from euclid_tools.image_plotter import plot_images
-from euclid_tools.irsa_tools import print_catalog_info
+from euclid_tools.irsa_tools import print_catalog_info, catalog_table
 from euclid_tools.shared import print_results, print_message, create_object_name
 from flux_comp.core import SED, WaveFlux
 
 from euclid_tools import get_backend
 
 backend = get_backend('irsa')
+release = 'q1'  # Change to 'dr1' for DR1 catalogs and spectra.
+catalogue = None  # DR1 defaults to wide_survey; use 'deep_survey' for the validated spectrum target.
 
 warnings.simplefilter("ignore", category=AstropyWarning)
 
@@ -69,13 +76,15 @@ warnings.simplefilter("ignore", category=AstropyWarning)
 # ------------------------------
 # Print catalog information
 # ------------------------------
-print_catalog_info()
+print_catalog_info(release=release, catalogue=catalogue)
 
 # ------------------------------
 # Retrieve objects
 # ------------------------------
 
 # Define object coordinates
+# Validated DR1 spectrum target: set release='dr1', catalogue='deep_survey',
+# and ra, dec = 273.018929496624, 68.231870619389.
 # ra, dec = 58.1332495, -49.1830038
 # ra, dec = 59.7913643, -47.6826163
 ra, dec = 266.4850113, 64.9936424
@@ -84,11 +93,11 @@ ra, dec = 266.4850113, 64.9936424
 search_radius = 5
 
 # Perform cone search for objects
-results = backend.retrieve_objects(ra, dec, search_radius=search_radius)
+results = backend.retrieve_objects(ra, dec, search_radius=search_radius, release=release, catalogue=catalogue)
 
 if not results:
     # If no results are found, print message and exit
-    print_message(ra, dec, search_radius)
+    print_message(ra, dec, search_radius, release=release, catalogue=catalog_table(release, catalogue))
     sys.exit()
 
 # Print the retrieved object information
@@ -103,7 +112,7 @@ result = results[0]
 object_id = str(result["object_id"])
 
 # Retrieve the catalog entry for the selected object
-object_by_id = backend.retrieve_object_by_id(object_id)
+object_by_id = backend.retrieve_object_by_id(object_id, release=release, catalogue=catalogue)
 if object_by_id is not None:
     print_results(object_by_id)
 
@@ -112,7 +121,10 @@ if object_by_id is not None:
 # ------------------------------
 
 # Retrieve the spectrum for the selected object
-data = backend.retrieve_spectrum(object_id)
+spectrum_options = {"release": release}
+if release == "dr1":
+    spectrum_options["grism"] = "red"  # Ambiguous repeated red products raise.
+data = backend.retrieve_spectrum(object_id, **spectrum_options)
 
 # Plot the spectrum if data is available
 if data and len(data) > 0:
@@ -144,14 +156,22 @@ if data and len(data) > 0:
 # Retrieve cutouts
 # ------------------------------
 
+image_options = {}
+if release == "dr1":
+    image_tiling = "deep" if catalogue in ("deep_survey", "deep_mode") else "wide"
+    image_options = {"release": "dr1", "tiling": image_tiling,
+                     "selection": "deep" if image_tiling == "deep" else "survey",
+                     "tile_id": str(result["tileid"])}
+    # Use backend.discover_mosaics(...) and an exact product if a tile is ambiguous.
+
 # Define cutout size (arcsec)
 cutout_size = 20  # arcsec
 
 # Retrieve cutouts from various bands (VIS, Y, J, H)
-vis_hdu = backend.retrieve_cutout(ra, dec, search_radius=search_radius, cutout_size=cutout_size, band="VIS")
-y_hdu = backend.retrieve_cutout(ra, dec, search_radius=search_radius, cutout_size=cutout_size, band="Y")
-j_hdu = backend.retrieve_cutout(ra, dec, search_radius=search_radius, cutout_size=cutout_size, band="J")
-h_hdu = backend.retrieve_cutout(ra, dec, search_radius=search_radius, cutout_size=cutout_size, band="H")
+vis_hdu = backend.retrieve_cutout(ra, dec, search_radius=search_radius, cutout_size=cutout_size, band="VIS", **image_options)
+y_hdu = backend.retrieve_cutout(ra, dec, search_radius=search_radius, cutout_size=cutout_size, band="Y", **image_options)
+j_hdu = backend.retrieve_cutout(ra, dec, search_radius=search_radius, cutout_size=cutout_size, band="J", **image_options)
+h_hdu = backend.retrieve_cutout(ra, dec, search_radius=search_radius, cutout_size=cutout_size, band="H", **image_options)
 
 # Collect the images in a list with band and RGB mapping information
 images = []

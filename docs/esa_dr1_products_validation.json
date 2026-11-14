@@ -1,0 +1,540 @@
+{
+  "sources": [
+    "https://www.cosmos.esa.int/web/euclid/dr1-data",
+    "https://astroquery.readthedocs.io/en/latest/esa/euclid/euclid.html",
+    "https://euclid.esac.esa.int/dr/dr1/dpdd/sirdpd/dpcards/sir_combinedspectra.html"
+  ],
+  "checks": [
+    {
+      "kind": "spectrum",
+      "grism": "red",
+      "source_id": "2731837857643705492",
+      "status": "ok",
+      "bins": 531,
+      "finite_flux": 531,
+      "flux_unit": "1e-16 erg / (Angstrom s cm2)",
+      "seconds": 7.703563445000327,
+      "provenance": {
+        "schema": "euclid.product-provenance/v1",
+        "metadata_version": 1,
+        "release": "DR1",
+        "archive": "ESA",
+        "product_type": "spectrum",
+        "source_id": "2731837857643705492",
+        "source_file": "/data/euclid/repository_dr1/DR1/R2/SIR_COMBINED_SPECTRA/102158277/EUC_SIR_W-COMBSPEC_102158277_20250902T225801.134941Z.fits",
+        "source_hdu": 12,
+        "grism": "red",
+        "grism_reference": "ESA dr1.spectra_source.lambda_range",
+        "retrieval_route": "tap-association+esa-datalink",
+        "retrieval_url": "https://eas.esac.esa.int/sas-dd/data?ID=dr1+2731837857643705492&RELEASE=dr1&LINKING_PARAMETER=SOURCE_ID&RETRIEVAL_TYPE=SPECTRA_RGS&USE_ZIP_ALWAYS=true&TAPCLIENT=ASTROQUERY",
+        "dataset": "dr1",
+        "association_table": "dr1.spectra_source",
+        "tile_id": null,
+        "band": null,
+        "mosaic_class": null,
+        "processing_dataset": null,
+        "processing_plan": null,
+        "processing_pipeline": null,
+        "processing_version": null,
+        "raw_sha256": "744b62b1e992d22707760dd17b4628f412d8e547fc152bf8056d7cb83e9f3bc2",
+        "source_header_sha256": null,
+        "cutout_header_sha256": null,
+        "requested_source_id": null
+      }
+    },
+    {
+      "kind": "spectrum",
+      "grism": "blue",
+      "source_id": "2681886189660473837",
+      "status": "ok",
+      "bins": 433,
+      "finite_flux": 433,
+      "flux_unit": "1e-16 erg / (Angstrom s cm2)",
+      "seconds": 1.298610230000122,
+      "provenance": {
+        "schema": "euclid.product-provenance/v1",
+        "metadata_version": 1,
+        "release": "DR1",
+        "archive": "ESA",
+        "product_type": "spectrum",
+        "source_id": "2681886189660473837",
+        "source_file": "/data/euclid/repository_dr1/DR1/R1/SIR_COMBINED_SPECTRA/101834042/EUC_SIR_W-COMBSPEC_101834042_20250907T183244.040942Z.fits",
+        "source_hdu": 489,
+        "grism": "blue",
+        "grism_reference": "ESA dr1.spectra_source.lambda_range",
+        "retrieval_route": "tap-association+esa-datalink",
+        "retrieval_url": "https://eas.esac.esa.int/sas-dd/data?ID=dr1+2681886189660473837&RELEASE=dr1&LINKING_PARAMETER=SOURCE_ID&RETRIEVAL_TYPE=SPECTRA_BGS&USE_ZIP_ALWAYS=true&TAPCLIENT=ASTROQUERY",
+        "dataset": "dr1",
+        "association_table": "dr1.spectra_source",
+        "tile_id": null,
+        "band": null,
+        "mosaic_class": null,
+        "processing_dataset": null,
+        "processing_plan": null,
+        "processing_pipeline": null,
+        "processing_version": null,
+        "raw_sha256": "77227ef9e627f6ae64d00b418840b1d3a9fd4954bf80c1b173b3aae7698b6f40",
+        "source_header_sha256": null,
+        "cutout_header_sha256": null,
+        "requested_source_id": null
+      }
+    },
+    {
+      "kind": "image",
+      "ra": 273.18378579,
+      "dec": 64.37054921,
+      "band": "VIS",
+      "tiling": "wide",
+      "selection": "survey",
+      "tile_id": "102158277",
+      "status": "ok",
+      "shape": [
+        31,
+        31
+      ],
+      "seconds": 0.5420862890005083,
+      "provenance": {
+        "schema": "euclid.product-provenance/v1",
+        "metadata_version": 1,
+        "release": "DR1",
+        "archive": "ESA",
+        "product_type": "image",
+        "source_id": null,
+        "source_file": "/data/euclid/repository_dr1/DR1/R2/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-5EF3F0_20250803T105320.820305Z_00.00.fits",
+        "source_hdu": null,
+        "grism": null,
+        "grism_reference": null,
+        "retrieval_route": "tap-mosaic+esa-get_cutout",
+        "retrieval_url": "https://eas.esac.esa.int/sas-cutout/cutout?FILEPATH=%2Fdata%2Feuclid%2Frepository_dr1%2FDR1%2FR2%2FMER%2F102158277%2FVIS%2FEUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-5EF3F0_20250803T105320.820305Z_00.00.fits&TAPCLIENT=ASTROQUERY&POS=CIRCLE%2C273.18378579%2C64.37054921%2C0.0004166666666666667",
+        "dataset": null,
+        "association_table": null,
+        "tile_id": "102158277",
+        "band": "VIS",
+        "mosaic_class": "survey",
+        "processing_dataset": "DR1_R2",
+        "processing_plan": "MER_ProcessTile_EUCLID_2.0.32-DATA_RELEASE-pcasenov-PLAN-000000",
+        "processing_pipeline": "MER_ProcessTile_EUCLID_2.0.32",
+        "processing_version": "11.3.1",
+        "raw_sha256": "b584c57035d65cd6310f8ebc37168ab2615d14f863001baaefb110bd500ec45a",
+        "source_header_sha256": null,
+        "cutout_header_sha256": "481d53250bc35e86cc9216191b00e16be1ee28a88506865035168e9a76c93e24",
+        "requested_source_id": null
+      },
+      "bunit": "ADU/s",
+      "magzero": 24.5
+    },
+    {
+      "kind": "image",
+      "ra": 273.18378579,
+      "dec": 64.37054921,
+      "band": "Y",
+      "tiling": "wide",
+      "selection": "survey",
+      "tile_id": "102158277",
+      "status": "ok",
+      "shape": [
+        31,
+        31
+      ],
+      "seconds": 0.9373937670006853,
+      "provenance": {
+        "schema": "euclid.product-provenance/v1",
+        "metadata_version": 1,
+        "release": "DR1",
+        "archive": "ESA",
+        "product_type": "image",
+        "source_id": null,
+        "source_file": "/data/euclid/repository_dr1/DR1/R2/MER/102158277/NISP/EUC_MER_BGSUB-MOSAIC-NIR-Y_TILE102158277-B62363_20250802T171104.054818Z_00.00.fits",
+        "source_hdu": null,
+        "grism": null,
+        "grism_reference": null,
+        "retrieval_route": "tap-mosaic+esa-get_cutout",
+        "retrieval_url": "https://eas.esac.esa.int/sas-cutout/cutout?FILEPATH=%2Fdata%2Feuclid%2Frepository_dr1%2FDR1%2FR2%2FMER%2F102158277%2FNISP%2FEUC_MER_BGSUB-MOSAIC-NIR-Y_TILE102158277-B62363_20250802T171104.054818Z_00.00.fits&TAPCLIENT=ASTROQUERY&POS=CIRCLE%2C273.18378579%2C64.37054921%2C0.0004166666666666667",
+        "dataset": null,
+        "association_table": null,
+        "tile_id": "102158277",
+        "band": "Y",
+        "mosaic_class": "survey",
+        "processing_dataset": "DR1_R2",
+        "processing_plan": "MER_ProcessTile_EUCLID_2.0.32-DATA_RELEASE-pcasenov-PLAN-000000",
+        "processing_pipeline": "MER_ProcessTile_EUCLID_2.0.32",
+        "processing_version": "11.3.1",
+        "raw_sha256": "e4051a6c733fb5527267d6c8612ba63b295c6a8bf9b8437e36bd34ae2164c8d0",
+        "source_header_sha256": null,
+        "cutout_header_sha256": "1b7c51de49b09a56ed616f22afa790f14111eb1003ba18984b752ad736118513",
+        "requested_source_id": null
+      },
+      "bunit": "ELECTRON/s",
+      "magzero": 29.8
+    },
+    {
+      "kind": "image",
+      "ra": 273.18378579,
+      "dec": 64.37054921,
+      "band": "J",
+      "tiling": "wide",
+      "selection": "survey",
+      "tile_id": "102158277",
+      "status": "ok",
+      "shape": [
+        31,
+        31
+      ],
+      "seconds": 1.2789429130007193,
+      "provenance": {
+        "schema": "euclid.product-provenance/v1",
+        "metadata_version": 1,
+        "release": "DR1",
+        "archive": "ESA",
+        "product_type": "image",
+        "source_id": null,
+        "source_file": "/data/euclid/repository_dr1/DR1/R2/MER/102158277/NISP/EUC_MER_BGSUB-MOSAIC-NIR-J_TILE102158277-96D8A2_20250802T170831.080782Z_00.00.fits",
+        "source_hdu": null,
+        "grism": null,
+        "grism_reference": null,
+        "retrieval_route": "tap-mosaic+esa-get_cutout",
+        "retrieval_url": "https://eas.esac.esa.int/sas-cutout/cutout?FILEPATH=%2Fdata%2Feuclid%2Frepository_dr1%2FDR1%2FR2%2FMER%2F102158277%2FNISP%2FEUC_MER_BGSUB-MOSAIC-NIR-J_TILE102158277-96D8A2_20250802T170831.080782Z_00.00.fits&TAPCLIENT=ASTROQUERY&POS=CIRCLE%2C273.18378579%2C64.37054921%2C0.0004166666666666667",
+        "dataset": null,
+        "association_table": null,
+        "tile_id": "102158277",
+        "band": "J",
+        "mosaic_class": "survey",
+        "processing_dataset": "DR1_R2",
+        "processing_plan": "MER_ProcessTile_EUCLID_2.0.32-DATA_RELEASE-pcasenov-PLAN-000000",
+        "processing_pipeline": "MER_ProcessTile_EUCLID_2.0.32",
+        "processing_version": "11.3.1",
+        "raw_sha256": "1fd6872f45d721a4b89cd4836aab75d7593181cdfbd7ae31ee8968748590a876",
+        "source_header_sha256": null,
+        "cutout_header_sha256": "61626dfc49900637e5ded002ac51cc544119b50ca25cca9cfdd9dfb58419fa3b",
+        "requested_source_id": null
+      },
+      "bunit": "ELECTRON/s",
+      "magzero": 30.1
+    },
+    {
+      "kind": "image",
+      "ra": 273.18378579,
+      "dec": 64.37054921,
+      "band": "H",
+      "tiling": "wide",
+      "selection": "survey",
+      "tile_id": "102158277",
+      "status": "ok",
+      "shape": [
+        31,
+        31
+      ],
+      "seconds": 1.2248804440005188,
+      "provenance": {
+        "schema": "euclid.product-provenance/v1",
+        "metadata_version": 1,
+        "release": "DR1",
+        "archive": "ESA",
+        "product_type": "image",
+        "source_id": null,
+        "source_file": "/data/euclid/repository_dr1/DR1/R2/MER/102158277/NISP/EUC_MER_BGSUB-MOSAIC-NIR-H_TILE102158277-3C313F_20250802T171057.910045Z_00.00.fits",
+        "source_hdu": null,
+        "grism": null,
+        "grism_reference": null,
+        "retrieval_route": "tap-mosaic+esa-get_cutout",
+        "retrieval_url": "https://eas.esac.esa.int/sas-cutout/cutout?FILEPATH=%2Fdata%2Feuclid%2Frepository_dr1%2FDR1%2FR2%2FMER%2F102158277%2FNISP%2FEUC_MER_BGSUB-MOSAIC-NIR-H_TILE102158277-3C313F_20250802T171057.910045Z_00.00.fits&TAPCLIENT=ASTROQUERY&POS=CIRCLE%2C273.18378579%2C64.37054921%2C0.0004166666666666667",
+        "dataset": null,
+        "association_table": null,
+        "tile_id": "102158277",
+        "band": "H",
+        "mosaic_class": "survey",
+        "processing_dataset": "DR1_R2",
+        "processing_plan": "MER_ProcessTile_EUCLID_2.0.32-DATA_RELEASE-pcasenov-PLAN-000000",
+        "processing_pipeline": "MER_ProcessTile_EUCLID_2.0.32",
+        "processing_version": "11.3.1",
+        "raw_sha256": "c42af74bf198cfe34ff998b61ffa23d1c31fc9ea78c7053a12cfdcf68c5d408b",
+        "source_header_sha256": null,
+        "cutout_header_sha256": "aa076223d75b5814295f4fb7f9845095997c5c937067fef43e5b5705e370e9b1",
+        "requested_source_id": null
+      },
+      "bunit": "ELECTRON/s",
+      "magzero": 30.0
+    },
+    {
+      "kind": "image",
+      "ra": 273.018929496624,
+      "dec": 68.231870619389,
+      "band": "VIS",
+      "tiling": "deep",
+      "selection": "deep",
+      "tile_id": "101839130",
+      "status": "ok",
+      "shape": [
+        31,
+        31
+      ],
+      "seconds": 1.1083297719997063,
+      "provenance": {
+        "schema": "euclid.product-provenance/v1",
+        "metadata_version": 1,
+        "release": "DR1",
+        "archive": "ESA",
+        "product_type": "image",
+        "source_id": null,
+        "source_file": "/data/euclid/repository_dr1/DR1/R1/MER/101839130/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE101839130-9E5A9_20250817T160657.920550Z_00.00.fits",
+        "source_hdu": null,
+        "grism": null,
+        "grism_reference": null,
+        "retrieval_route": "tap-mosaic+esa-get_cutout",
+        "retrieval_url": "https://eas.esac.esa.int/sas-cutout/cutout?FILEPATH=%2Fdata%2Feuclid%2Frepository_dr1%2FDR1%2FR1%2FMER%2F101839130%2FVIS%2FEUC_MER_BGSUB-MOSAIC-VIS_TILE101839130-9E5A9_20250817T160657.920550Z_00.00.fits&TAPCLIENT=ASTROQUERY&POS=CIRCLE%2C273.018929496624%2C68.231870619389%2C0.0004166666666666667",
+        "dataset": null,
+        "association_table": null,
+        "tile_id": "101839130",
+        "band": "VIS",
+        "mosaic_class": "deep",
+        "processing_dataset": "DR1_R1",
+        "processing_plan": "MER_ProcessTile_EUCLID_2.0.32-DATA_RELEASE_DEEP-trochequ-PLAN-000002",
+        "processing_pipeline": "MER_ProcessTile_EUCLID_2.0.32",
+        "processing_version": "11.3.1",
+        "raw_sha256": "8d85cfc35c6e21e9ef3a1e45267809af47954c050f681fc80d814d641b126ef5",
+        "source_header_sha256": null,
+        "cutout_header_sha256": "70c0d9784f23d19b435013fb1db62670a1adc5a26a8dca41ff2e34c3540cb54f",
+        "requested_source_id": null
+      },
+      "bunit": "ADU/s",
+      "magzero": 24.5
+    },
+    {
+      "kind": "image",
+      "ra": 273.18378579,
+      "dec": 64.37054921,
+      "band": "VIS",
+      "tiling": "wide",
+      "selection": "repeat",
+      "tile_id": "102158277",
+      "product": "/data/euclid/repository_dr1/DR1/R1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-84DEE3_20250706T145426.302735Z_00.00.fits",
+      "status": "ok",
+      "shape": [
+        31,
+        31
+      ],
+      "seconds": 0.8675151480001659,
+      "provenance": {
+        "schema": "euclid.product-provenance/v1",
+        "metadata_version": 1,
+        "release": "DR1",
+        "archive": "ESA",
+        "product_type": "image",
+        "source_id": null,
+        "source_file": "/data/euclid/repository_dr1/DR1/R1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-84DEE3_20250706T145426.302735Z_00.00.fits",
+        "source_hdu": null,
+        "grism": null,
+        "grism_reference": null,
+        "retrieval_route": "tap-mosaic+esa-get_cutout",
+        "retrieval_url": "https://eas.esac.esa.int/sas-cutout/cutout?FILEPATH=%2Fdata%2Feuclid%2Frepository_dr1%2FDR1%2FR1%2FMER%2F102158277%2FVIS%2FEUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-84DEE3_20250706T145426.302735Z_00.00.fits&TAPCLIENT=ASTROQUERY&POS=CIRCLE%2C273.18378579%2C64.37054921%2C0.0004166666666666667",
+        "dataset": null,
+        "association_table": null,
+        "tile_id": "102158277",
+        "band": "VIS",
+        "mosaic_class": "repeat",
+        "processing_dataset": "DR1_R1",
+        "processing_plan": "MER_ProcessTile_EUCLID_2.0.25-DATA_RELEASE_DEEP-pcasenov-PLAN-000000",
+        "processing_pipeline": "MER_ProcessTile_EUCLID_2.0.25",
+        "processing_version": "11.3.1",
+        "raw_sha256": "f6f31c7762019aa925672cbc57ca481ae412e2b728ce1cc41236e1135a2421eb",
+        "source_header_sha256": null,
+        "cutout_header_sha256": "2a1bf4802f5dcd0dc5d64f1c884c7536c07000135e0fa456215f9aca4bee7a95",
+        "requested_source_id": null
+      },
+      "bunit": "ADU/s",
+      "magzero": 24.5
+    }
+  ],
+  "requests": [
+    {
+      "url": "https://eas.esac.esa.int/tap-server/tap/sync",
+      "parameters": {
+        "REQUEST": "doQuery",
+        "LANG": "ADQL",
+        "FORMAT": "csv",
+        "QUERY": "SELECT TOP 101 source_id,file_path,file_name,hdu_index,lambda_range FROM dr1.spectra_source WHERE source_id=2731837857643705492 AND lambda_range='RGS'"
+      },
+      "status": 200,
+      "header_seconds": 0.8685777160008001,
+      "bytes": 204
+    },
+    {
+      "url": "https://eas.esac.esa.int/sas-dd/data",
+      "parameters": {
+        "ID": "dr1 2731837857643705492",
+        "RELEASE": "dr1",
+        "LINKING_PARAMETER": "SOURCE_ID",
+        "RETRIEVAL_TYPE": "SPECTRA_RGS",
+        "USE_ZIP_ALWAYS": "true",
+        "TAPCLIENT": "ASTROQUERY"
+      },
+      "status": 200,
+      "header_seconds": 0.6964416380014882,
+      "bytes": 9245
+    },
+    {
+      "url": "https://eas.esac.esa.int/tap-server/tap/sync",
+      "parameters": {
+        "REQUEST": "doQuery",
+        "LANG": "ADQL",
+        "FORMAT": "csv",
+        "QUERY": "SELECT TOP 101 source_id,file_path,file_name,hdu_index,lambda_range FROM dr1.spectra_source WHERE source_id=2681886189660473837 AND lambda_range='BGS'"
+      },
+      "status": 200,
+      "header_seconds": 0.8697839380001824,
+      "bytes": 205
+    },
+    {
+      "url": "https://eas.esac.esa.int/sas-dd/data",
+      "parameters": {
+        "ID": "dr1 2681886189660473837",
+        "RELEASE": "dr1",
+        "LINKING_PARAMETER": "SOURCE_ID",
+        "RETRIEVAL_TYPE": "SPECTRA_BGS",
+        "USE_ZIP_ALWAYS": "true",
+        "TAPCLIENT": "ASTROQUERY"
+      },
+      "status": 200,
+      "header_seconds": 0.4183174620011414,
+      "bytes": 7303
+    },
+    {
+      "url": "https://eas.esac.esa.int/tap-server/tap/sync",
+      "parameters": {
+        "REQUEST": "doQuery",
+        "LANG": "ADQL",
+        "FORMAT": "csv",
+        "QUERY": "SELECT TOP 101 file_name,file_path,instrument_name,filter_name,tile_index,data_set_release,purpose,processing_mode FROM dr1.mosaic_product WHERE instrument_name='VIS' AND filter_name='VIS' AND processing_mode='WIDE' AND purpose='DATA_RELEASE' AND INTERSECTS(CIRCLE('ICRS',273.18378579,64.37054921,0.0002777777777777778),fov)=1 AND tile_index=102158277"
+      },
+      "status": 200,
+      "header_seconds": 0.3668535859997064,
+      "bytes": 277
+    },
+    {
+      "url": "https://eas.esac.esa.int/sas-cutout/cutout",
+      "parameters": {
+        "FILEPATH": "/data/euclid/repository_dr1/DR1/R2/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-5EF3F0_20250803T105320.820305Z_00.00.fits",
+        "TAPCLIENT": "ASTROQUERY",
+        "POS": "CIRCLE,273.18378579,64.37054921,0.0004166666666666667"
+      },
+      "status": 200,
+      "header_seconds": 0.16265683500023442,
+      "bytes": 11520
+    },
+    {
+      "url": "https://eas.esac.esa.int/tap-server/tap/sync",
+      "parameters": {
+        "REQUEST": "doQuery",
+        "LANG": "ADQL",
+        "FORMAT": "csv",
+        "QUERY": "SELECT TOP 101 file_name,file_path,instrument_name,filter_name,tile_index,data_set_release,purpose,processing_mode FROM dr1.mosaic_product WHERE instrument_name='NISP' AND filter_name='NIR_Y' AND processing_mode='WIDE' AND purpose='DATA_RELEASE' AND INTERSECTS(CIRCLE('ICRS',273.18378579,64.37054921,0.0002777777777777778),fov)=1 AND tile_index=102158277"
+      },
+      "status": 200,
+      "header_seconds": 0.3770758789996762,
+      "bytes": 283
+    },
+    {
+      "url": "https://eas.esac.esa.int/sas-cutout/cutout",
+      "parameters": {
+        "FILEPATH": "/data/euclid/repository_dr1/DR1/R2/MER/102158277/NISP/EUC_MER_BGSUB-MOSAIC-NIR-Y_TILE102158277-B62363_20250802T171104.054818Z_00.00.fits",
+        "TAPCLIENT": "ASTROQUERY",
+        "POS": "CIRCLE,273.18378579,64.37054921,0.0004166666666666667"
+      },
+      "status": 200,
+      "header_seconds": 0.5491945339999802,
+      "bytes": 11520
+    },
+    {
+      "url": "https://eas.esac.esa.int/tap-server/tap/sync",
+      "parameters": {
+        "REQUEST": "doQuery",
+        "LANG": "ADQL",
+        "FORMAT": "csv",
+        "QUERY": "SELECT TOP 101 file_name,file_path,instrument_name,filter_name,tile_index,data_set_release,purpose,processing_mode FROM dr1.mosaic_product WHERE instrument_name='NISP' AND filter_name='NIR_J' AND processing_mode='WIDE' AND purpose='DATA_RELEASE' AND INTERSECTS(CIRCLE('ICRS',273.18378579,64.37054921,0.0002777777777777778),fov)=1 AND tile_index=102158277"
+      },
+      "status": 200,
+      "header_seconds": 0.26739499700124725,
+      "bytes": 283
+    },
+    {
+      "url": "https://eas.esac.esa.int/sas-cutout/cutout",
+      "parameters": {
+        "FILEPATH": "/data/euclid/repository_dr1/DR1/R2/MER/102158277/NISP/EUC_MER_BGSUB-MOSAIC-NIR-J_TILE102158277-96D8A2_20250802T170831.080782Z_00.00.fits",
+        "TAPCLIENT": "ASTROQUERY",
+        "POS": "CIRCLE,273.18378579,64.37054921,0.0004166666666666667"
+      },
+      "status": 200,
+      "header_seconds": 1.0005477350005094,
+      "bytes": 11520
+    },
+    {
+      "url": "https://eas.esac.esa.int/tap-server/tap/sync",
+      "parameters": {
+        "REQUEST": "doQuery",
+        "LANG": "ADQL",
+        "FORMAT": "csv",
+        "QUERY": "SELECT TOP 101 file_name,file_path,instrument_name,filter_name,tile_index,data_set_release,purpose,processing_mode FROM dr1.mosaic_product WHERE instrument_name='NISP' AND filter_name='NIR_H' AND processing_mode='WIDE' AND purpose='DATA_RELEASE' AND INTERSECTS(CIRCLE('ICRS',273.18378579,64.37054921,0.0002777777777777778),fov)=1 AND tile_index=102158277"
+      },
+      "status": 200,
+      "header_seconds": 0.37591008900017187,
+      "bytes": 283
+    },
+    {
+      "url": "https://eas.esac.esa.int/sas-cutout/cutout",
+      "parameters": {
+        "FILEPATH": "/data/euclid/repository_dr1/DR1/R2/MER/102158277/NISP/EUC_MER_BGSUB-MOSAIC-NIR-H_TILE102158277-3C313F_20250802T171057.910045Z_00.00.fits",
+        "TAPCLIENT": "ASTROQUERY",
+        "POS": "CIRCLE,273.18378579,64.37054921,0.0004166666666666667"
+      },
+      "status": 200,
+      "header_seconds": 0.8345485219997499,
+      "bytes": 11520
+    },
+    {
+      "url": "https://eas.esac.esa.int/tap-server/tap/sync",
+      "parameters": {
+        "REQUEST": "doQuery",
+        "LANG": "ADQL",
+        "FORMAT": "csv",
+        "QUERY": "SELECT TOP 101 file_name,file_path,instrument_name,filter_name,tile_index,data_set_release,purpose,processing_mode FROM dr1.mosaic_product WHERE instrument_name='VIS' AND filter_name='VIS' AND processing_mode='DEEP' AND purpose='DATA_RELEASE_DEEP' AND INTERSECTS(CIRCLE('ICRS',273.018929496624,68.231870619389,0.0002777777777777778),fov)=1 AND tile_index=101839130"
+      },
+      "status": 200,
+      "header_seconds": 0.2926810579992889,
+      "bytes": 281
+    },
+    {
+      "url": "https://eas.esac.esa.int/sas-cutout/cutout",
+      "parameters": {
+        "FILEPATH": "/data/euclid/repository_dr1/DR1/R1/MER/101839130/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE101839130-9E5A9_20250817T160657.920550Z_00.00.fits",
+        "TAPCLIENT": "ASTROQUERY",
+        "POS": "CIRCLE,273.018929496624,68.231870619389,0.0004166666666666667"
+      },
+      "status": 200,
+      "header_seconds": 0.8014664319998701,
+      "bytes": 11520
+    },
+    {
+      "url": "https://eas.esac.esa.int/tap-server/tap/sync",
+      "parameters": {
+        "REQUEST": "doQuery",
+        "LANG": "ADQL",
+        "FORMAT": "csv",
+        "QUERY": "SELECT TOP 101 file_name,file_path,instrument_name,filter_name,tile_index,data_set_release,purpose,processing_mode FROM dr1.mosaic_product WHERE instrument_name='VIS' AND filter_name='VIS' AND processing_mode='WIDE' AND purpose='DATA_RELEASE_DEEP' AND INTERSECTS(CIRCLE('ICRS',273.18378579,64.37054921,0.0002777777777777778),fov)=1 AND tile_index=102158277"
+      },
+      "status": 200,
+      "header_seconds": 0.2562760109994997,
+      "bytes": 1919
+    },
+    {
+      "url": "https://eas.esac.esa.int/sas-cutout/cutout",
+      "parameters": {
+        "FILEPATH": "/data/euclid/repository_dr1/DR1/R1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-84DEE3_20250706T145426.302735Z_00.00.fits",
+        "TAPCLIENT": "ASTROQUERY",
+        "POS": "CIRCLE,273.18378579,64.37054921,0.0004166666666666667"
+      },
+      "status": 200,
+      "header_seconds": 0.5999497499997233,
+      "bytes": 11520
+    }
+  ]
+}
