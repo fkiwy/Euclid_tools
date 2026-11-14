@@ -2,7 +2,7 @@
 
 Implemented 13 November 2026. This adds an opt-in DR1 spectrum route; Q1 remains
 the default of `irsa_tools.retrieve_spectrum`. IRSA catalog helpers also support explicit DR1 selection; see
-[IRSA DR1 catalogs](IRSA_DR1_CATALOG.md). Image retrieval is unchanged. ESA DR1 spectrum/cutout retrieval remains disabled.
+[IRSA DR1 catalogs](IRSA_DR1_CATALOG.md). IRSA DR1 images are now available via [SIA/S3 cutouts](IRSA_DR1_IMAGES.md). ESA DR1 spectrum/cutout retrieval remains disabled.
 
 ## API and explicit product selection
 
@@ -122,7 +122,7 @@ Use the companion Euclid_search branch `codex/dr1-foundation` and
 `euclid_dr1/archive_dr1_irsa_spectra.json`. It explicitly combines the existing
 ESA DR1 catalog mapping with IRSA DR1 spectra and defaults to red, appropriate
 for the existing 1.22–1.88 µm spectral fitting range. ESA image/spectrum methods
-and IRSA images have not been enabled for DR1 by this implementation.
+remain disabled; the separate [IRSA DR1 image implementation](IRSA_DR1_IMAGES.md) is opt-in.
 
 Combined validation: **128 passed, 24 subtests passed** on Python 3.12.
 The actual search `save_spectra` command also wrote a successful live manifest

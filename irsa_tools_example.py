@@ -151,18 +151,22 @@ if data and len(data) > 0:
 # Retrieve cutouts
 # ------------------------------
 
+image_options = {}
 if release == "dr1":
-    print("DR1 image retrieval is not implemented; skipping image cutouts.")
-    sys.exit(0)
+    image_tiling = "deep" if catalogue in ("deep_survey", "deep_mode") else "wide"
+    image_options = {"release": "dr1", "tiling": image_tiling,
+                     "selection": "deep" if image_tiling == "deep" else "survey",
+                     "tile_id": str(result["tileid"])}
+    # Use backend.discover_mosaics(...) and an exact product if a tile is ambiguous.
 
 # Define cutout size (arcsec)
 cutout_size = 20  # arcsec
 
 # Retrieve cutouts from various bands (VIS, Y, J, H)
-vis_hdu = backend.retrieve_cutout(ra, dec, search_radius=search_radius, cutout_size=cutout_size, band="VIS")
-y_hdu = backend.retrieve_cutout(ra, dec, search_radius=search_radius, cutout_size=cutout_size, band="Y")
-j_hdu = backend.retrieve_cutout(ra, dec, search_radius=search_radius, cutout_size=cutout_size, band="J")
-h_hdu = backend.retrieve_cutout(ra, dec, search_radius=search_radius, cutout_size=cutout_size, band="H")
+vis_hdu = backend.retrieve_cutout(ra, dec, search_radius=search_radius, cutout_size=cutout_size, band="VIS", **image_options)
+y_hdu = backend.retrieve_cutout(ra, dec, search_radius=search_radius, cutout_size=cutout_size, band="Y", **image_options)
+j_hdu = backend.retrieve_cutout(ra, dec, search_radius=search_radius, cutout_size=cutout_size, band="J", **image_options)
+h_hdu = backend.retrieve_cutout(ra, dec, search_radius=search_radius, cutout_size=cutout_size, band="H", **image_options)
 
 # Collect the images in a list with band and RGB mapping information
 images = []

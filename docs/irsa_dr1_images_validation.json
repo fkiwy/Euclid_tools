@@ -1,0 +1,1127 @@
+{
+  "utc": "2026-11-14T08:34:57.818246+00:00",
+  "astropy": "8.0.2",
+  "s3fs": "2026.9.0",
+  "ra": 273.167,
+  "dec": 64.3687,
+  "search_radius_arcsec": 1,
+  "cutout_size_arcsec": 3,
+  "cases": [
+    {
+      "name": "deep_VIS",
+      "shape": [
+        30,
+        30
+      ],
+      "source": "s3://nasa-irsa-euclid-dr1/dr1/MER/101829777/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE101829777-6CD2B3_20250822T095429.755828Z_00.00.fits",
+      "header": {
+        "MAGZERO": 24.5,
+        "BUNIT": "ADU/s",
+        "FILTER": "VIS",
+        "DATASETR": "DR1_R1",
+        "PPLANID": "MER_ProcessTile_EUCLID_2.0.32-DATA_RELEASE_DEEP-trochequ-PLAN-000002",
+        "PIPDEFID": "MER_ProcessTile_EUCLID_2.0.32",
+        "PSWREL": "11.3.1",
+        "RAWHDR": "dee3cf4d0846bae4f87ff35489557a39649e917e16f1b295ca07b08898ed4444",
+        "CUTBYTES": 9440
+      },
+      "total_s3_get_bytes_including_discovery": 15200,
+      "ranged_gets": [
+        {
+          "key": "dr1/MER/101829777/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE101829777-6CD2B3_20250822T095429.755828Z_00.00.fits",
+          "range": "bytes=0-2879",
+          "bytes": 2880,
+          "content_range": "bytes 0-2879/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE101829777-6CD2B3_20250822T095429.755828Z_00.00.fits",
+          "range": "bytes=2880-5759",
+          "bytes": 2880,
+          "content_range": "bytes 2880-5759/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE101829777-6CD2B3_20250822T095429.755828Z_00.00.fits",
+          "range": "bytes=0-79",
+          "bytes": 80,
+          "content_range": "bytes 0-79/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE101829777-6CD2B3_20250822T095429.755828Z_00.00.fits",
+          "range": "bytes=0-2879",
+          "bytes": 2880,
+          "content_range": "bytes 0-2879/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE101829777-6CD2B3_20250822T095429.755828Z_00.00.fits",
+          "range": "bytes=2880-5759",
+          "bytes": 2880,
+          "content_range": "bytes 2880-5759/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE101829777-6CD2B3_20250822T095429.755828Z_00.00.fits",
+          "range": "bytes=381832708-381832827",
+          "bytes": 120,
+          "content_range": "bytes 381832708-381832827/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE101829777-6CD2B3_20250822T095429.755828Z_00.00.fits",
+          "range": "bytes=381873508-381873627",
+          "bytes": 120,
+          "content_range": "bytes 381873508-381873627/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE101829777-6CD2B3_20250822T095429.755828Z_00.00.fits",
+          "range": "bytes=381914308-381914427",
+          "bytes": 120,
+          "content_range": "bytes 381914308-381914427/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE101829777-6CD2B3_20250822T095429.755828Z_00.00.fits",
+          "range": "bytes=381955108-381955227",
+          "bytes": 120,
+          "content_range": "bytes 381955108-381955227/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE101829777-6CD2B3_20250822T095429.755828Z_00.00.fits",
+          "range": "bytes=381995908-381996027",
+          "bytes": 120,
+          "content_range": "bytes 381995908-381996027/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE101829777-6CD2B3_20250822T095429.755828Z_00.00.fits",
+          "range": "bytes=382036708-382036827",
+          "bytes": 120,
+          "content_range": "bytes 382036708-382036827/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE101829777-6CD2B3_20250822T095429.755828Z_00.00.fits",
+          "range": "bytes=382077508-382077627",
+          "bytes": 120,
+          "content_range": "bytes 382077508-382077627/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE101829777-6CD2B3_20250822T095429.755828Z_00.00.fits",
+          "range": "bytes=382118308-382118427",
+          "bytes": 120,
+          "content_range": "bytes 382118308-382118427/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE101829777-6CD2B3_20250822T095429.755828Z_00.00.fits",
+          "range": "bytes=382159108-382159227",
+          "bytes": 120,
+          "content_range": "bytes 382159108-382159227/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE101829777-6CD2B3_20250822T095429.755828Z_00.00.fits",
+          "range": "bytes=382199908-382200027",
+          "bytes": 120,
+          "content_range": "bytes 382199908-382200027/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE101829777-6CD2B3_20250822T095429.755828Z_00.00.fits",
+          "range": "bytes=382240708-382240827",
+          "bytes": 120,
+          "content_range": "bytes 382240708-382240827/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE101829777-6CD2B3_20250822T095429.755828Z_00.00.fits",
+          "range": "bytes=382281508-382281627",
+          "bytes": 120,
+          "content_range": "bytes 382281508-382281627/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE101829777-6CD2B3_20250822T095429.755828Z_00.00.fits",
+          "range": "bytes=382322308-382322427",
+          "bytes": 120,
+          "content_range": "bytes 382322308-382322427/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE101829777-6CD2B3_20250822T095429.755828Z_00.00.fits",
+          "range": "bytes=382363108-382363227",
+          "bytes": 120,
+          "content_range": "bytes 382363108-382363227/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE101829777-6CD2B3_20250822T095429.755828Z_00.00.fits",
+          "range": "bytes=382403908-382404027",
+          "bytes": 120,
+          "content_range": "bytes 382403908-382404027/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE101829777-6CD2B3_20250822T095429.755828Z_00.00.fits",
+          "range": "bytes=382444708-382444827",
+          "bytes": 120,
+          "content_range": "bytes 382444708-382444827/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE101829777-6CD2B3_20250822T095429.755828Z_00.00.fits",
+          "range": "bytes=382485508-382485627",
+          "bytes": 120,
+          "content_range": "bytes 382485508-382485627/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE101829777-6CD2B3_20250822T095429.755828Z_00.00.fits",
+          "range": "bytes=382526308-382526427",
+          "bytes": 120,
+          "content_range": "bytes 382526308-382526427/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE101829777-6CD2B3_20250822T095429.755828Z_00.00.fits",
+          "range": "bytes=382567108-382567227",
+          "bytes": 120,
+          "content_range": "bytes 382567108-382567227/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE101829777-6CD2B3_20250822T095429.755828Z_00.00.fits",
+          "range": "bytes=382607908-382608027",
+          "bytes": 120,
+          "content_range": "bytes 382607908-382608027/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE101829777-6CD2B3_20250822T095429.755828Z_00.00.fits",
+          "range": "bytes=382648708-382648827",
+          "bytes": 120,
+          "content_range": "bytes 382648708-382648827/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE101829777-6CD2B3_20250822T095429.755828Z_00.00.fits",
+          "range": "bytes=382689508-382689627",
+          "bytes": 120,
+          "content_range": "bytes 382689508-382689627/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE101829777-6CD2B3_20250822T095429.755828Z_00.00.fits",
+          "range": "bytes=382730308-382730427",
+          "bytes": 120,
+          "content_range": "bytes 382730308-382730427/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE101829777-6CD2B3_20250822T095429.755828Z_00.00.fits",
+          "range": "bytes=382771108-382771227",
+          "bytes": 120,
+          "content_range": "bytes 382771108-382771227/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE101829777-6CD2B3_20250822T095429.755828Z_00.00.fits",
+          "range": "bytes=382811908-382812027",
+          "bytes": 120,
+          "content_range": "bytes 382811908-382812027/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE101829777-6CD2B3_20250822T095429.755828Z_00.00.fits",
+          "range": "bytes=382852708-382852827",
+          "bytes": 120,
+          "content_range": "bytes 382852708-382852827/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE101829777-6CD2B3_20250822T095429.755828Z_00.00.fits",
+          "range": "bytes=382893508-382893627",
+          "bytes": 120,
+          "content_range": "bytes 382893508-382893627/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE101829777-6CD2B3_20250822T095429.755828Z_00.00.fits",
+          "range": "bytes=382934308-382934427",
+          "bytes": 120,
+          "content_range": "bytes 382934308-382934427/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE101829777-6CD2B3_20250822T095429.755828Z_00.00.fits",
+          "range": "bytes=382975108-382975227",
+          "bytes": 120,
+          "content_range": "bytes 382975108-382975227/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE101829777-6CD2B3_20250822T095429.755828Z_00.00.fits",
+          "range": "bytes=383015908-383016027",
+          "bytes": 120,
+          "content_range": "bytes 383015908-383016027/416165760"
+        }
+      ]
+    },
+    {
+      "name": "deep_Y",
+      "shape": [
+        30,
+        30
+      ],
+      "source": "s3://nasa-irsa-euclid-dr1/dr1/MER/101829777/NISP/EUC_MER_BGSUB-MOSAIC-NIR-Y_TILE101829777-38C792_20250821T134546.640871Z_00.00.fits",
+      "header": {
+        "MAGZERO": 29.8,
+        "BUNIT": "ELECTRON/s",
+        "FILTER": "NIR_Y",
+        "DATASETR": "DR1_R1",
+        "PPLANID": "MER_ProcessTile_EUCLID_2.0.32-DATA_RELEASE_DEEP-trochequ-PLAN-000002",
+        "PIPDEFID": "MER_ProcessTile_EUCLID_2.0.32",
+        "PSWREL": "11.3.1",
+        "RAWHDR": "d4002c9f5a911b1ba829dbe86a1a9395b34273e8747206186833d1c7b461f8d6",
+        "CUTBYTES": 9440
+      },
+      "total_s3_get_bytes_including_discovery": 15200,
+      "ranged_gets": [
+        {
+          "key": "dr1/MER/101829777/NISP/EUC_MER_BGSUB-MOSAIC-NIR-Y_TILE101829777-38C792_20250821T134546.640871Z_00.00.fits",
+          "range": "bytes=0-2879",
+          "bytes": 2880,
+          "content_range": "bytes 0-2879/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/NISP/EUC_MER_BGSUB-MOSAIC-NIR-Y_TILE101829777-38C792_20250821T134546.640871Z_00.00.fits",
+          "range": "bytes=2880-5759",
+          "bytes": 2880,
+          "content_range": "bytes 2880-5759/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/NISP/EUC_MER_BGSUB-MOSAIC-NIR-Y_TILE101829777-38C792_20250821T134546.640871Z_00.00.fits",
+          "range": "bytes=0-79",
+          "bytes": 80,
+          "content_range": "bytes 0-79/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/NISP/EUC_MER_BGSUB-MOSAIC-NIR-Y_TILE101829777-38C792_20250821T134546.640871Z_00.00.fits",
+          "range": "bytes=0-2879",
+          "bytes": 2880,
+          "content_range": "bytes 0-2879/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/NISP/EUC_MER_BGSUB-MOSAIC-NIR-Y_TILE101829777-38C792_20250821T134546.640871Z_00.00.fits",
+          "range": "bytes=2880-5759",
+          "bytes": 2880,
+          "content_range": "bytes 2880-5759/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/NISP/EUC_MER_BGSUB-MOSAIC-NIR-Y_TILE101829777-38C792_20250821T134546.640871Z_00.00.fits",
+          "range": "bytes=381832708-381832827",
+          "bytes": 120,
+          "content_range": "bytes 381832708-381832827/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/NISP/EUC_MER_BGSUB-MOSAIC-NIR-Y_TILE101829777-38C792_20250821T134546.640871Z_00.00.fits",
+          "range": "bytes=381873508-381873627",
+          "bytes": 120,
+          "content_range": "bytes 381873508-381873627/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/NISP/EUC_MER_BGSUB-MOSAIC-NIR-Y_TILE101829777-38C792_20250821T134546.640871Z_00.00.fits",
+          "range": "bytes=381914308-381914427",
+          "bytes": 120,
+          "content_range": "bytes 381914308-381914427/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/NISP/EUC_MER_BGSUB-MOSAIC-NIR-Y_TILE101829777-38C792_20250821T134546.640871Z_00.00.fits",
+          "range": "bytes=381955108-381955227",
+          "bytes": 120,
+          "content_range": "bytes 381955108-381955227/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/NISP/EUC_MER_BGSUB-MOSAIC-NIR-Y_TILE101829777-38C792_20250821T134546.640871Z_00.00.fits",
+          "range": "bytes=381995908-381996027",
+          "bytes": 120,
+          "content_range": "bytes 381995908-381996027/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/NISP/EUC_MER_BGSUB-MOSAIC-NIR-Y_TILE101829777-38C792_20250821T134546.640871Z_00.00.fits",
+          "range": "bytes=382036708-382036827",
+          "bytes": 120,
+          "content_range": "bytes 382036708-382036827/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/NISP/EUC_MER_BGSUB-MOSAIC-NIR-Y_TILE101829777-38C792_20250821T134546.640871Z_00.00.fits",
+          "range": "bytes=382077508-382077627",
+          "bytes": 120,
+          "content_range": "bytes 382077508-382077627/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/NISP/EUC_MER_BGSUB-MOSAIC-NIR-Y_TILE101829777-38C792_20250821T134546.640871Z_00.00.fits",
+          "range": "bytes=382118308-382118427",
+          "bytes": 120,
+          "content_range": "bytes 382118308-382118427/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/NISP/EUC_MER_BGSUB-MOSAIC-NIR-Y_TILE101829777-38C792_20250821T134546.640871Z_00.00.fits",
+          "range": "bytes=382159108-382159227",
+          "bytes": 120,
+          "content_range": "bytes 382159108-382159227/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/NISP/EUC_MER_BGSUB-MOSAIC-NIR-Y_TILE101829777-38C792_20250821T134546.640871Z_00.00.fits",
+          "range": "bytes=382199908-382200027",
+          "bytes": 120,
+          "content_range": "bytes 382199908-382200027/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/NISP/EUC_MER_BGSUB-MOSAIC-NIR-Y_TILE101829777-38C792_20250821T134546.640871Z_00.00.fits",
+          "range": "bytes=382240708-382240827",
+          "bytes": 120,
+          "content_range": "bytes 382240708-382240827/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/NISP/EUC_MER_BGSUB-MOSAIC-NIR-Y_TILE101829777-38C792_20250821T134546.640871Z_00.00.fits",
+          "range": "bytes=382281508-382281627",
+          "bytes": 120,
+          "content_range": "bytes 382281508-382281627/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/NISP/EUC_MER_BGSUB-MOSAIC-NIR-Y_TILE101829777-38C792_20250821T134546.640871Z_00.00.fits",
+          "range": "bytes=382322308-382322427",
+          "bytes": 120,
+          "content_range": "bytes 382322308-382322427/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/NISP/EUC_MER_BGSUB-MOSAIC-NIR-Y_TILE101829777-38C792_20250821T134546.640871Z_00.00.fits",
+          "range": "bytes=382363108-382363227",
+          "bytes": 120,
+          "content_range": "bytes 382363108-382363227/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/NISP/EUC_MER_BGSUB-MOSAIC-NIR-Y_TILE101829777-38C792_20250821T134546.640871Z_00.00.fits",
+          "range": "bytes=382403908-382404027",
+          "bytes": 120,
+          "content_range": "bytes 382403908-382404027/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/NISP/EUC_MER_BGSUB-MOSAIC-NIR-Y_TILE101829777-38C792_20250821T134546.640871Z_00.00.fits",
+          "range": "bytes=382444708-382444827",
+          "bytes": 120,
+          "content_range": "bytes 382444708-382444827/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/NISP/EUC_MER_BGSUB-MOSAIC-NIR-Y_TILE101829777-38C792_20250821T134546.640871Z_00.00.fits",
+          "range": "bytes=382485508-382485627",
+          "bytes": 120,
+          "content_range": "bytes 382485508-382485627/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/NISP/EUC_MER_BGSUB-MOSAIC-NIR-Y_TILE101829777-38C792_20250821T134546.640871Z_00.00.fits",
+          "range": "bytes=382526308-382526427",
+          "bytes": 120,
+          "content_range": "bytes 382526308-382526427/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/NISP/EUC_MER_BGSUB-MOSAIC-NIR-Y_TILE101829777-38C792_20250821T134546.640871Z_00.00.fits",
+          "range": "bytes=382567108-382567227",
+          "bytes": 120,
+          "content_range": "bytes 382567108-382567227/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/NISP/EUC_MER_BGSUB-MOSAIC-NIR-Y_TILE101829777-38C792_20250821T134546.640871Z_00.00.fits",
+          "range": "bytes=382607908-382608027",
+          "bytes": 120,
+          "content_range": "bytes 382607908-382608027/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/NISP/EUC_MER_BGSUB-MOSAIC-NIR-Y_TILE101829777-38C792_20250821T134546.640871Z_00.00.fits",
+          "range": "bytes=382648708-382648827",
+          "bytes": 120,
+          "content_range": "bytes 382648708-382648827/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/NISP/EUC_MER_BGSUB-MOSAIC-NIR-Y_TILE101829777-38C792_20250821T134546.640871Z_00.00.fits",
+          "range": "bytes=382689508-382689627",
+          "bytes": 120,
+          "content_range": "bytes 382689508-382689627/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/NISP/EUC_MER_BGSUB-MOSAIC-NIR-Y_TILE101829777-38C792_20250821T134546.640871Z_00.00.fits",
+          "range": "bytes=382730308-382730427",
+          "bytes": 120,
+          "content_range": "bytes 382730308-382730427/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/NISP/EUC_MER_BGSUB-MOSAIC-NIR-Y_TILE101829777-38C792_20250821T134546.640871Z_00.00.fits",
+          "range": "bytes=382771108-382771227",
+          "bytes": 120,
+          "content_range": "bytes 382771108-382771227/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/NISP/EUC_MER_BGSUB-MOSAIC-NIR-Y_TILE101829777-38C792_20250821T134546.640871Z_00.00.fits",
+          "range": "bytes=382811908-382812027",
+          "bytes": 120,
+          "content_range": "bytes 382811908-382812027/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/NISP/EUC_MER_BGSUB-MOSAIC-NIR-Y_TILE101829777-38C792_20250821T134546.640871Z_00.00.fits",
+          "range": "bytes=382852708-382852827",
+          "bytes": 120,
+          "content_range": "bytes 382852708-382852827/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/NISP/EUC_MER_BGSUB-MOSAIC-NIR-Y_TILE101829777-38C792_20250821T134546.640871Z_00.00.fits",
+          "range": "bytes=382893508-382893627",
+          "bytes": 120,
+          "content_range": "bytes 382893508-382893627/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/NISP/EUC_MER_BGSUB-MOSAIC-NIR-Y_TILE101829777-38C792_20250821T134546.640871Z_00.00.fits",
+          "range": "bytes=382934308-382934427",
+          "bytes": 120,
+          "content_range": "bytes 382934308-382934427/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/NISP/EUC_MER_BGSUB-MOSAIC-NIR-Y_TILE101829777-38C792_20250821T134546.640871Z_00.00.fits",
+          "range": "bytes=382975108-382975227",
+          "bytes": 120,
+          "content_range": "bytes 382975108-382975227/416165760"
+        },
+        {
+          "key": "dr1/MER/101829777/NISP/EUC_MER_BGSUB-MOSAIC-NIR-Y_TILE101829777-38C792_20250821T134546.640871Z_00.00.fits",
+          "range": "bytes=383015908-383016027",
+          "bytes": 120,
+          "content_range": "bytes 383015908-383016027/416165760"
+        }
+      ]
+    },
+    {
+      "name": "wide_survey_VIS",
+      "shape": [
+        30,
+        30
+      ],
+      "source": "s3://nasa-irsa-euclid-dr1/dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-5EF3F0_20250803T105320.820305Z_00.00.fits",
+      "header": {
+        "MAGZERO": 24.5,
+        "BUNIT": "ADU/s",
+        "FILTER": "VIS",
+        "DATASETR": "DR1_R2",
+        "PPLANID": "MER_ProcessTile_EUCLID_2.0.32-DATA_RELEASE-pcasenov-PLAN-000000",
+        "PIPDEFID": "MER_ProcessTile_EUCLID_2.0.32",
+        "PSWREL": "11.3.1",
+        "RAWHDR": "a5aa759d52e3dc9aa2be5001519b92eed043429c4d30d5990ffcabf3192a3a26",
+        "CUTBYTES": 9440
+      },
+      "total_s3_get_bytes_including_discovery": 72800,
+      "ranged_gets": [
+        {
+          "key": "dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-D2D4A8_20250717T234458.099429Z_00.00.fits",
+          "range": "bytes=0-2879",
+          "bytes": 2880,
+          "content_range": "bytes 0-2879/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-D2D4A8_20250717T234458.099429Z_00.00.fits",
+          "range": "bytes=2880-5759",
+          "bytes": 2880,
+          "content_range": "bytes 2880-5759/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-84DEE3_20250706T145426.302735Z_00.00.fits",
+          "range": "bytes=0-2879",
+          "bytes": 2880,
+          "content_range": "bytes 0-2879/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-84DEE3_20250706T145426.302735Z_00.00.fits",
+          "range": "bytes=2880-5759",
+          "bytes": 2880,
+          "content_range": "bytes 2880-5759/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-23FC7F_20250711T040708.154588Z_00.00.fits",
+          "range": "bytes=0-2879",
+          "bytes": 2880,
+          "content_range": "bytes 0-2879/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-23FC7F_20250711T040708.154588Z_00.00.fits",
+          "range": "bytes=2880-5759",
+          "bytes": 2880,
+          "content_range": "bytes 2880-5759/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-B007EF_20250721T154611.196938Z_00.00.fits",
+          "range": "bytes=0-2879",
+          "bytes": 2880,
+          "content_range": "bytes 0-2879/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-B007EF_20250721T154611.196938Z_00.00.fits",
+          "range": "bytes=2880-5759",
+          "bytes": 2880,
+          "content_range": "bytes 2880-5759/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-6C87B_20250802T221323.880699Z_00.00.fits",
+          "range": "bytes=0-2879",
+          "bytes": 2880,
+          "content_range": "bytes 0-2879/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-6C87B_20250802T221323.880699Z_00.00.fits",
+          "range": "bytes=2880-5759",
+          "bytes": 2880,
+          "content_range": "bytes 2880-5759/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-5EF3F0_20250803T105320.820305Z_00.00.fits",
+          "range": "bytes=0-2879",
+          "bytes": 2880,
+          "content_range": "bytes 0-2879/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-5EF3F0_20250803T105320.820305Z_00.00.fits",
+          "range": "bytes=2880-5759",
+          "bytes": 2880,
+          "content_range": "bytes 2880-5759/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-780B8E_20250710T134758.237901Z_00.00.fits",
+          "range": "bytes=0-2879",
+          "bytes": 2880,
+          "content_range": "bytes 0-2879/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-780B8E_20250710T134758.237901Z_00.00.fits",
+          "range": "bytes=2880-5759",
+          "bytes": 2880,
+          "content_range": "bytes 2880-5759/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-F82A6D_20250726T152550.954849Z_00.00.fits",
+          "range": "bytes=0-2879",
+          "bytes": 2880,
+          "content_range": "bytes 0-2879/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-F82A6D_20250726T152550.954849Z_00.00.fits",
+          "range": "bytes=2880-5759",
+          "bytes": 2880,
+          "content_range": "bytes 2880-5759/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-1103BC_20250714T091533.365297Z_00.00.fits",
+          "range": "bytes=0-2879",
+          "bytes": 2880,
+          "content_range": "bytes 0-2879/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-1103BC_20250714T091533.365297Z_00.00.fits",
+          "range": "bytes=2880-5759",
+          "bytes": 2880,
+          "content_range": "bytes 2880-5759/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-BA1AD7_20250710T134511.614824Z_00.00.fits",
+          "range": "bytes=0-2879",
+          "bytes": 2880,
+          "content_range": "bytes 0-2879/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-BA1AD7_20250710T134511.614824Z_00.00.fits",
+          "range": "bytes=2880-5759",
+          "bytes": 2880,
+          "content_range": "bytes 2880-5759/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-63F164_20250706T151353.088893Z_00.00.fits",
+          "range": "bytes=0-2879",
+          "bytes": 2880,
+          "content_range": "bytes 0-2879/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-63F164_20250706T151353.088893Z_00.00.fits",
+          "range": "bytes=2880-5759",
+          "bytes": 2880,
+          "content_range": "bytes 2880-5759/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-5EF3F0_20250803T105320.820305Z_00.00.fits",
+          "range": "bytes=0-79",
+          "bytes": 80,
+          "content_range": "bytes 0-79/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-5EF3F0_20250803T105320.820305Z_00.00.fits",
+          "range": "bytes=0-2879",
+          "bytes": 2880,
+          "content_range": "bytes 0-2879/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-5EF3F0_20250803T105320.820305Z_00.00.fits",
+          "range": "bytes=2880-5759",
+          "bytes": 2880,
+          "content_range": "bytes 2880-5759/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-5EF3F0_20250803T105320.820305Z_00.00.fits",
+          "range": "bytes=376246232-376246351",
+          "bytes": 120,
+          "content_range": "bytes 376246232-376246351/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-5EF3F0_20250803T105320.820305Z_00.00.fits",
+          "range": "bytes=376323032-376323151",
+          "bytes": 120,
+          "content_range": "bytes 376323032-376323151/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-5EF3F0_20250803T105320.820305Z_00.00.fits",
+          "range": "bytes=376399832-376399951",
+          "bytes": 120,
+          "content_range": "bytes 376399832-376399951/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-5EF3F0_20250803T105320.820305Z_00.00.fits",
+          "range": "bytes=376476632-376476751",
+          "bytes": 120,
+          "content_range": "bytes 376476632-376476751/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-5EF3F0_20250803T105320.820305Z_00.00.fits",
+          "range": "bytes=376553432-376553551",
+          "bytes": 120,
+          "content_range": "bytes 376553432-376553551/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-5EF3F0_20250803T105320.820305Z_00.00.fits",
+          "range": "bytes=376630232-376630351",
+          "bytes": 120,
+          "content_range": "bytes 376630232-376630351/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-5EF3F0_20250803T105320.820305Z_00.00.fits",
+          "range": "bytes=376707032-376707151",
+          "bytes": 120,
+          "content_range": "bytes 376707032-376707151/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-5EF3F0_20250803T105320.820305Z_00.00.fits",
+          "range": "bytes=376783832-376783951",
+          "bytes": 120,
+          "content_range": "bytes 376783832-376783951/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-5EF3F0_20250803T105320.820305Z_00.00.fits",
+          "range": "bytes=376860632-376860751",
+          "bytes": 120,
+          "content_range": "bytes 376860632-376860751/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-5EF3F0_20250803T105320.820305Z_00.00.fits",
+          "range": "bytes=376937432-376937551",
+          "bytes": 120,
+          "content_range": "bytes 376937432-376937551/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-5EF3F0_20250803T105320.820305Z_00.00.fits",
+          "range": "bytes=377014232-377014351",
+          "bytes": 120,
+          "content_range": "bytes 377014232-377014351/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-5EF3F0_20250803T105320.820305Z_00.00.fits",
+          "range": "bytes=377091032-377091151",
+          "bytes": 120,
+          "content_range": "bytes 377091032-377091151/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-5EF3F0_20250803T105320.820305Z_00.00.fits",
+          "range": "bytes=377167832-377167951",
+          "bytes": 120,
+          "content_range": "bytes 377167832-377167951/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-5EF3F0_20250803T105320.820305Z_00.00.fits",
+          "range": "bytes=377244632-377244751",
+          "bytes": 120,
+          "content_range": "bytes 377244632-377244751/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-5EF3F0_20250803T105320.820305Z_00.00.fits",
+          "range": "bytes=377321432-377321551",
+          "bytes": 120,
+          "content_range": "bytes 377321432-377321551/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-5EF3F0_20250803T105320.820305Z_00.00.fits",
+          "range": "bytes=377398232-377398351",
+          "bytes": 120,
+          "content_range": "bytes 377398232-377398351/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-5EF3F0_20250803T105320.820305Z_00.00.fits",
+          "range": "bytes=377475032-377475151",
+          "bytes": 120,
+          "content_range": "bytes 377475032-377475151/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-5EF3F0_20250803T105320.820305Z_00.00.fits",
+          "range": "bytes=377551832-377551951",
+          "bytes": 120,
+          "content_range": "bytes 377551832-377551951/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-5EF3F0_20250803T105320.820305Z_00.00.fits",
+          "range": "bytes=377628632-377628751",
+          "bytes": 120,
+          "content_range": "bytes 377628632-377628751/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-5EF3F0_20250803T105320.820305Z_00.00.fits",
+          "range": "bytes=377705432-377705551",
+          "bytes": 120,
+          "content_range": "bytes 377705432-377705551/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-5EF3F0_20250803T105320.820305Z_00.00.fits",
+          "range": "bytes=377782232-377782351",
+          "bytes": 120,
+          "content_range": "bytes 377782232-377782351/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-5EF3F0_20250803T105320.820305Z_00.00.fits",
+          "range": "bytes=377859032-377859151",
+          "bytes": 120,
+          "content_range": "bytes 377859032-377859151/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-5EF3F0_20250803T105320.820305Z_00.00.fits",
+          "range": "bytes=377935832-377935951",
+          "bytes": 120,
+          "content_range": "bytes 377935832-377935951/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-5EF3F0_20250803T105320.820305Z_00.00.fits",
+          "range": "bytes=378012632-378012751",
+          "bytes": 120,
+          "content_range": "bytes 378012632-378012751/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-5EF3F0_20250803T105320.820305Z_00.00.fits",
+          "range": "bytes=378089432-378089551",
+          "bytes": 120,
+          "content_range": "bytes 378089432-378089551/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-5EF3F0_20250803T105320.820305Z_00.00.fits",
+          "range": "bytes=378166232-378166351",
+          "bytes": 120,
+          "content_range": "bytes 378166232-378166351/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-5EF3F0_20250803T105320.820305Z_00.00.fits",
+          "range": "bytes=378243032-378243151",
+          "bytes": 120,
+          "content_range": "bytes 378243032-378243151/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-5EF3F0_20250803T105320.820305Z_00.00.fits",
+          "range": "bytes=378319832-378319951",
+          "bytes": 120,
+          "content_range": "bytes 378319832-378319951/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-5EF3F0_20250803T105320.820305Z_00.00.fits",
+          "range": "bytes=378396632-378396751",
+          "bytes": 120,
+          "content_range": "bytes 378396632-378396751/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-5EF3F0_20250803T105320.820305Z_00.00.fits",
+          "range": "bytes=378473432-378473551",
+          "bytes": 120,
+          "content_range": "bytes 378473432-378473551/1474565760"
+        }
+      ]
+    },
+    {
+      "name": "wide_repeat_VIS",
+      "shape": [
+        30,
+        30
+      ],
+      "source": "s3://nasa-irsa-euclid-dr1/dr1/MER/102158276/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158276-6FD3B8_20250703T031658.239336Z_00.00.fits",
+      "header": {
+        "MAGZERO": 24.5,
+        "BUNIT": "ADU/s",
+        "FILTER": "VIS",
+        "DATASETR": "DR1_R1",
+        "PPLANID": "MER_ProcessTile_EUCLID_2.0.25-DATA_RELEASE_DEEP-pcasenov-PLAN-000000",
+        "PIPDEFID": "MER_ProcessTile_EUCLID_2.0.25",
+        "PSWREL": "11.3.1",
+        "RAWHDR": "5f70b49d57e2a6a5839b517decbd483fc234ebe89bf7f3a5391fd98d53310802",
+        "CUTBYTES": 9440
+      },
+      "total_s3_get_bytes_including_discovery": 15200,
+      "ranged_gets": [
+        {
+          "key": "dr1/MER/102158276/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158276-6FD3B8_20250703T031658.239336Z_00.00.fits",
+          "range": "bytes=0-2879",
+          "bytes": 2880,
+          "content_range": "bytes 0-2879/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158276/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158276-6FD3B8_20250703T031658.239336Z_00.00.fits",
+          "range": "bytes=2880-5759",
+          "bytes": 2880,
+          "content_range": "bytes 2880-5759/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158276/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158276-6FD3B8_20250703T031658.239336Z_00.00.fits",
+          "range": "bytes=0-79",
+          "bytes": 80,
+          "content_range": "bytes 0-79/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158276/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158276-6FD3B8_20250703T031658.239336Z_00.00.fits",
+          "range": "bytes=0-2879",
+          "bytes": 2880,
+          "content_range": "bytes 0-2879/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158276/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158276-6FD3B8_20250703T031658.239336Z_00.00.fits",
+          "range": "bytes=2880-5759",
+          "bytes": 2880,
+          "content_range": "bytes 2880-5759/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158276/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158276-6FD3B8_20250703T031658.239336Z_00.00.fits",
+          "range": "bytes=376098384-376098503",
+          "bytes": 120,
+          "content_range": "bytes 376098384-376098503/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158276/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158276-6FD3B8_20250703T031658.239336Z_00.00.fits",
+          "range": "bytes=376175184-376175303",
+          "bytes": 120,
+          "content_range": "bytes 376175184-376175303/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158276/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158276-6FD3B8_20250703T031658.239336Z_00.00.fits",
+          "range": "bytes=376251984-376252103",
+          "bytes": 120,
+          "content_range": "bytes 376251984-376252103/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158276/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158276-6FD3B8_20250703T031658.239336Z_00.00.fits",
+          "range": "bytes=376328784-376328903",
+          "bytes": 120,
+          "content_range": "bytes 376328784-376328903/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158276/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158276-6FD3B8_20250703T031658.239336Z_00.00.fits",
+          "range": "bytes=376405584-376405703",
+          "bytes": 120,
+          "content_range": "bytes 376405584-376405703/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158276/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158276-6FD3B8_20250703T031658.239336Z_00.00.fits",
+          "range": "bytes=376482384-376482503",
+          "bytes": 120,
+          "content_range": "bytes 376482384-376482503/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158276/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158276-6FD3B8_20250703T031658.239336Z_00.00.fits",
+          "range": "bytes=376559184-376559303",
+          "bytes": 120,
+          "content_range": "bytes 376559184-376559303/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158276/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158276-6FD3B8_20250703T031658.239336Z_00.00.fits",
+          "range": "bytes=376635984-376636103",
+          "bytes": 120,
+          "content_range": "bytes 376635984-376636103/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158276/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158276-6FD3B8_20250703T031658.239336Z_00.00.fits",
+          "range": "bytes=376712784-376712903",
+          "bytes": 120,
+          "content_range": "bytes 376712784-376712903/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158276/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158276-6FD3B8_20250703T031658.239336Z_00.00.fits",
+          "range": "bytes=376789584-376789703",
+          "bytes": 120,
+          "content_range": "bytes 376789584-376789703/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158276/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158276-6FD3B8_20250703T031658.239336Z_00.00.fits",
+          "range": "bytes=376866384-376866503",
+          "bytes": 120,
+          "content_range": "bytes 376866384-376866503/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158276/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158276-6FD3B8_20250703T031658.239336Z_00.00.fits",
+          "range": "bytes=376943184-376943303",
+          "bytes": 120,
+          "content_range": "bytes 376943184-376943303/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158276/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158276-6FD3B8_20250703T031658.239336Z_00.00.fits",
+          "range": "bytes=377019984-377020103",
+          "bytes": 120,
+          "content_range": "bytes 377019984-377020103/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158276/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158276-6FD3B8_20250703T031658.239336Z_00.00.fits",
+          "range": "bytes=377096784-377096903",
+          "bytes": 120,
+          "content_range": "bytes 377096784-377096903/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158276/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158276-6FD3B8_20250703T031658.239336Z_00.00.fits",
+          "range": "bytes=377173584-377173703",
+          "bytes": 120,
+          "content_range": "bytes 377173584-377173703/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158276/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158276-6FD3B8_20250703T031658.239336Z_00.00.fits",
+          "range": "bytes=377250384-377250503",
+          "bytes": 120,
+          "content_range": "bytes 377250384-377250503/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158276/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158276-6FD3B8_20250703T031658.239336Z_00.00.fits",
+          "range": "bytes=377327184-377327303",
+          "bytes": 120,
+          "content_range": "bytes 377327184-377327303/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158276/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158276-6FD3B8_20250703T031658.239336Z_00.00.fits",
+          "range": "bytes=377403984-377404103",
+          "bytes": 120,
+          "content_range": "bytes 377403984-377404103/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158276/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158276-6FD3B8_20250703T031658.239336Z_00.00.fits",
+          "range": "bytes=377480784-377480903",
+          "bytes": 120,
+          "content_range": "bytes 377480784-377480903/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158276/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158276-6FD3B8_20250703T031658.239336Z_00.00.fits",
+          "range": "bytes=377557584-377557703",
+          "bytes": 120,
+          "content_range": "bytes 377557584-377557703/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158276/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158276-6FD3B8_20250703T031658.239336Z_00.00.fits",
+          "range": "bytes=377634384-377634503",
+          "bytes": 120,
+          "content_range": "bytes 377634384-377634503/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158276/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158276-6FD3B8_20250703T031658.239336Z_00.00.fits",
+          "range": "bytes=377711184-377711303",
+          "bytes": 120,
+          "content_range": "bytes 377711184-377711303/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158276/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158276-6FD3B8_20250703T031658.239336Z_00.00.fits",
+          "range": "bytes=377787984-377788103",
+          "bytes": 120,
+          "content_range": "bytes 377787984-377788103/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158276/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158276-6FD3B8_20250703T031658.239336Z_00.00.fits",
+          "range": "bytes=377864784-377864903",
+          "bytes": 120,
+          "content_range": "bytes 377864784-377864903/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158276/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158276-6FD3B8_20250703T031658.239336Z_00.00.fits",
+          "range": "bytes=377941584-377941703",
+          "bytes": 120,
+          "content_range": "bytes 377941584-377941703/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158276/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158276-6FD3B8_20250703T031658.239336Z_00.00.fits",
+          "range": "bytes=378018384-378018503",
+          "bytes": 120,
+          "content_range": "bytes 378018384-378018503/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158276/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158276-6FD3B8_20250703T031658.239336Z_00.00.fits",
+          "range": "bytes=378095184-378095303",
+          "bytes": 120,
+          "content_range": "bytes 378095184-378095303/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158276/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158276-6FD3B8_20250703T031658.239336Z_00.00.fits",
+          "range": "bytes=378171984-378172103",
+          "bytes": 120,
+          "content_range": "bytes 378171984-378172103/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158276/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158276-6FD3B8_20250703T031658.239336Z_00.00.fits",
+          "range": "bytes=378248784-378248903",
+          "bytes": 120,
+          "content_range": "bytes 378248784-378248903/1474565760"
+        },
+        {
+          "key": "dr1/MER/102158276/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158276-6FD3B8_20250703T031658.239336Z_00.00.fits",
+          "range": "bytes=378325584-378325703",
+          "bytes": 120,
+          "content_range": "bytes 378325584-378325703/1474565760"
+        }
+      ]
+    }
+  ],
+  "limitations": "Small VIS and Y samples only; J/H and edge/ambiguity behaviors have offline tests. Processing/calibration metadata preserved, not scientific calibration validation.",
+  "spectrum_target_cutout": {
+    "ra": 273.018929496624,
+    "dec": 68.231870619389,
+    "tile_id": "101839130",
+    "shape": [
+      30,
+      30
+    ],
+    "header": {
+      "SRCS3": "s3://nasa-irsa-euclid-dr1/dr1/MER/101839130/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE101839130-9E5A9_20250817T160657.920550Z_00.00.fits",
+      "DATASETR": "DR1_R1",
+      "PPLANID": "MER_ProcessTile_EUCLID_2.0.32-DATA_RELEASE_DEEP-trochequ-PLAN-000002",
+      "BUNIT": "ADU/s",
+      "MAGZERO": 24.5,
+      "RAWHDR": "9ef3ad416667f26d1fc9e236e06306f820b01c44340d50ef8e52be0129a96c7b",
+      "CUTBYTES": 9440
+    }
+  },
+  "live_search_workflow": {
+    "entry_point": "euclid_dr1.plot_images",
+    "config": "archive_dr1_irsa_images.json",
+    "status": "ok",
+    "cutout_size_arcsec": 3,
+    "bands": {
+      "VIS": {
+        "MAGZERO": 24.5,
+        "BUNIT": "ADU/s",
+        "DATASETR": "DR1_R2",
+        "PPLANID": "MER_ProcessTile_EUCLID_2.0.32-DATA_RELEASE-pcasenov-PLAN-000000",
+        "SRCS3": "s3://nasa-irsa-euclid-dr1/dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-5EF3F0_20250803T105320.820305Z_00.00.fits",
+        "RAWHDR": "a5aa759d52e3dc9aa2be5001519b92eed043429c4d30d5990ffcabf3192a3a26",
+        "CUTBYTES": 9440,
+        "cutout_fits_sha256": "76d094f52991babde07dfcb72127a7713303ad2e01e64d0d510913a6d97e90c8"
+      },
+      "Y": {
+        "MAGZERO": 29.8,
+        "BUNIT": "ELECTRON/s",
+        "DATASETR": "DR1_R2",
+        "PPLANID": "MER_ProcessTile_EUCLID_2.0.32-DATA_RELEASE-pcasenov-PLAN-000000",
+        "SRCS3": "s3://nasa-irsa-euclid-dr1/dr1/MER/102158277/NISP/EUC_MER_BGSUB-MOSAIC-NIR-Y_TILE102158277-B62363_20250802T171104.054818Z_00.00.fits",
+        "RAWHDR": "d1abdc4c5d2396f60d7a625ba8ae5beba08b47e65370cfca621f6024c1a2c45e",
+        "CUTBYTES": 9440,
+        "cutout_fits_sha256": "5a4f638bfbaf6c9dbb9d2c8edf4111ba45b47301b2939fb1c20deb1a2b81f194"
+      },
+      "J": {
+        "MAGZERO": 30.1,
+        "BUNIT": "ELECTRON/s",
+        "DATASETR": "DR1_R2",
+        "PPLANID": "MER_ProcessTile_EUCLID_2.0.32-DATA_RELEASE-pcasenov-PLAN-000000",
+        "SRCS3": "s3://nasa-irsa-euclid-dr1/dr1/MER/102158277/NISP/EUC_MER_BGSUB-MOSAIC-NIR-J_TILE102158277-96D8A2_20250802T170831.080782Z_00.00.fits",
+        "RAWHDR": "17e5387854cd9ad82345749a4165e5e4123774ece24e035c32f4e2550d0ef2d1",
+        "CUTBYTES": 9440,
+        "cutout_fits_sha256": "cd5c505e822b058eae9c17078b12dcd3a8306926d68b2e8613ff17b671f35392"
+      },
+      "H": {
+        "MAGZERO": 30.0,
+        "BUNIT": "ELECTRON/s",
+        "DATASETR": "DR1_R2",
+        "PPLANID": "MER_ProcessTile_EUCLID_2.0.32-DATA_RELEASE-pcasenov-PLAN-000000",
+        "SRCS3": "s3://nasa-irsa-euclid-dr1/dr1/MER/102158277/NISP/EUC_MER_BGSUB-MOSAIC-NIR-H_TILE102158277-3C313F_20250802T171057.910045Z_00.00.fits",
+        "RAWHDR": "770bdacd925b1789d607f6d11bcdd1047ff6c82a810e1bdd9110e0fdc31e64c6",
+        "CUTBYTES": 9440,
+        "cutout_fits_sha256": "8d36a2db57fbfa4ab0c171b9d9f34864abd2d9c662ad03b7da61888df889806c"
+      }
+    },
+    "pdf_rendered": true
+  }
+}

@@ -93,6 +93,11 @@ class IRSABackend(EuclidArchiveBackend):
 
         return irsa_tools.retrieve_spectra(object_id, **kwargs)
 
+    def discover_mosaics(self, ra, dec, **kwargs):
+        from euclid_tools import irsa_tools
+
+        return irsa_tools.discover_mosaics(ra, dec, **kwargs)
+
     def retrieve_cutout(self, ra, dec, radius=None, search_radius=None, cutout_size=None, band=None, **kwargs):
         from euclid_tools import irsa_tools
 

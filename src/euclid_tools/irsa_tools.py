@@ -274,9 +274,15 @@ def retrieve_spectrum(object_id: str, save_spectrum: bool = False, output_dir: s
     return result
 
 
-def retrieve_cutout(ra: float, dec: float, search_radius: float = None, cutout_size: float = None, band: str = None, radius: float = None) -> fits.PrimaryHDU:
+def retrieve_cutout(ra: float, dec: float, search_radius: float = None, cutout_size: float = None, band: str = None, radius: float = None, *, release="q1", tiling="wide", selection=None,
+                    tile_id=None, product=None, mode="trim", client=None, filesystem=None) -> fits.PrimaryHDU:
     """
-    Retrieve an image cutout from Euclid imaging data.
+    Retrieve a Q1 (default) or explicitly selected IRSA DR1 image cutout.
+
+    DR1 uses SIA and bounded S3 section reads, preserves calibration headers and
+    updates WCS. Wide defaults to official survey mosaics; deep defaults to deep
+    stacks. Ambiguous results require tile_id or an exact product S3 URI.
+    See docs/IRSA_DR1_IMAGES.md for discovery, selections and limits.
 
     Parameters
     ----------
@@ -302,6 +308,14 @@ def retrieve_cutout(ra: float, dec: float, search_radius: float = None, cutout_s
     ValueError
         If the provided band is not one of the allowed options.
     """
+
+    if normalize_release(release) == "dr1":
+        from euclid_tools.irsa_images import retrieve_cutout as retrieve_dr1_cutout
+        return retrieve_dr1_cutout(ra, dec, radius=resolve_radius(radius, search_radius),
+                                   cutout_size=cutout_size, band=band, tiling=tiling, selection=selection,
+                                   tile_id=tile_id, product=product, mode=mode, client=client, filesystem=filesystem)
+    if tiling != "wide" or selection is not None or tile_id is not None or product is not None or client is not None or filesystem is not None or mode != "trim":
+        raise ValueError("DR1 mosaic selectors require release='dr1'")
 
     if band not in ["VIS", "Y", "J", "H"]:
         raise ValueError("Invalid band. Choose from 'VIS', 'Y', 'J', or 'H'.")
@@ -355,3 +369,10 @@ def retrieve_spectra(object_id, *, grism=None, product=None, client=None, sessio
     from euclid_tools.irsa_spectra import retrieve_spectra as retrieve_dr1
     return retrieve_dr1(object_id, grism=grism, product=product, client=client,
                         session=session, timeout=timeout)
+
+
+def discover_mosaics(ra, dec, radius=None, search_radius=None, **kwargs):
+    """Discover verified DR1 wide/deep science mosaics; list all candidates."""
+    from euclid_tools.irsa_images import discover_mosaics as discover_dr1
+    radius = 2 if radius is None and search_radius is None else resolve_radius(radius, search_radius)
+    return discover_dr1(ra, dec, radius=radius, **kwargs)

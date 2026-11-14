@@ -43,7 +43,7 @@ rows without deduplication or silently selecting one.
 require the Q1-only aperture/Vega columns. Complete Q1 summaries are unchanged.
 The example's `release` variable is passed to catalog metadata, cone search, ID
 lookup and spectrum retrieval. For DR1 it explicitly selects red spectra and
-skips images, since DR1 image retrieval is not implemented. Its default remains
+selects images from the same explicit DR1 tiling and catalog tileid. Its default remains
 Q1. Changing the release does not establish coverage at the example coordinates
 or guarantee an unambiguous spectrum for the nearest object.
 

@@ -6,7 +6,7 @@ ESA `retrieve_objects`, `retrieve_object_by_id`, and `print_catalog_info` accept
 keyword-only `release="q1"` (default) or `release="dr1"`, case insensitive.
 The ESA backend forwards release arguments. Invalid releases fail before a query.
 IRSA catalog release selection is now available; see [IRSA DR1 catalogs](IRSA_DR1_CATALOG.md).
-IRSA image APIs remain Q1-only. Explicit DR1 spectrum retrieval is now
+IRSA DR1 image cutouts are also available via [verified SIA/S3 section reads](IRSA_DR1_IMAGES.md). Explicit DR1 spectrum retrieval is now
 available; see [IRSA DR1 spectra](IRSA_DR1_SPECTRA.md) for the 13 November extension.
 
 Q1 retains positional arguments,
