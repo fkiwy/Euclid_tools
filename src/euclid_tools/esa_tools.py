@@ -1,4 +1,5 @@
 import os
+import inspect
 import tempfile
 from datetime import datetime
 
@@ -12,6 +13,11 @@ from astroquery.esa.euclid import Euclid
 from euclid_tools.backends import resolve_radius
 from euclid_tools.shared import add_magnitude, normalize_spectrum_table, convert_flux_to_mag, MagnitudeSystem
 from euclid_tools.releases import catalog_table, normalize_release, require_product_support
+
+def _spectrum_id_keyword(client):
+    """Support Astroquery's old source_id and current ids spelling explicitly."""
+    return "ids" if "ids" in inspect.signature(client.get_spectrum).parameters else "source_id"
+
 
 COLUMNS_TO_REMOVE = ["basic_download_data_oid", "to_be_published"]
 
@@ -190,7 +196,8 @@ def retrieve_spectrum(object_id: str, save_spectrum: bool = False, output_dir: s
         raise ValueError("ESA product selectors/injected clients require release='dr1'")
     require_product_support(release, "spectrum")
     filename = _generate_filename(tempfile.gettempdir(), object_id)
-    results = Euclid.get_spectrum(retrieval_type="SPECTRA_RGS", source_id=object_id, output_file=filename)
+    results = Euclid.get_spectrum(retrieval_type="SPECTRA_RGS", schema="q1",
+                                  output_file=filename, **{_spectrum_id_keyword(Euclid): object_id})
 
     result = None
     if results and len(results) > 0:
@@ -325,16 +332,20 @@ def retrieve_cutout(ra: float, dec: float, search_radius: float = None, cutout_s
            filter_name, 
            ra, 
            dec 
-      FROM sedm.mosaic_product 
+      FROM q1.mosaic_product
      WHERE (instrument_name='{instrument_name}') 
        AND (filter_name='{filter_name}') 
-       AND (((mosaic_product.fov IS NOT NULL AND INTERSECTS(CIRCLE('ICRS', {ra}, {dec},{radius_deg}), mosaic_product.fov)=1))) 
-     ORDER BY mosaic_product.tile_index ASC
+       AND (((fov IS NOT NULL AND INTERSECTS(CIRCLE('ICRS', {ra}, {dec},{radius_deg}), fov)=1)))
+     ORDER BY tile_index ASC
     """
     job_async = Euclid.launch_job(query)
+    if job_async is None:
+        raise RuntimeError("ESA Q1 mosaic query failed; no cutout requested")
     results = job_async.get_results()
+    if results is None:
+        raise RuntimeError("ESA Q1 mosaic query returned no result table")
 
-    if not results or len(results) == 0:
+    if len(results) == 0:
         return None
 
     result = results[0]
@@ -356,6 +367,8 @@ def retrieve_cutout(ra: float, dec: float, search_radius: float = None, cutout_s
         radius=radius,
         output_file=filename,
     )
+    if not cutout_url:
+        return None
     hdul = fits.open(cutout_url[0])
 
     from euclid_tools.provenance import stamp
