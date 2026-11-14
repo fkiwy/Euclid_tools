@@ -168,3 +168,34 @@ which was visually inspected. The earlier spectrum target at
 from deep tile 101839130 using 9,440 bytes of FITS reads. Those results are in
 the validation JSON. Only science-plane pixels are retrieved; associated weight,
 RMS and pixel-quality image planes are outside this implementation.
+
+
+## File-only plotting and Tk shutdown
+
+The IRSA/ESA example scripts select Matplotlib's non-GUI Agg backend before
+importing plotting modules. These scripts save files and open them in the system
+viewer; they do not need Tk windows or a Tk main loop. This avoids creating Tk
+canvas objects that can later be finalized from an S3/async worker and trigger
+`RuntimeError: main thread is not in main loop` or `Tcl_AsyncDelete` failures.
+The search image command likewise selects Agg before archive initialization.
+Library plotting imports/functions do not force a backend on interactive callers.
+
+After updating, restart the Python process or IDE kernel before rerunning.
+Changing the backend cannot repair Tk objects already created in an existing
+session. A clean terminal process can also be configured explicitly:
+
+```powershell
+$env:MPLBACKEND = "Agg"
+python irsa_tools_example.py
+```
+
+Regression tests start fresh processes with TkAgg configured, execute the actual
+entrypoints up to the first archive request, and render a PDF using an Agg
+canvas before any archive work. Those checks failed before the fix and pass
+afterward. Another subprocess verifies that library imports preserve an
+explicitly chosen SVG backend. Native Windows Tcl finalization was not reproduced
+on the Linux test host; the tested fix prevents Tk plotting objects from being
+created by these file-export paths. Data retrieval and scientific calculations
+are unchanged, and no package downgrade is required.
+
+Combined validation after file-backend selection: **173 passed, 24 subtests passed**.

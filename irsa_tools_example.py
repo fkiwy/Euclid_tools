@@ -50,6 +50,11 @@ The script will generate a plot that shows the spectrum of the selected object, 
 import sys
 import warnings
 
+# These examples export files and use an external viewer; never create Tk GUI
+# objects that an S3/async worker could later garbage-collect off the main thread.
+import matplotlib
+matplotlib.use("Agg")
+
 from astropy.utils.exceptions import AstropyWarning
 from euclid_tools.image_plotter import plot_images
 from euclid_tools.irsa_tools import print_catalog_info, catalog_table
