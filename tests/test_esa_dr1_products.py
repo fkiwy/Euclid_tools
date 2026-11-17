@@ -154,8 +154,12 @@ def test_cutout_preserves_pixels_wcs_calibration_and_processing_identity():
 
 def test_image_ambiguity_bad_metadata_limits_and_position():
     s=Session()
-    with pytest.raises(ValueError,match='Ambiguous ESA mosaic'):
+    with pytest.raises(ValueError,match='Ambiguous ESA mosaic') as error:
         esa.retrieve_cutout(273.18378579,64.37054921,client=client(mosaic(2)),session=s)
+    assert 'tile_id=102158277' in str(error.value)
+    assert 'dataset=DR1_R2' in str(error.value)
+    assert '/MER/102158277/VIS/mosaic.fits' in str(error.value)
+    assert 'discover_mosaics' in str(error.value)
     assert not s.calls
     bad=mosaic();bad['purpose'][0]='WRONG'
     with pytest.raises(ValueError,match='metadata differs'):

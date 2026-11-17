@@ -65,14 +65,17 @@ def test_defaults_and_q1_photometry_are_unchanged():
 
 
 @pytest.mark.parametrize('catalogue,tiling,selection',[(None,'wide','survey'),('deep_survey','deep','deep')])
-def test_example_keeps_catalog_id_and_image_collection_consistent(monkeypatch,catalogue,tiling,selection):
+@pytest.mark.parametrize('override',[False,True])
+def test_example_keeps_catalog_id_and_image_collection_consistent(monkeypatch,catalogue,tiling,selection,override):
+    override = ('101280483' if catalogue else '102158276') if override else None
     import euclid_tools
     from euclid_tools import shared,image_plotter
     script=Path(__file__).resolve().parents[1]/'esa_tools_example.py'
     source=script.read_text().replace('release = "q1"','release = "dr1"',1)
     source=source.replace('catalogue = None',f'catalogue = {catalogue!r}',1)
+    source=source.replace('image_tile_id = None',f'image_tile_id = {override!r}',1)
     identity='-597913580476826189' if catalogue else '2731837857643705492'
-    backend=Mock();backend.retrieve_objects.return_value=Table({'object_id':[int(identity)]})
+    backend=Mock();backend.retrieve_objects.return_value=Table({'object_id':[int(identity)],'tile_index':[101280484 if catalogue else 102158277]})
     backend.retrieve_object_by_id.return_value=None;backend.retrieve_spectrum.return_value=None
     backend.retrieve_cutout.return_value=None
     monkeypatch.setattr(euclid_tools,'get_backend',lambda name:backend)
@@ -88,3 +91,4 @@ def test_example_keeps_catalog_id_and_image_collection_consistent(monkeypatch,ca
     assert backend.retrieve_cutout.call_count==4
     for call in backend.retrieve_cutout.call_args_list:
         assert call.kwargs['tiling']==tiling and call.kwargs['selection']==selection
+        assert call.kwargs['tile_id']==(override or ('101280484' if catalogue else '102158277'))

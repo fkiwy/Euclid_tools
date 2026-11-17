@@ -77,3 +77,29 @@ The actual companion `Archive` also retrieved the deep catalog source, saved its
 Deep queries explicitly request CSV, which Astroquery's current ESA interface also defaults to. The live full-column VOTable response has malformed `arraysize="100x*"` metadata on `calblock_id_list`; CSV avoids that parser error while retaining all native columns and exact integer IDs. The public deep ID helper was additionally checked against a full native CSV response (479 input columns), not only the 19-column validation cone. No scientific field is dropped to work around the archive issue.
 
 Final combined validation: **224 passed, 24 subtests passed** across tools and search, including Q1 defaults, unchanged DR1-wide defaults, cone/ID/metadata selection, invalid-selector rejection, the example's stable coordinates and deep-image routing, and actual companion catalog-ID-to-spectrum integration. Both diffs pass whitespace checks.
+
+## Overlapping mosaics at 58.1332495, -49.1830038
+
+Both deep tiles `101280483` and `101280484` cover this position in VIS/Y/J/H.
+The selected deep catalog object `-581332463491830110` explicitly records
+`tile_index=101280484`. The example now uses that catalog tile for DR1 images
+when `image_tile_id` is None. Set `image_tile_id="101280484"` explicitly in
+older checkouts; a user-supplied override always takes precedence. The tile
+comes from the selected catalog row, not from a spectrum filename, a nearest
+mosaic calculation or a quality ranking.
+
+Direct library calls still require explicit tile/product selection when several
+mosaics match. Errors now list candidate tiles, releases and exact paths; use
+`backend.discover_mosaics(..., tiling="deep", selection="deep")` to inspect all
+candidates. A tile with multiple product versions remains ambiguous and requires
+an exact product path. Missing/masked catalog tile metadata does not authorize
+arbitrary selection. In `euclid_dr1` inputs, use the existing `image_tile_id` or
+per-band image tile/product fields to make the same explicit choice.
+
+On 2026-11-17 the catalog tile and the two overlapping candidates were checked
+against live ESA metadata. [Overlap validation](esa_dr1_mosaic_overlap_validation.json)
+records successful, small four-band cutouts from catalog tile 101280484, with
+native processing/calibration/WCS checks and FITS re-serialization. Q1 routing,
+scientific cuts and the library's ambiguity guard are unchanged.
+
+Overlap-fix regression validation: **226 passed, 24 subtests passed** across both repositories; the example additionally tests catalog-tile use and explicit override precedence for both wide and deep selection. Ambiguity tests verify candidate details are reported before any product download.

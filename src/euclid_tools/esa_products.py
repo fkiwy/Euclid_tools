@@ -264,7 +264,13 @@ def retrieve_cutout(ra, dec, *, radius=2, cutout_size=20, band='VIS', tiling='wi
     if not len(rows):
         return None
     if len(rows) != 1:
-        raise ValueError('Ambiguous ESA mosaic; select a tile or exact product path')
+        choices = "\n".join(
+            f"  tile_id={r['tile_index']}, dataset={r['data_set_release']}, product={r['product']}"
+            for r in rows[:10])
+        remaining = f"\n  ... {len(rows)-10} more candidates" if len(rows)>10 else ""
+        raise ValueError(
+            'Ambiguous ESA mosaic; select a tile or exact product path. Candidates:\n'
+            + choices + remaining + '\nUse discover_mosaics for the full candidate table.')
     row = rows[0]
     params = {'FILEPATH':str(row['product']), 'TAPCLIENT':'ASTROQUERY',
               'POS':f'CIRCLE,{coord.ra.deg},{coord.dec.deg},{cutout_size/7200}'}

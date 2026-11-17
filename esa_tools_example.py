@@ -77,7 +77,7 @@ warnings.simplefilter("ignore", category=AstropyWarning)
 # ------------------------------
 release = "q1"  # Set "dr1" to select a DR1 survey.
 catalogue = None  # DR1 defaults to wide_survey; set deep_survey for deep stacks.
-image_tile_id = None  # Optional exact tile; DR1 overlaps require explicit selection.
+image_tile_id = None  # DR1: use selected catalog tile_index; set a string to override.
 print(f"ESA catalog: {catalog_table(release, catalogue)}")
 print_catalog_info(release=release, catalogue=catalogue)
 
@@ -171,8 +171,15 @@ image_options = {"release": release}
 if release == "dr1":
     image_options["tiling"] = "deep" if catalogue == "deep_survey" else "wide"
     image_options["selection"] = "deep" if catalogue == "deep_survey" else "survey"
-    if image_tile_id is not None:
-        image_options["tile_id"] = image_tile_id
+    selected_image_tile = image_tile_id
+    if selected_image_tile is None and "tile_index" in result.colnames:
+        import numpy as np
+        catalog_tile = result["tile_index"]
+        if not np.ma.is_masked(catalog_tile):
+            selected_image_tile = str(catalog_tile)
+    if selected_image_tile is not None:
+        image_options["tile_id"] = selected_image_tile
+        print(f"ESA images: using tile {selected_image_tile}")
 vis_hdu = backend.retrieve_cutout(ra, dec, search_radius=search_radius, cutout_size=cutout_size, band="VIS", **image_options)
 y_hdu = backend.retrieve_cutout(ra, dec, search_radius=search_radius, cutout_size=cutout_size, band="Y", **image_options)
 j_hdu = backend.retrieve_cutout(ra, dec, search_radius=search_radius, cutout_size=cutout_size, band="J", **image_options)
