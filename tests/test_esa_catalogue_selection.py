@@ -64,31 +64,47 @@ def test_defaults_and_q1_photometry_are_unchanged():
     assert 'Y_2fwhm_aper_AB_mag' in result.colnames and 'Y_Vega_mag' in result.colnames
 
 
-@pytest.mark.parametrize('catalogue,tiling,selection',[(None,'wide','survey'),('deep_survey','deep','deep')])
-@pytest.mark.parametrize('override',[False,True])
-def test_example_keeps_catalog_id_and_image_collection_consistent(monkeypatch,catalogue,tiling,selection,override):
-    override = ('101280483' if catalogue else '102158276') if override else None
+@pytest.mark.parametrize('release,survey,tiling,selection',[
+    ('dr1','wide_survey','wide','survey'),
+    ('dr1','deep_survey','deep','deep'),
+    ('q1','deep_survey',None,None),
+])
+@pytest.mark.parametrize('archive,override',[('esa',False),('esa',True),('irsa',False)])
+def test_example_keeps_catalog_id_and_image_collection_consistent(monkeypatch,release,survey,tiling,selection,archive,override):
+    override = ('101280483' if tiling == 'deep' else '102020530') if override else None
     import euclid_tools
-    from euclid_tools import shared,image_plotter
-    script=Path(__file__).resolve().parents[1]/'esa_tools_example.py'
-    source=script.read_text().replace('release = "q1"','release = "dr1"',1)
-    source=source.replace('catalogue = None',f'catalogue = {catalogue!r}',1)
-    source=source.replace('image_tile_id = None',f'image_tile_id = {override!r}',1)
-    identity='-597913580476826189' if catalogue else '2731837857643705492'
-    backend=Mock();backend.retrieve_objects.return_value=Table({'object_id':[int(identity)],'tile_index':[101280484 if catalogue else 102158277]})
+    from euclid_tools import shared,image_plotter,irsa_tools
+    module = esa_tools if archive == 'esa' else irsa_tools
+    script=Path(__file__).resolve().parents[1]/f'{archive}_tools_example.py'
+    source=script.read_text().replace('release = "dr1"',f'release = {release!r}',1)
+    source=source.replace('dr1_catalogue = "deep_survey"',f'dr1_catalogue = {survey!r}',1)
+    if archive == 'esa':
+        source=source.replace('image_tile_id = None',f'image_tile_id = {override!r}',1)
+    catalogue = survey if release == 'dr1' else None
+    identity = ('-581332495491830038' if release == 'q1' else
+                '-581332463491830110' if tiling == 'deep' else '-581332416491830015')
+    tile = '101280484' if tiling == 'deep' else '102020531'
+    backend=Mock();backend.retrieve_objects.return_value=Table({'object_id':[int(identity)],
+        'tile_index' if archive == 'esa' else 'tileid':[int(tile)]})
     backend.retrieve_object_by_id.return_value=None;backend.retrieve_spectrum.return_value=None
     backend.retrieve_cutout.return_value=None
     monkeypatch.setattr(euclid_tools,'get_backend',lambda name:backend)
-    info=Mock();monkeypatch.setattr(esa_tools,'print_catalog_info',info)
+    info=Mock();monkeypatch.setattr(module,'print_catalog_info',info)
     monkeypatch.setattr(shared,'print_results',lambda result:None)
     monkeypatch.setattr(image_plotter,'plot_images',lambda *args,**kwargs:None)
     exec(compile(source,str(script),'exec'),{'__name__':'__main__'})
-    info.assert_called_once_with(release='dr1',catalogue=catalogue)
+    info.assert_called_once_with(release=release,catalogue=catalogue)
     assert backend.retrieve_objects.call_args.kwargs['catalogue']==catalogue
-    assert backend.retrieve_objects.call_args.args[:2]==(273.18378579,64.37054921)
-    backend.retrieve_object_by_id.assert_called_once_with(identity,release='dr1',catalogue=catalogue,vega_calibration=None)
-    backend.retrieve_spectrum.assert_called_once_with(identity,release='dr1',grism='red',product=None)
+    assert backend.retrieve_objects.call_args.args[:2]==(58.1332495,-49.1830038)
+    backend.retrieve_object_by_id.assert_called_once_with(identity,release=release,catalogue=catalogue,vega_calibration=None)
+    spectrum_options = {'release':release}
+    if release == 'dr1':spectrum_options.update(grism='red',product=None)
+    backend.retrieve_spectrum.assert_called_once_with(identity,**spectrum_options)
     assert backend.retrieve_cutout.call_count==4
     for call in backend.retrieve_cutout.call_args_list:
-        assert call.kwargs['tiling']==tiling and call.kwargs['selection']==selection
-        assert call.kwargs['tile_id']==(override or ('101280484' if catalogue else '102158277'))
+        assert call.kwargs.get('release','q1') == release
+        if release == 'dr1':
+            assert call.kwargs['tiling']==tiling and call.kwargs['selection']==selection
+            assert call.kwargs['tile_id']==(override or tile)
+        else:
+            assert 'tiling' not in call.kwargs and 'tile_id' not in call.kwargs

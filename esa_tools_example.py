@@ -1,51 +1,55 @@
+"""Retrieve catalog photometry, a red spectrum and VIS/Y/J/H cutouts from ESA.
+
+Setup and execution (from this repository):
+    python -m pip install -e .
+    python esa_tools_example.py
+
+Configuration
+-------------
+The default is release="dr1", dr1_catalogue="deep_survey", at ICRS coordinates
+(RA, Dec) = (58.1332495, -49.1830038) degrees. This object is present in Q1 and
+DR1; (59.7913643, -47.6826163) is an alternative below. Set release="q1" to use
+Q1's catalog and product routes at the same coordinates. The library API itself
+still defaults to Q1. For DR1 wide products, set dr1_catalogue="wide_survey".
+Changing release/survey does not imply identical source IDs, observing visits,
+processing or usable spectral coverage.
+
+The script prints the selected catalog metadata, performs a 5-arcsecond cone
+search, selects its closest result and prints an ID lookup from that same
+catalog. Catalog fluxes are in microJy. DR1 adds profile AB magnitudes; optional
+Vega output requires an explicitly sourced vega_calibration (see
+docs/DR1_VEGA_CALIBRATION.md). Q1 retains its existing AB/Vega outputs.
+
+For DR1, a red-grism spectrum is requested for the selected catalog ID. Multiple
+associations require an explicit spectrum_product=(ESA parent path, HDU), chosen
+from backend.discover_spectra(object_id, release="dr1", grism="red"). Parents
+without a distinguishing native source-patch identifier remain unsupported.
+The spectrum display is trimmed to 1.21-1.89 micrometres with uncertainty shading;
+no scientific quality-mask selection or repair of missing bins is applied.
+
+Images use 20-arcsecond cutouts and the corresponding DR1 wide/deep collection.
+The selected catalog's native tile_index resolves tile overlaps; image_tile_id
+can explicitly override it. Remaining product ambiguity requires inspection via
+backend.discover_mosaics and an exact product selection with the library API.
+Q1 uses its legacy image route.
+
+Outputs and dependencies
+------------------------
+Spectrum and image-panel plots are PNG files in the system temporary directory
+and open in the external viewer by default. Set output_dir, open_plot or
+plot_format on the plotting calls below to change this. Use separate output_dir
+values when comparing releases to retain both sets of target-named plots. These plots
+use Matplotlib Agg, avoiding a Tk GUI. No named FITS output is requested;
+retrieve_spectrum(save_spectrum=True, output_dir=...) can save a spectrum.
+Legacy Q1 clients may use temporary download files. An empty cone exits with
+the selected catalog and coordinates. Successful retrieval depends on service
+availability. DR1 failures raise; the legacy ESA Q1 client can log a failure and
+return no files.
+
+Uses euclid_tools.get_backend("esa"), euclid_tools.esa_tools for metadata,
+euclid_tools.shared, euclid_tools.image_plotter, Astropy and flux_comp.
 """
-Example: Using Euclid Tools for Object Retrieval, Spectrum Plotting, and Image Cutouts
 
-This example demonstrates how to use tools from `tools.esa_tools` to retrieve catalog objects,
-spectra, and image cutouts from the Euclid mission. It also shows how to plot the spectrum using `flux_comp`
-and the images in various bands.
-
-The steps in the script are as follows:
-1. Print catalog information.
-2. Retrieve catalog objects near specified coordinates.
-3. Retrieve and plot the spectrum for a selected object (using flux_comp).
-4. Retrieve image cutouts in different bands (VIS, Y, J, H).
-5. Plot the retrieved images in a multi-band format.
-
-Dependencies:
-- `euclid_tools.esa_tools` (for retrieving catalog objects, spectra, and image cutouts)
-- `euclid_tools.image_plotter` (for plotting images)
-- `euclid_tools.shared` (for utility functions like `print_results` or `print_message`)
-- `astropy` (for units and warnings handling)
-
-Steps in the script:
-1. **Print Catalog Information:**
-   - The script begins by printing information about the catalog available for querying, using the `print_catalog_info()` function.
-
-2. **Retrieve Objects:**
-   - It performs a cone search around the specified RA and Dec with a specified search radius (in arcseconds) using the `retrieve_objects()` function.
-   - If objects are found, the first object is selected for further analysis. If no objects are found, the script will exit gracefully with a message.
-
-3. **Retrieve Spectrum:**
-   - The script retrieves the spectrum for the selected object using the `retrieve_spectrum()` function.
-   - If a valid spectrum is retrieved, it will be plotted using `flux_comp` (SED/WaveFlux) via sed.plot().
-
-4. **Retrieve Cutouts:**
-   - The script retrieves image cutouts from different bands (VIS, Y, J, H) with a specified cutout size, using the `retrieve_cutout()` function.
-   - Each retrieved cutout is appended to the `images` list with relevant metadata (band and RGB color mapping).
-
-5. **Plot Images:**
-   - The `plot_images()` function is called to create a multi-band image plot using the retrieved cutouts. The plot is saved as a PDF.
-
-Notes for Users:
-- **Coordinates:** The script starts with a specific set of coordinates (RA, Dec). Users can modify these to retrieve data for different objects.
-- **Cutout Sizes:** The cutout size is defined in arcseconds, and users can adjust it based on their needs. For example, a `cutout_size` of 20 arcseconds is used in this script.
-- **Plot Format:** The resulting plot for images is saved in PDF format. Users can change this format (e.g., PNG, JPG) by modifying the `plot_format` argument.
-- **Image Bands:** The bands (VIS, Y, J, H) are selected for cutout retrieval, but users can adjust this list to include other bands if needed.
-
-Example Output:
-The script will generate a plot that shows the spectrum of the selected object, as well as a multi-band image plot in the VIS, Y, J, and H bands. The plot will be saved in the specified format (PDF by default).
-"""
 
 import sys
 import warnings
@@ -75,8 +79,9 @@ warnings.simplefilter("ignore", category=AstropyWarning)
 # ------------------------------
 # Print catalog information
 # ------------------------------
-release = "q1"  # Set "dr1" to select a DR1 survey.
-catalogue = None  # DR1 defaults to wide_survey; set deep_survey for deep stacks.
+release = "dr1"  # Set "q1" to compare the same target with Q1.
+dr1_catalogue = "deep_survey"  # Set "wide_survey" for the DR1 wide product.
+catalogue = dr1_catalogue if release == "dr1" else None
 vega_calibration = None  # DR1: load a completed, source-recorded calibration JSON to opt in.
 spectrum_product = None  # DR1: exact (ESA parent path, HDU) from backend.discover_spectra.
 image_tile_id = None  # DR1: use selected catalog tile_index; set a string to override.
@@ -87,16 +92,9 @@ print_catalog_info(release=release, catalogue=catalogue)
 # Retrieve objects
 # ------------------------------
 
-# Define object coordinates
-# ra, dec = 58.1332495, -49.1830038
+# Shared Q1/DR1 target: coordinates remain fixed when changing release/survey.
+ra, dec = 58.1332495, -49.1830038
 # ra, dec = 59.7913643, -47.6826163
-if release == "q1":
-    ra, dec = 266.4850113, 64.9936424
-else:
-    ra, dec = 273.18378579, 64.37054921
-# To compare wide/deep for another source, set coordinates here and change only
-# catalogue above; selecting a different survey never changes these coordinates.
-# ra, dec = 59.7913643, -47.6826163  # Validated Q1/DR1 deep-field object.
 
 # Specify search radius in arcseconds
 search_radius = 5
@@ -195,5 +193,5 @@ images.append({"hdu": y_hdu, "band": "Y", "rgb": "g"})
 images.append({"hdu": j_hdu, "band": "J", "rgb": None})
 images.append({"hdu": h_hdu, "band": "H", "rgb": "r"})
 
-# Plot the images in a multi-band format and save the plot as a PDF
+# Plot the images in a multi-band format and save the plot as a PNG
 plot_images(ra, dec, images, cutout_size, plot_format="png")
