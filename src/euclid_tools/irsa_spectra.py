@@ -9,9 +9,10 @@ from urllib.parse import quote, urlencode
 import astropy.units as u
 import numpy as np
 import requests
-from astropy.table import QTable
+from astropy.table import QTable, Table
 from astropy.io.votable import parse
 from astroquery.ipac.irsa import Irsa
+from euclid_tools.validation import object_id as _object_id, positive_scalar
 
 ASSOCIATION_TABLE = "euclid.objectid_spectrafile_association_dr1"
 SPECTRUMDM_URL = "https://irsacloud.ipac.caltech.edu/api/spectrumdm/convert/"
@@ -19,17 +20,6 @@ DATASET_ID = "euclid_combspec_dr1"
 MAX_ASSOCIATIONS = 100
 MAX_BYTES = 8 * 1024 * 1024
 FLUX_UNIT = u.erg / (u.s * u.cm**2 * u.AA)
-
-
-def _object_id(value):
-    text = str(value)
-    digits = text[1:] if text.startswith("-") else text
-    if not digits or not digits.isascii() or not digits.isdecimal():
-        raise ValueError("object_id must be a decimal integer with an optional leading minus sign")
-    number = int(text)
-    if not -(2**63) <= number < 2**63:
-        raise ValueError("object_id is outside the signed 64-bit range")
-    return str(number)
 
 
 def _hdu(value):
@@ -135,17 +125,59 @@ def decode_spectrum(body, *, object_id, path, hdu, tileid):
     return result
 
 
+def _associations(object_id, *, client=None):
+    object_id = _object_id(object_id)
+    client = Irsa if client is None else client
+    query = (f"SELECT TOP {MAX_ASSOCIATIONS + 1} objectid,tileid,path,hdu "
+             f"FROM {ASSOCIATION_TABLE} WHERE objectid = {object_id}")
+    job = client.query_tap(query, maxrec=MAX_ASSOCIATIONS + 1)
+    if job is None:
+        raise RuntimeError("IRSA spectrum association query failed")
+    rows = job.to_table()
+    if rows is None:
+        raise RuntimeError("IRSA spectrum association query returned no result table")
+    if len(rows) > MAX_ASSOCIATIONS:
+        raise ValueError("Too many spectrum associations; refusing a truncated product list")
+    found = {}
+    for row in rows:
+        if _object_id(row["objectid"]) != object_id:
+            raise ValueError("Association table returned a different object ID")
+        path, hdu = str(row["path"]), _hdu(row["hdu"])
+        url = spectrum_url(path, hdu)
+        key = (path, hdu)
+        if key in found and found[key]['tileid'] != str(row['tileid']):
+            raise ValueError("Conflicting IRSA tile identities for one file/HDU")
+        found[key] = {'path': path, 'hdu': hdu, 'tileid': str(row['tileid']), 'url': url}
+    return object_id, list(found.values())
+
+
+def discover_spectra(object_id, *, grism=None, client=None):
+    """List exact DR1 associations without downloading spectral data.
+
+    IRSA's association table supplies no grism. Discovery leaves it unknown and
+    rejects a grism filter; retrieve_spectra classifies supplied wavelengths.
+    """
+    if grism is not None:
+        if grism not in ('red', 'blue'):
+            raise ValueError("grism must be red, blue or None")
+        raise NotImplementedError("IRSA association metadata has no grism; omit grism for discovery. "
+                                  "retrieve_spectra can filter after reading wavelengths")
+    _, rows = _associations(object_id, client=client)
+    return Table(rows=[('', r['path'], r['hdu'], '', '', True, r['tileid']) for r in rows],
+                 names=('grism', 'source_path', 'hdu_index', 'linking_parameter', 'linking_id',
+                        'retrieval_supported', 'tile_id'), dtype=(str, str, int, str, str, bool, str))
+
+
 def retrieve_spectra(object_id, *, grism=None, product=None, client=None, session=None,
                      timeout=120, max_bytes=MAX_BYTES):
-    """Return all DR1 products, optionally filtered; fail on any download error.
+    """Return every matching DR1 spectrum without ranking or combining products.
 
-    ``product=(path, hdu)`` must identify an association for this object. ``grism``
-    is 'red' or 'blue', using the wavelength rule in IRSA's DR1 tutorial. Neither
-    filter ranks spectra, combines products, clips variance, or removes bins.
-    Returns [] only for no associations or no matching products. Raises for
-    malformed metadata, transport errors, response limits, or invalid spectra.
+    An empty association/grism result returns []; an unassociated exact product
+    for a source with associations raises ValueError. Metadata is validated and
+    identical file/HDU rows are deduplicated before any spectrum download.
     """
-    object_id = _object_id(object_id)
+    positive_scalar(timeout, 'timeout')
+    positive_scalar(max_bytes, 'max_bytes')
     if grism not in (None, "red", "blue"):
         raise ValueError("grism must be 'red', 'blue', or None")
     if product is not None:
@@ -153,22 +185,14 @@ def retrieve_spectra(object_id, *, grism=None, product=None, client=None, sessio
             raise ValueError("product must be a (path, hdu) pair")
         product = (str(product[0]), _hdu(product[1]))
         spectrum_url(*product)
-    client = Irsa if client is None else client
-    query = (f"SELECT TOP {MAX_ASSOCIATIONS + 1} objectid,tileid,path,hdu "
-             f"FROM {ASSOCIATION_TABLE} WHERE objectid = {object_id}")
-    rows = client.query_tap(query, maxrec=MAX_ASSOCIATIONS + 1).to_table()
-    if len(rows) > MAX_ASSOCIATIONS:
-        raise ValueError("Too many spectrum associations; refusing a truncated product list")
+    object_id, rows = _associations(object_id, client=client)
+    selected = [r for r in rows if product is None or product == (r['path'], r['hdu'])]
+    if product is not None and rows and not selected:
+        raise ValueError("Selected IRSA spectrum product is not associated with this source")
     result = []
-    for row in rows:
-        if _object_id(row["objectid"]) != object_id:
-            raise ValueError("Association table returned a different object ID")
-        path, hdu = str(row["path"]), _hdu(row["hdu"])
-        url = spectrum_url(path, hdu)
-        if product is not None and (path, hdu) != product:
-            continue
-        body = _download(url, session=session, timeout=timeout, max_bytes=max_bytes)
-        spectrum = decode_spectrum(body, object_id=object_id, path=path, hdu=hdu, tileid=row["tileid"])
+    for row in selected:
+        body = _download(row['url'], session=session, timeout=timeout, max_bytes=max_bytes)
+        spectrum = decode_spectrum(body, object_id=object_id, path=row['path'], hdu=row['hdu'], tileid=row['tileid'])
         if grism is None or spectrum.meta["GRISM"] == grism:
             result.append(spectrum)
     return result

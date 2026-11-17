@@ -10,6 +10,7 @@ from astropy.io import fits
 from astropy.table import Table, QTable
 from astroquery.esa.euclid import Euclid
 
+from euclid_tools.validation import object_id as validate_object_id, row_limit, positive_scalar
 from euclid_tools.photometry import add_dr1_magnitudes, validate_vega_calibration
 from euclid_tools.backends import resolve_radius
 from euclid_tools.shared import add_magnitude, normalize_spectrum_table, convert_flux_to_mag, MagnitudeSystem
@@ -65,8 +66,12 @@ def retrieve_objects(ra: float, dec: float, radius: float = None, search_radius:
     client = Euclid if client is None else client
     radius = u.Quantity(resolve_radius(radius=radius, search_radius=search_radius), u.arcsec)
     coord = SkyCoord(ra=ra, dec=dec, unit=(u.deg, u.deg), frame="icrs")
+    if not np.isfinite(coord.ra.deg) or not np.isfinite(coord.dec.deg):
+        raise ValueError("Coordinates must be finite degrees")
 
-    client.ROW_LIMIT = limit
+    limit = row_limit(limit)
+    if limit is not None:
+        client.ROW_LIMIT = limit
 
     job = client.cone_search(
         coordinate=coord,
@@ -84,6 +89,8 @@ def retrieve_objects(ra: float, dec: float, radius: float = None, search_radius:
         raise RuntimeError("ESA catalog query failed; check archive access and client diagnostics")
     table = job.get_results()
 
+    if table is None:
+        raise RuntimeError("ESA catalog query returned no result table")
     if len(table) == 0:
         return None
 
@@ -114,16 +121,15 @@ def retrieve_object_by_id(object_id: str, *, release: str = "q1", catalogue=None
     table_name = catalog_table(release, catalogue)
     vega_calibration = validate_vega_calibration(vega_calibration, release=release)
     client = Euclid if client is None else client
-    object_id = str(object_id)
-    digits = object_id[1:] if object_id.startswith("-") else object_id
-    if not digits or not digits.isascii() or not digits.isdecimal():
-        raise ValueError("object_id must contain decimal digits with an optional leading minus sign")
+    object_id = validate_object_id(object_id)
 
     query = f"SELECT * FROM {table_name} WHERE object_id = {object_id}"
     job = client.launch_job(query, **({"output_format": "csv"} if catalogue == "deep_survey" else {}))
     if job is None:
         raise RuntimeError("ESA catalog query failed; check archive access and client diagnostics")
     table = job.get_results()
+    if table is None:
+        raise RuntimeError("ESA catalog query returned no result table")
     if len(table) == 0:
         return None
     return _prepare_catalog_table(table, release=release, catalogue=catalogue, vega_calibration=vega_calibration)
@@ -189,6 +195,8 @@ def retrieve_spectrum(object_id: str, save_spectrum: bool = False, output_dir: s
     - The output directory defaults to a temporary directory if not specified.
     """
 
+    object_id = validate_object_id(object_id)
+    positive_scalar(timeout, "timeout")
     if normalize_release(release) == "dr1":
         from euclid_tools.esa_products import retrieve_spectrum as retrieve_dr1_spectrum
         result = retrieve_dr1_spectrum(object_id, grism=grism, product=product,
@@ -206,13 +214,14 @@ def retrieve_spectrum(object_id: str, save_spectrum: bool = False, output_dir: s
 
     result = None
     if results and len(results) > 0:
-        try:
-            hdu = fits.open(results[0])[1]
-        except:
-            print("No spectrum available for given object ID")
-            return None
-
-        spectrum = QTable.read(hdu, format="fits")
+        results = list(dict.fromkeys(str(path) for path in results))
+        if len(results) != 1:
+            raise ValueError("Ambiguous Q1 spectrum: multiple returned products")
+        with fits.open(results[0], memmap=False) as hdus:
+            if len(hdus) != 2 or not isinstance(hdus[1], fits.BinTableHDU):
+                raise ValueError("Expected one extracted Q1 spectrum table")
+            hdu = hdus[1].copy()
+            spectrum = QTable.read(hdu, format="fits")
 
         # Check if the spectrum contains valid data
         if np.isnan(spectrum["WAVELENGTH"]).all():
@@ -224,9 +233,9 @@ def retrieve_spectrum(object_id: str, save_spectrum: bool = False, output_dir: s
         fscale = hdu.header.get("FSCALE", 1.0)
 
         flux = spectrum["SIGNAL"] * fscale
-        error = np.sqrt(
-            np.clip(spectrum["VAR"], 0, None)
-        ) * fscale
+        # Negative variance is invalid; it must not become a zero uncertainty.
+        with np.errstate(invalid="ignore"):
+            error = np.sqrt(spectrum["VAR"]) * fscale
 
         mask = spectrum["MASK"]
 
@@ -302,6 +311,9 @@ def retrieve_cutout(ra: float, dec: float, search_radius: float = None, cutout_s
         If the provided band is not one of the allowed options.
     """
 
+    if cutout_size is None:
+        raise TypeError("'cutout_size' is required")
+    positive_scalar(cutout_size, "cutout_size")
     if normalize_release(release) == "dr1":
         from euclid_tools.esa_products import retrieve_cutout as retrieve_dr1_cutout
         return retrieve_dr1_cutout(ra, dec, radius=resolve_radius(radius, search_radius),
@@ -381,6 +393,31 @@ def retrieve_cutout(ra: float, dec: float, search_radius: float = None, cutout_s
           route="tap-mosaic+esa-get_cutout", SRCPATH=str(file_path), PRODBAND=band,
           TILEID=str(obs_id))
     return hdul[0]
+
+
+def discover_spectra(object_id, *, release="dr1", **kwargs):
+    """List ESA DR1 parent/grism associations without spectrum downloads."""
+    if normalize_release(release) != 'dr1':
+        raise ValueError("ESA spectrum discovery requires release='dr1'")
+    from euclid_tools.esa_products import discover_spectra as discover_dr1
+    return discover_dr1(object_id, **kwargs)
+
+
+def retrieve_spectra(object_id, *, release="dr1", **kwargs):
+    """Return independently identifiable DR1 products; Q1 retains its singular API."""
+    if normalize_release(release) != 'dr1':
+        raise ValueError("Plural ESA spectrum retrieval requires release='dr1'")
+    from euclid_tools.esa_products import retrieve_spectra as retrieve_dr1
+    return retrieve_dr1(object_id, **kwargs)
+
+
+def discover_mosaics(ra, dec, radius=None, search_radius=None, *, release="dr1", **kwargs):
+    """Discover ESA DR1 survey/deep mosaics, or explicitly select repeat visits."""
+    if normalize_release(release) != 'dr1':
+        raise ValueError("ESA mosaic discovery requires release='dr1'")
+    from euclid_tools.esa_products import discover_mosaics as discover_dr1
+    radius = 2 if radius is None and search_radius is None else resolve_radius(radius, search_radius)
+    return discover_dr1(ra, dec, radius=radius, **kwargs)
 
 
 def print_catalog_info(*, release: str = "q1", catalogue=None):

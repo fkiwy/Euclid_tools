@@ -99,7 +99,8 @@ def test_repeated_same_grism_requires_exact_product_and_roundtrips(tmp_path):
 def test_no_products_and_unmatched_selector_are_distinct_from_errors():
     with patch.object(dr1, "_download") as download:
         assert irsa_tools.retrieve_spectrum(ID, release="dr1", client=client_for(associations(0))) is None
-        assert dr1.retrieve_spectra(ID, product=(PATH, 99), client=client_for(associations())) == []
+        with pytest.raises(ValueError, match='not associated'):
+            dr1.retrieve_spectra(ID, product=(PATH, 99), client=client_for(associations()))
         download.assert_not_called()
     with patch.object(dr1, "_download", side_effect=requests.Timeout("test timeout")):
         with pytest.raises(requests.Timeout):

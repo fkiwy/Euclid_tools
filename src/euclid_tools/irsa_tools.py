@@ -14,6 +14,7 @@ from astropy.table import Table, QTable
 from astropy.wcs import WCS
 from astroquery.ipac.irsa import Irsa
 
+from euclid_tools.validation import object_id as validate_object_id, row_limit, positive_scalar
 from euclid_tools.photometry import add_dr1_magnitudes, validate_vega_calibration
 from euclid_tools.backends import resolve_radius
 from euclid_tools.shared import add_magnitude, normalize_spectrum_table, convert_flux_to_mag, MagnitudeSystem
@@ -41,7 +42,7 @@ def catalog_table(release="q1", catalogue=None):
     return DR1_CATALOGUES[name]
 
 
-def retrieve_objects(ra: float, dec: float, radius: float = None, search_radius: float = None, *, release: str = "q1", catalogue=None, vega_calibration=None, client=None) -> Table:
+def retrieve_objects(ra: float, dec: float, radius: float = None, search_radius: float = None, limit: int = None, *, release: str = "q1", catalogue=None, vega_calibration=None, client=None) -> Table:
     """
     Perform a cone search on the explicitly selected IRSA MER catalog.
 
@@ -81,9 +82,16 @@ def retrieve_objects(ra: float, dec: float, radius: float = None, search_radius:
     client = Irsa if client is None else client
     radius = resolve_radius(radius=radius, search_radius=search_radius) * u.arcsec
     position = SkyCoord(ra, dec, unit=(u.deg, u.deg), frame="icrs")
+    if not np.isfinite(position.ra.deg) or not np.isfinite(position.dec.deg):
+        raise ValueError("Coordinates must be finite degrees")
 
+    limit = row_limit(limit)
+    if limit is not None:
+        client.ROW_LIMIT = limit
     table = client.query_region(coordinates=position, spatial="Cone", catalog=table_name, radius=radius)
 
+    if table is None:
+        raise RuntimeError("IRSA catalog query returned no result table")
     if len(table) == 0:
         return None
 
@@ -121,13 +129,15 @@ def retrieve_object_by_id(object_id: str, *, release: str = "q1", catalogue=None
     table_name = catalog_table(release, catalogue)
     vega_calibration = validate_vega_calibration(vega_calibration, release=release)
     client = Irsa if client is None else client
-    object_id = str(object_id)
-    digits = object_id[1:] if object_id.startswith("-") else object_id
-    if not digits or not digits.isascii() or not digits.isdecimal():
-        raise ValueError("object_id must contain decimal digits with an optional leading minus sign")
+    object_id = validate_object_id(object_id)
 
     query = f"SELECT * FROM {table_name} WHERE object_id = {object_id}"
-    table = client.query_tap(query).to_table()
+    job = client.query_tap(query)
+    if job is None:
+        raise RuntimeError("IRSA catalog query failed")
+    table = job.to_table()
+    if table is None:
+        raise RuntimeError("IRSA catalog query returned no result table")
     if len(table) == 0:
         return None
     return _prepare_catalog_table(table, release=release, catalogue=catalogue, vega_calibration=vega_calibration)
@@ -139,9 +149,10 @@ def _prepare_catalog_table(table: Table, *, release: str = "q1", catalogue=None,
         # IRSA supplies ra/dec in degrees, and these verified flux pairs in uJy.
         # Do not infer aperture or Vega calibrations from Q1.
         add_dr1_magnitudes(table, vega_calibration=vega_calibration)
-        table.meta.update(release="DR1", catalogue_table=catalog_table(release, catalogue), archive="IRSA")
+        table.meta.update(release="DR1", catalogue_table=catalog_table(release, catalogue), archive="IRSA",
+                          catalogue="wide_survey" if catalogue is None else catalogue)
         return table
-    table.remove_columns(COLUMNS_TO_REMOVE)
+    table.remove_columns([name for name in COLUMNS_TO_REMOVE if name in table.colnames])
 
     add_magnitude(table, table["flux_vis_psf"], table["fluxerr_vis_psf"], "VIS")
     add_magnitude(table, table["flux_y_templfit"], table["fluxerr_y_templfit"], "Y")
@@ -196,6 +207,8 @@ def retrieve_spectrum(object_id: str, save_spectrum: bool = False, output_dir: s
     - The output directory defaults to a temporary directory if not specified.
     """
 
+    object_id = validate_object_id(object_id)
+    positive_scalar(timeout, "timeout")
     if normalize_release(release) == "dr1":
         spectra = retrieve_spectra(object_id, grism=grism, product=product,
                                    client=client, session=session, timeout=timeout)
@@ -219,11 +232,22 @@ def retrieve_spectrum(object_id: str, save_spectrum: bool = False, output_dir: s
        AND path IS NOT NULL
     """
 
-    table = Irsa.query_tap(adql).to_table()
+    job = Irsa.query_tap(adql)
+    if job is None:
+        raise RuntimeError("IRSA Q1 spectrum association query failed")
+    table = job.to_table()
+    if table is None:
+        raise RuntimeError("IRSA Q1 spectrum association query returned no result table")
 
     if len(table) == 0:
         return None
 
+    if len(table) != 1:
+        identities = {(str(row['path']), str(row['hdu']) if 'hdu' in table.colnames else None)
+                      for row in table}
+        if len(identities) != 1:
+            raise ValueError("Ambiguous Q1 spectrum: multiple file/HDU associations")
+        table = table[:1]
     path = str(table["path"][0])
     if path.endswith(".fits"):
         # Current Q1 associations identify a parent FITS file and one HDU,
@@ -337,6 +361,9 @@ def retrieve_cutout(ra: float, dec: float, search_radius: float = None, cutout_s
         If the provided band is not one of the allowed options.
     """
 
+    if cutout_size is None:
+        raise TypeError("'cutout_size' is required")
+    positive_scalar(cutout_size, "cutout_size")
     if normalize_release(release) == "dr1":
         from euclid_tools.irsa_images import retrieve_cutout as retrieve_dr1_cutout
         return retrieve_dr1_cutout(ra, dec, radius=resolve_radius(radius, search_radius),
@@ -400,15 +427,35 @@ def print_catalog_info(*, release: str = "q1", catalogue=None):
         print(f'{f"{col.name}":45s} {f"{col.unit}":12s} {col.description}')
 
 
-def retrieve_spectra(object_id, *, grism=None, product=None, client=None, session=None, timeout=120):
-    """Return every matching DR1 spectrum; Q1's singular API remains unchanged."""
+def retrieve_spectra(object_id, *, release="dr1", grism=None, product=None, client=None, session=None, timeout=120):
+    """Return matching DR1 products; Q1 retains its singular API."""
+    if normalize_release(release) != 'dr1':
+        raise ValueError("Plural IRSA spectrum retrieval requires release='dr1'")
     from euclid_tools.irsa_spectra import retrieve_spectra as retrieve_dr1
     return retrieve_dr1(object_id, grism=grism, product=product, client=client,
                         session=session, timeout=timeout)
 
 
-def discover_mosaics(ra, dec, radius=None, search_radius=None, **kwargs):
-    """Discover verified DR1 wide/deep science mosaics; list all candidates."""
+def discover_spectra(object_id, *, release="dr1", grism=None, client=None):
+    """List DR1 file/HDU associations without downloads; grism is unknown."""
+    if normalize_release(release) != 'dr1':
+        raise ValueError("IRSA spectrum discovery requires release='dr1'")
+    from euclid_tools.irsa_spectra import discover_spectra as discover_dr1
+    return discover_dr1(object_id, grism=grism, client=client)
+
+
+def discover_mosaics(ra, dec, radius=None, search_radius=None, *, release="dr1", selection=None, **kwargs):
+    """Discover DR1 survey/deep mosaics, or explicitly select repeat visits.
+
+    Native IRSA header-verification errors remain visible as status rows.
+    """
+    if normalize_release(release) != 'dr1':
+        raise ValueError("IRSA mosaic discovery requires release='dr1'")
+    tiling = kwargs.get('tiling', 'wide')
+    selection = ('survey' if tiling == 'wide' else 'deep') if selection is None else selection
+    if selection not in (('survey', 'repeat') if tiling == 'wide' else ('deep',)):
+        raise ValueError("Mosaic selection disagrees with wide/deep tiling")
     from euclid_tools.irsa_images import discover_mosaics as discover_dr1
     radius = 2 if radius is None and search_radius is None else resolve_radius(radius, search_radius)
-    return discover_dr1(ra, dec, radius=radius, **kwargs)
+    rows = discover_dr1(ra, dec, radius=radius, **kwargs)
+    return rows[(rows['kind'] == selection) | (rows['status'] == 'error')]

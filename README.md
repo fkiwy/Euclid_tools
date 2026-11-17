@@ -194,6 +194,9 @@ three decimal places.
 
 ### 2. `retrieve_spectrum()`
 
+ESA/IRSA shared behavior, corrections and retained differences are documented in
+the [backend parity audit](docs/BACKEND_PARITY.md).
+
 Access via `get_backend('esa')` or `get_backend('irsa')` — backends implement this method.
 
 This function retrieves the spectrum of a given object from the Euclid archive based on the object ID.

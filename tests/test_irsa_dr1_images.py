@@ -95,7 +95,9 @@ def test_wide_survey_is_distinct_from_repeat_and_deep():
     survey, repeat, deep = mosaic(), mosaic("repeat", version="repeat"), mosaic("deep")
     client, fs = setup(survey, repeat)
     found = irsa_tools.discover_mosaics(RA, DEC, client=client, filesystem=fs)
-    assert list(found["kind"]) == ["survey", "repeat"]
+    assert list(found["kind"]) == ["survey"]
+    repeats = irsa_tools.discover_mosaics(RA, DEC, selection='repeat', client=client, filesystem=fs)
+    assert list(repeats['kind']) == ['repeat']
     hdu = images.retrieve_cutout(RA, DEC, selection="repeat", cutout_size=3, client=client, filesystem=fs)
     assert hdu.header["MOSCLASS"] == "repeat" and hdu.header["SRCS3"] == repeat[0]
     client, fs = setup(deep)

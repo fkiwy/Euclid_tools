@@ -188,6 +188,8 @@ def _source_patch_ids(value):
 
 
 def _spectrum_associations(object_id, *, grism, client, session, timeout):
+    from euclid_tools.validation import positive_scalar
+    positive_scalar(timeout, "timeout")
     object_id = _object_id(object_id)
     if grism not in (None, *GRISMS):
         raise ValueError('grism must be red, blue or None')
@@ -244,6 +246,8 @@ def _select_spectra(object_id, *, grism, product, client, session, timeout):
         if not isinstance(product, (tuple, list)) or len(product) != 2:
             raise ValueError('product must be an exact (ESA path, HDU) pair')
         product = (str(product[0]), _hdu(product[1]))
+        parent = PurePosixPath(product[0])
+        _path(str(parent.parent), parent.name)
     object_id, rows = _spectrum_associations(object_id, grism=grism, client=client, session=session, timeout=timeout)
     selected = [r for r in rows if product is None or product == (r['path'], r['hdu'])]
     if product is not None and rows and not selected:
@@ -333,7 +337,11 @@ def discover_mosaics(ra, dec, *, radius=2, band='VIS', tiling='wide', selection=
         if product is None or str(product) == path:
             keep.append(index)
     rows = rows[keep]
-    rows['product'] = [_path(r['file_path'],r['file_name']) for r in rows]
+    rows['product'] = np.asarray([_path(r['file_path'],r['file_name']) for r in rows], dtype=str)
+    rows['tile_id'] = np.asarray([str(r['tile_index']) for r in rows], dtype=str)
+    for name, value in (('band', band), ('tiling', tiling), ('kind', selection),
+                        ('status', 'ready'), ('error', '')):
+        rows[name] = np.asarray([value] * len(rows), dtype=str)
     return rows
 
 

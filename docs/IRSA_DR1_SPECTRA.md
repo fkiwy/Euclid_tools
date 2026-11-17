@@ -1,5 +1,10 @@
 # IRSA DR1 spectrum retrieval
 
+Parity update: plural spectra accept explicit `release="dr1"`. Metadata-only
+`discover_spectra` lists exact parents with unknown grism. Exact products absent
+from nonempty metadata now raise ValueError. See the
+[shared behavior audit](BACKEND_PARITY.md) for the contract and retained limits.
+
 Implemented 13 November 2026. This adds an opt-in DR1 spectrum route; Q1 remains
 the default of `irsa_tools.retrieve_spectrum`. IRSA catalog helpers also support explicit DR1 selection; see
 [IRSA DR1 catalogs](IRSA_DR1_CATALOG.md). IRSA DR1 images are now available via [SIA/S3 cutouts](IRSA_DR1_IMAGES.md). ESA DR1 spectra/cutouts are also available through the [dedicated ESA route](ESA_DR1_PRODUCTS.md).
@@ -33,7 +38,8 @@ red. The provenance records that this is a wavelength rule, not a grism header.
 It does not merge overlapping red/blue spectra or select the highest-S/N result.
 
 The plural method returns a list; the singular method returns one QTable, None
-for no matching association/grism/product, or raises ValueError for multiple
+for no matching association/grism, or raises ValueError for an unassociated exact
+product when associations exist, or for multiple
 matches. Any failed product fetch raises rather than silently returning a partial
 set. Malformed metadata, conflicting source identity, missing/incompatible units,
 VOTable service errors and inconsistent variance/uncertainty are explicit errors.

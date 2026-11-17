@@ -1,5 +1,10 @@
 # IRSA DR1 MER image cutouts
 
+Public module/backend `discover_mosaics` now defaults to official survey/deep
+products and accepts explicit `release="dr1"`, radius aliases and
+`selection="repeat"`. The lower-level `irsa_images.discover_mosaics` retains its
+all-class inspection behavior. See the [parity audit](BACKEND_PARITY.md).
+
 Implemented 14 November 2026. Q1 remains the default of `retrieve_cutout`.
 DR1 explicitly discovers science mosaics with SIA, verifies their FITS headers,
 and reads only the requested section from anonymous S3. No Q1, full-image,
