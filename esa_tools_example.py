@@ -77,6 +77,8 @@ warnings.simplefilter("ignore", category=AstropyWarning)
 # ------------------------------
 release = "q1"  # Set "dr1" to select a DR1 survey.
 catalogue = None  # DR1 defaults to wide_survey; set deep_survey for deep stacks.
+vega_calibration = None  # DR1: load a completed, source-recorded calibration JSON to opt in.
+spectrum_product = None  # DR1: exact (ESA parent path, HDU) from backend.discover_spectra.
 image_tile_id = None  # DR1: use selected catalog tile_index; set a string to override.
 print(f"ESA catalog: {catalog_table(release, catalogue)}")
 print_catalog_info(release=release, catalogue=catalogue)
@@ -100,7 +102,7 @@ else:
 search_radius = 5
 
 # Perform cone search for objects
-results = backend.retrieve_objects(ra, dec, search_radius=search_radius, release=release, catalogue=catalogue)
+results = backend.retrieve_objects(ra, dec, search_radius=search_radius, release=release, catalogue=catalogue, vega_calibration=vega_calibration)
 
 if not results:
     # If no results are found, print message and exit
@@ -119,7 +121,7 @@ result = results[0]
 object_id = str(result["object_id"])
 
 # Retrieve the catalog entry for the selected object
-object_by_id = backend.retrieve_object_by_id(object_id, release=release, catalogue=catalogue)
+object_by_id = backend.retrieve_object_by_id(object_id, release=release, catalogue=catalogue, vega_calibration=vega_calibration)
 if object_by_id is not None:
     print_results(object_by_id)
 
@@ -131,6 +133,7 @@ if object_by_id is not None:
 spectrum_options = {"release": release}
 if release == "dr1":
     spectrum_options["grism"] = "red"
+    spectrum_options["product"] = spectrum_product
 data = backend.retrieve_spectrum(object_id, **spectrum_options)
 
 # Plot the spectrum if data is available

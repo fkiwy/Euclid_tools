@@ -26,7 +26,54 @@ Request `/sas-dd/data` with `ID="dr1 <source_id>"`, `RELEASE="dr1"`, `LINKING_PA
 
 DR1 SIGNAL and VAR already carry scaled physical units (`10**-16 erg/s/cm2/Angstrom` and its square). Per the official DPDD, **FSCALE is deprecated because its scale is embedded in the units**. The decoder preserves native flux units/values, converts wavelength to microns, computes `sqrt(VAR)` without clipping negative variance, and retains every bin and original mask/quality/NDITH value. It never multiplies FSCALE or applies Q1 masks. A nonphysical/missing unit fails explicitly.
 
-`retrieve_spectra` returns each uniquely associated grism; the singular method rejects multiple results. Multiple native file/HDU associations for the same grism are rejected before product download. An optional `product=(full_esa_path, hdu)` checks a unique association but cannot disambiguate several associations for one grism: the verified source-ID route cannot enforce a parent file. The source-patch route documented by newer Astroquery was **not validated** (a small test timed out); it is not implemented. No silent ranking, merging or Q1/IRSA fallback occurs.
+`retrieve_spectra` returns independently identifiable products, including multiple
+parents for one grism. The singular method rejects multiple choices before
+downloading and lists exact selectors. `product=(full_esa_path, hdu)` selects one
+parent. Use `backend.discover_spectra(object_id, release="dr1", grism="red")` to
+list `source_path`, `hdu_index`, native `linking_id` and `retrieval_supported`
+without downloading a spectrum. Exact duplicate file/HDU rows represent one
+product; conflicting grisms for a file/HDU are rejected.
+
+The documented `SOURCEPATCH_ID` route is now verified for native identifiers that
+uniquely select one parent within the requested grism. Parse the actual
+`sourcepatch_id` array from TAP, retaining exact decimal strings even beyond
+int64. Do not construct identifiers by concatenating other fields. For multiple
+parents, select an identifier absent from the other same-grism associations and
+send `LINKING_PARAMETER=SOURCEPATCH_ID`, `ID="dr1 <native sourcepatch_id>"`.
+The FITS extension still identifies the physical `source_id`, which is checked.
+Unique-grism products retain the existing `SOURCE_ID` route. No ranking,
+combining or archive/release fallback occurs.
+
+Some wide parents have no distinguishing identifier: every patch identifier is
+also associated with a deep stack. They remain explicitly blocked, even with an
+exact file/HDU selector. Discovery marks them `retrieval_supported=False`.
+The source-ID route can return multiple tables with identical extension names;
+neither response order nor those names establish their parent identity. A
+multi-table source-patch response is likewise rejected, never assigned to the
+requested parent. All selected routes are checked before product downloads.
+
+Provenance adds `LINKPAR`/`LINKID` (`linking_parameter`/`linking_id` in the shared
+record) and uses route `tap-sourcepatch+esa-datalink` when applicable. The exact
+parent path/HDU, physical source ID, returned bytes hash and retrieval URL remain
+recorded. The first lexicographic unique patch identifier is only an equivalent
+retrieval alias for that parent, not a scientific preference among products.
+
+Official selector documentation:
+[EuclidClass.get_spectrum](https://docs.astropy.org/projects/astroquery/en/latest/api/astroquery.esa.euclid.EuclidClass.html#astroquery.esa.euclid.EuclidClass.get_spectrum).
+The bounded [live validation script](../scripts/validate_esa_spectrum_associations.py)
+records results in [association validation](esa_dr1_spectrum_associations_validation.json).
+Some exploratory requests timed out; timeouts are propagated, without changing
+the requested parent or archive. Q1 product selection/routing is unchanged.
+
+On 2026-11-17, the actual adapter returned both red parents of source
+`-629553356493020915` (HDU 3226 in DR1_R1 and HDU 3676 in DR1_R2), and the deep
+stack for source `2714057875648364582` (HDU 9906). All three have 531 bins. The
+last source's wide parent (HDU 622) shares its only patch identifier with that
+stack and was blocked before a product request. Total received bytes across
+these checks, including metadata, were 31,019. Selected source-patch requests
+took approximately 51–52 seconds at the service, so this functionality does not
+guarantee the speed of the unique-source-ID route. These are small product
+checks, not survey-level completeness or quality validation.
 
 ## Mosaic selection, cutouts and provenance
 

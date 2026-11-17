@@ -86,8 +86,8 @@ def test_example_keeps_catalog_id_and_image_collection_consistent(monkeypatch,ca
     info.assert_called_once_with(release='dr1',catalogue=catalogue)
     assert backend.retrieve_objects.call_args.kwargs['catalogue']==catalogue
     assert backend.retrieve_objects.call_args.args[:2]==(273.18378579,64.37054921)
-    backend.retrieve_object_by_id.assert_called_once_with(identity,release='dr1',catalogue=catalogue)
-    backend.retrieve_spectrum.assert_called_once_with(identity,release='dr1',grism='red')
+    backend.retrieve_object_by_id.assert_called_once_with(identity,release='dr1',catalogue=catalogue,vega_calibration=None)
+    backend.retrieve_spectrum.assert_called_once_with(identity,release='dr1',grism='red',product=None)
     assert backend.retrieve_cutout.call_count==4
     for call in backend.retrieve_cutout.call_args_list:
         assert call.kwargs['tiling']==tiling and call.kwargs['selection']==selection

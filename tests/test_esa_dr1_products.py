@@ -92,8 +92,9 @@ def test_wrong_source_and_unverified_units_fail(options,match):
 
 def test_ambiguous_same_grism_rejected_before_product_download_even_with_selector():
     session=Session()
+    rows=association(2); rows['hdu_index'][1]=13
     with pytest.raises(ValueError,match='Ambiguous ESA spectrum'):
-        esa.retrieve_spectrum(ID,product=(PATH,12),client=client(association(2)),session=session)
+        esa.retrieve_spectrum(ID,product=(PATH,12),client=client(rows),session=session)
     assert not session.calls
 
 
@@ -180,7 +181,7 @@ def test_legacy_q1_route_is_preserved_and_dr1_does_not_call_it():
 
 
 def test_distinct_grisms_plural_and_singular_contract():
-    rows=association(2);rows['lambda_range'][1]='BGS'
+    rows=association(2);rows['lambda_range'][1]='BGS';rows['hdu_index'][1]=13
     session=Session(spectrum_body(),spectrum_body())
     results=get_backend('esa').retrieve_spectra(ID,release='dr1',client=client(rows),session=session)
     assert [r.meta['GRISM'] for r in results]==['red','blue']

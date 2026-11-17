@@ -66,6 +66,7 @@ from euclid_tools import get_backend
 backend = get_backend('irsa')
 release = 'q1'  # Change to 'dr1' for DR1 catalogs and spectra.
 catalogue = None  # DR1 defaults to wide_survey; use 'deep_survey' for the validated spectrum target.
+vega_calibration = None  # DR1: load a completed, source-recorded calibration JSON to opt in.
 
 warnings.simplefilter("ignore", category=AstropyWarning)
 
@@ -93,7 +94,7 @@ ra, dec = 266.4850113, 64.9936424
 search_radius = 5
 
 # Perform cone search for objects
-results = backend.retrieve_objects(ra, dec, search_radius=search_radius, release=release, catalogue=catalogue)
+results = backend.retrieve_objects(ra, dec, search_radius=search_radius, release=release, catalogue=catalogue, vega_calibration=vega_calibration)
 
 if not results:
     # If no results are found, print message and exit
@@ -112,7 +113,7 @@ result = results[0]
 object_id = str(result["object_id"])
 
 # Retrieve the catalog entry for the selected object
-object_by_id = backend.retrieve_object_by_id(object_id, release=release, catalogue=catalogue)
+object_by_id = backend.retrieve_object_by_id(object_id, release=release, catalogue=catalogue, vega_calibration=vega_calibration)
 if object_by_id is not None:
     print_results(object_by_id)
 

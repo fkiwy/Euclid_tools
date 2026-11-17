@@ -106,7 +106,8 @@ def _single_fits(body):
     return body
 
 
-def decode_spectrum(body, *, object_id, association, grism, url):
+def decode_spectrum(body, *, object_id, association, grism, url,
+                    linking_parameter="SOURCE_ID", linking_id=None):
     body = _single_fits(body)
     with fits.open(io.BytesIO(body), memmap=False) as hdus:
         if len(hdus) != 2 or not isinstance(hdus[1], fits.BinTableHDU):
@@ -149,7 +150,9 @@ def decode_spectrum(body, *, object_id, association, grism, url):
                 result[name] = value.value if hasattr(value, 'unit') else value
         result.meta.update(raw.meta)
     stamp(result.meta, product_type='spectrum', release='DR1', archive='ESA',
-          route='tap-association+esa-datalink', OBJECTID=str(object_id),
+          route=('tap-sourcepatch+esa-datalink' if linking_parameter == 'SOURCEPATCH_ID'
+                 else 'tap-association+esa-datalink'), OBJECTID=str(object_id),
+          LINKPAR=linking_parameter, LINKID=str(object_id) if linking_id is None else str(linking_id),
           SRCPATH=_path(association['file_path'], association['file_name']),
           SRCHDU=_hdu(association['hdu_index']),
           GRISM=grism, GRISMREF='ESA dr1.spectra_source.lambda_range',
@@ -158,23 +161,42 @@ def decode_spectrum(body, *, object_id, association, grism, url):
     return result
 
 
-def retrieve_spectra(object_id, *, grism=None, product=None, client=None, session=None, timeout=120):
+def _source_patch_ids(value):
+    """Read native identifiers verbatim, never form them from source/patch IDs.
+
+    ESA CSV serializes the array as ``(id, id)``. Integers can exceed int64;
+    retain decimal strings without a float or NumPy-integer round trip.
+    """
+    if value is None or np.ma.is_masked(value):
+        return ()
+    if isinstance(value, (list, tuple, np.ndarray)):
+        tokens = list(value)
+    else:
+        text = str(value).strip()
+        if text.startswith('(') and text.endswith(')'):
+            text = text[1:-1].strip()
+        if not text:
+            return ()
+        tokens = text.split(',')
+    result = []
+    for token in tokens:
+        token = str(token).strip()
+        if not re.fullmatch(r'-?[0-9]+', token):
+            raise ValueError('Invalid native ESA sourcepatch_id array')
+        result.append(str(int(token)))
+    return tuple(dict.fromkeys(result))
+
+
+def _spectrum_associations(object_id, *, grism, client, session, timeout):
     object_id = _object_id(object_id)
     if grism not in (None, *GRISMS):
         raise ValueError('grism must be red, blue or None')
-    if product is not None:
-        if not isinstance(product, (tuple, list)) or len(product) != 2:
-            raise ValueError('product must be an exact (ESA path, HDU) pair')
-        product = (str(product[0]), _hdu(product[1]))
-    columns = 'source_id,file_path,file_name,hdu_index,lambda_range'
+    columns = 'source_id,file_path,file_name,hdu_index,lambda_range,sourcepatch_id'
     query = f'SELECT TOP {MAX_ROWS+1} {columns} FROM {SOURCE_TABLE} WHERE source_id={object_id}'
     if grism:
         query += f" AND lambda_range='{GRISMS[grism]}'"
     rows = _query(query, client=client, session=session, timeout=timeout)
-    # DataLink's SOURCE_ID route is verified. Its source-patch route is not:
-    # selecting a file locally cannot force that file on an ambiguous service.
-    selected = []
-    seen = set()
+    associations = {}
     for row in rows:
         if str(row['source_id']) != object_id or str(row['lambda_range']) not in GRISMS.values():
             raise ValueError('ESA association source/grism is invalid')
@@ -183,30 +205,91 @@ def retrieve_spectra(object_id, *, grism=None, product=None, client=None, sessio
             raise ValueError('ESA association grism differs from request')
         path = _path(row['file_path'], row['file_name'])
         hdu = _hdu(row['hdu_index'])
-        if actual_grism in seen:
-            raise ValueError('Ambiguous ESA spectrum: multiple associations for one grism; '
-                             'exact source-patch retrieval is not verified')
-        seen.add(actual_grism)
-        if product is None or product == (path,hdu):
-            selected.append((row,actual_grism))
+        patches = _source_patch_ids(row['sourcepatch_id']) if 'sourcepatch_id' in rows.colnames else ()
+        key = (path, hdu)
+        if key in associations:
+            existing = associations[key]
+            if existing['grism'] != actual_grism:
+                raise ValueError('Conflicting ESA grisms for one file/HDU')
+            existing['patches'].update(patches)
+            continue
+        associations[key] = {'row': row, 'path': path, 'hdu': hdu,
+                             'grism': actual_grism, 'patches': set(patches)}
+    values = list(associations.values())
+    for item in values:
+        peers = [a for a in values if a['grism'] == item['grism']]
+        if len(peers) == 1:
+            item.update(link='SOURCE_ID', identity=object_id)
+        else:
+            other_patches = set().union(*(a['patches'] for a in peers if a is not item))
+            unique = sorted(item['patches'] - other_patches)
+            item.update(link='SOURCEPATCH_ID' if unique else '', identity=unique[0] if unique else '')
+    return object_id, values
+
+
+def discover_spectra(object_id, *, grism=None, client=None, session=None, timeout=120):
+    """List exact parent associations and their enforceable DataLink routes.
+
+    ``retrieval_supported=False`` means no native source-patch identifier
+    distinguishes that parent from the other same-grism associations.
+    """
+    _, rows = _spectrum_associations(object_id, grism=grism, client=client, session=session, timeout=timeout)
+    return Table(rows=[(r['grism'], r['path'], r['hdu'], r['link'], r['identity'], bool(r['link'])) for r in rows],
+                 names=('grism', 'source_path', 'hdu_index', 'linking_parameter', 'linking_id', 'retrieval_supported'),
+                 dtype=(str, str, int, str, str, bool))
+
+
+def _select_spectra(object_id, *, grism, product, client, session, timeout):
+    if product is not None:
+        if not isinstance(product, (tuple, list)) or len(product) != 2:
+            raise ValueError('product must be an exact (ESA path, HDU) pair')
+        product = (str(product[0]), _hdu(product[1]))
+    object_id, rows = _spectrum_associations(object_id, grism=grism, client=client, session=session, timeout=timeout)
+    selected = [r for r in rows if product is None or product == (r['path'], r['hdu'])]
+    if product is not None and rows and not selected:
+        raise ValueError('Selected ESA spectrum product is not associated with this source/grism')
+    for item in selected:
+        if not item['link']:
+            raise ValueError('Ambiguous ESA spectrum: no unique native sourcepatch_id identifies '
+                             f"product=({item['path']!r}, {item['hdu']}); use discover_spectra. "
+                             'This parent cannot be enforced by the documented DataLink route')
+    return object_id, selected
+
+
+def _retrieve_selected(object_id, selected, *, session, timeout):
     results = []
-    for row,actual_grism in selected:
-        params = {'ID': f'dr1 {object_id}', 'RELEASE': 'dr1',
-                  'LINKING_PARAMETER': 'SOURCE_ID', 'RETRIEVAL_TYPE': 'SPECTRA_'+GRISMS[actual_grism],
+    for item in selected:
+        params = {'ID': f"dr1 {item['identity']}", 'RELEASE': 'dr1',
+                  'LINKING_PARAMETER': item['link'], 'RETRIEVAL_TYPE': 'SPECTRA_'+GRISMS[item['grism']],
                   'USE_ZIP_ALWAYS': 'true', 'TAPCLIENT': 'ASTROQUERY'}
         body = _request(SPECTRUM_URL, params, session=session, timeout=timeout)
-        results.append(decode_spectrum(body, object_id=object_id, association=row,
-                                       grism=actual_grism, url=SPECTRUM_URL+'?'+urlencode(params)))
+        results.append(decode_spectrum(body, object_id=object_id, association=item['row'],
+                       grism=item['grism'], url=SPECTRUM_URL+'?'+urlencode(params),
+                       linking_parameter=item['link'], linking_id=item['identity']))
     return results
 
 
-def retrieve_spectrum(object_id, **kwargs):
-    spectra = retrieve_spectra(object_id, **kwargs)
-    if not spectra:
-        return None
-    if len(spectra) != 1:
-        raise ValueError('Ambiguous ESA DR1 spectrum; select a grism or use retrieve_spectra')
-    return spectra[0]
+def retrieve_spectra(object_id, *, grism=None, product=None, client=None, session=None, timeout=120):
+    """Retrieve each independently identified association without combining them.
+
+    Unique grisms retain SOURCE_ID routing. Multiple parents use a native
+    SOURCEPATCH_ID only when it uniquely identifies the selected parent/grism.
+    All routes are checked before any product download.
+    """
+    object_id, selected = _select_spectra(object_id, grism=grism, product=product, client=client,
+                                        session=session, timeout=timeout)
+    return _retrieve_selected(object_id, selected, session=session, timeout=timeout)
+
+
+def retrieve_spectrum(object_id, *, grism=None, product=None, client=None, session=None, timeout=120):
+    object_id, selected = _select_spectra(object_id, grism=grism, product=product, client=client,
+                                        session=session, timeout=timeout)
+    if len(selected) > 1:
+        choices = '; '.join(f"{r['grism']}: product=({r['path']!r}, {r['hdu']})" for r in selected)
+        raise ValueError('Ambiguous ESA DR1 spectrum; select a grism/exact product or use retrieve_spectra. '
+                         + choices)
+    spectra = _retrieve_selected(object_id, selected, session=session, timeout=timeout)
+    return spectra[0] if spectra else None
 
 
 def _image_args(ra, dec, radius, band, tiling, selection, tile_id):

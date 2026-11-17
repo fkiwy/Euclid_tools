@@ -17,6 +17,12 @@ image_record = product_provenance(image, source_id=object_id)
 
 The common record includes release, archive, product type, source ID, source file/HDU, grism and reference, retrieval route/URL, dataset and association table, tile and band, mosaic class, processing dataset/plan/pipeline/version, and existing raw/header hashes. It reads native metadata without modifying arrays, WCS, calibration, units, mask policy or scientific selection.
 
+ESA DR1 spectra additionally record optional `linking_parameter`/`linking_id`
+from `LINKPAR`/`LINKID`. A source-patch identifier can exceed int64 and remains an
+exact decimal string, separately from the physical source ID. Earlier products
+lacking these additive fields report null. `tap-sourcepatch+esa-datalink` denotes
+a native patch identifier uniquely associated with the selected parent/grism.
+
 FITS storage uses additive scalar cards: `PROVVER`, `PRODTYPE`, `RETROUTE`, `PRODBAND`, plus existing `RELEASE`, `ARCHIVE`, `OBJECTID`, `SRCPATH`, `SRCHDU`, `GRISM`, etc. Long path values use FITS long-string conventions. Existing DR1 `SRCS3` remains available alongside the common `SRCPATH`. A table's metadata and an image's header survive FITS round-trips; no nested Python dictionary is written into FITS.
 
 | Product | Recorded retrieval route | Identity evidence |

@@ -10,6 +10,7 @@ from astropy.io import fits
 from astropy.table import Table, QTable
 from astroquery.esa.euclid import Euclid
 
+from euclid_tools.photometry import add_dr1_magnitudes, validate_vega_calibration
 from euclid_tools.backends import resolve_radius
 from euclid_tools.shared import add_magnitude, normalize_spectrum_table, convert_flux_to_mag, MagnitudeSystem
 from euclid_tools.releases import catalog_table, normalize_release, require_product_support
@@ -22,13 +23,15 @@ def _spectrum_id_keyword(client):
 COLUMNS_TO_REMOVE = ["basic_download_data_oid", "to_be_published"]
 
 
-def retrieve_objects(ra: float, dec: float, radius: float = None, search_radius: float = None, limit: int = -1, *, release: str = "q1", catalogue=None, client=None) -> Table:
+def retrieve_objects(ra: float, dec: float, radius: float = None, search_radius: float = None, limit: int = -1, *, release: str = "q1", catalogue=None, vega_calibration=None, client=None) -> Table:
     """
     Perform a cone search on the explicitly selected ESA MER catalog.
 
     ``release="q1"`` (default) preserves legacy outputs. ``release="dr1"``
-    defaults to wide-survey profile photometry with AB magnitudes only.
+    defaults to wide-survey profile photometry with AB magnitudes by default.
     ``catalogue="deep_survey"`` explicitly selects the DR1 deep-survey stack catalog.
+    ``vega_calibration`` optionally supplies explicit DR1 reference fluxes and sources;
+    see docs/DR1_VEGA_CALIBRATION.md. No official DR1 Vega defaults are inferred.
     ``client`` optionally supplies an authenticated Astroquery-compatible client.
 
     Parameters
@@ -45,7 +48,7 @@ def retrieve_objects(ra: float, dec: float, radius: float = None, search_radius:
     Returns
     -------
     Table
-        Astropy Table containing catalog entries with AB magnitudes (and Vega for Q1).
+        Catalog entries with AB magnitudes; Vega is default for Q1 and explicit for DR1.
         Returns `None` if no objects are found.
 
     Notes
@@ -58,6 +61,7 @@ def retrieve_objects(ra: float, dec: float, radius: float = None, search_radius:
     """
 
     table_name = catalog_table(release, catalogue)
+    vega_calibration = validate_vega_calibration(vega_calibration, release=release)
     client = Euclid if client is None else client
     radius = u.Quantity(resolve_radius(radius=radius, search_radius=search_radius), u.arcsec)
     coord = SkyCoord(ra=ra, dec=dec, unit=(u.deg, u.deg), frame="icrs")
@@ -83,7 +87,7 @@ def retrieve_objects(ra: float, dec: float, radius: float = None, search_radius:
     if len(table) == 0:
         return None
 
-    table = _prepare_catalog_table(table, release=release, catalogue=catalogue)
+    table = _prepare_catalog_table(table, release=release, catalogue=catalogue, vega_calibration=vega_calibration)
 
     table.rename_column("dist", "separation")
 
@@ -95,11 +99,11 @@ def retrieve_objects(ra: float, dec: float, radius: float = None, search_radius:
     return table
 
 
-def retrieve_object_by_id(object_id: str, *, release: str = "q1", catalogue=None, client=None) -> Table:
+def retrieve_object_by_id(object_id: str, *, release: str = "q1", catalogue=None, vega_calibration=None, client=None) -> Table:
     """Retrieve an object by numeric ID from ``release="q1"`` or ``"dr1"``.
 
     DR1 accepts ``catalogue="wide_survey"`` (default) or ``"deep_survey"``.
-    It returns verified profile AB photometry only; Q1 retains AB/Vega and
+    It returns verified profile AB photometry by default; Q1 retains AB/Vega and
     aperture outputs. An optional ``client`` supplies the archive connection.
 
     Returns an Astropy Table with the same release-specific catalog columns and derived
@@ -108,6 +112,7 @@ def retrieve_object_by_id(object_id: str, *, release: str = "q1", catalogue=None
     ``ValueError`` before querying the archive.
     """
     table_name = catalog_table(release, catalogue)
+    vega_calibration = validate_vega_calibration(vega_calibration, release=release)
     client = Euclid if client is None else client
     object_id = str(object_id)
     digits = object_id[1:] if object_id.startswith("-") else object_id
@@ -121,22 +126,16 @@ def retrieve_object_by_id(object_id: str, *, release: str = "q1", catalogue=None
     table = job.get_results()
     if len(table) == 0:
         return None
-    return _prepare_catalog_table(table, release=release, catalogue=catalogue)
+    return _prepare_catalog_table(table, release=release, catalogue=catalogue, vega_calibration=vega_calibration)
 
 
-def _prepare_catalog_table(table: Table, *, release: str = "q1", catalogue=None) -> Table:
+def _prepare_catalog_table(table: Table, *, release: str = "q1", catalogue=None, vega_calibration=None) -> Table:
     """Apply the catalog formatting shared by cone searches and ID lookups."""
     release = normalize_release(release)
     table.remove_columns([name for name in COLUMNS_TO_REMOVE if name in table.colnames])
     if release == "dr1":
-        # Only verified profile photometry: no inferred aperture units or Vega calibration.
-        for band, suffix in (("VIS", "psf"), ("Y", "templfit"), ("J", "templfit"), ("H", "templfit")):
-            mag, err = convert_flux_to_mag(table[f"flux_{band.lower()}_{suffix}"],
-                                           table[f"fluxerr_{band.lower()}_{suffix}"], MagnitudeSystem.AB)
-            table[f"{band}_AB_mag"] = mag
-            table[f"{band}_AB_err"] = err
-            table[f"{band}_AB_mag"].unit = u.mag
-            table[f"{band}_AB_err"].unit = u.mag
+        # Verified profile photometry; Vega requires an explicit supplied convention.
+        add_dr1_magnitudes(table, vega_calibration=vega_calibration)
         table.rename_column("right_ascension", "ra")
         table.rename_column("declination", "dec")
         table.meta["release"] = "DR1"

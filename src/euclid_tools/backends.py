@@ -42,6 +42,13 @@ class EuclidArchiveBackend(ABC):
 class ESABackend(EuclidArchiveBackend):
     name = "esa"
 
+    def discover_spectra(self, object_id, *, release="dr1", **kwargs):
+        from euclid_tools.releases import normalize_release
+        if normalize_release(release) != "dr1":
+            raise ValueError("ESA spectrum discovery requires release='dr1'")
+        from euclid_tools.esa_products import discover_spectra
+        return discover_spectra(object_id, **kwargs)
+
     def retrieve_spectra(self, object_id, *, release="dr1", **kwargs):
         from euclid_tools.releases import normalize_release
         if normalize_release(release) != "dr1":

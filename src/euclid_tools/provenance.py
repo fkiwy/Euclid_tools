@@ -14,6 +14,7 @@ FIELDS = {
     "source_id": "OBJECTID", "source_file": "SRCPATH", "source_hdu": "SRCHDU",
     "grism": "GRISM", "grism_reference": "GRISMREF", "retrieval_route": "RETROUTE",
     "retrieval_url": "SRCURL", "dataset": "DATASET", "association_table": "ASSOCTBL",
+    "linking_parameter": "LINKPAR", "linking_id": "LINKID",
     "tile_id": "TILEID", "band": "PRODBAND", "mosaic_class": "MOSCLASS",
     "processing_dataset": "DATASETR", "processing_plan": "PPLANID",
     "processing_pipeline": "PIPDEFID", "processing_version": "PSWREL",

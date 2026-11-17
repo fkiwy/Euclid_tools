@@ -32,6 +32,11 @@ if objects is not None:
 
 Spectra take the returned source ID, not a catalog selector: an existing wide source ID is not converted to a deep ID. The catalog table and selected survey are recorded in returned table metadata (`catalogue_table`, `catalogue`). Raw IDs/flags are preserved, with the same profile AB calculations in µJy; no aperture/Vega mapping is inferred for DR1. Q1 retains its existing aperture/Vega outputs.
 
+DR1 optionally accepts an explicitly supplied `vega_calibration` convention;
+see [reference fluxes, required sources and scientific limitations](DR1_VEGA_CALIBRATION.md).
+The same option works for ESA/IRSA cone searches and ID lookups. Default AB
+photometry and all native measurements remain unchanged.
+
 For the example script, set:
 
 ```python

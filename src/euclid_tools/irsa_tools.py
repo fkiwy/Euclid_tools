@@ -14,6 +14,7 @@ from astropy.table import Table, QTable
 from astropy.wcs import WCS
 from astroquery.ipac.irsa import Irsa
 
+from euclid_tools.photometry import add_dr1_magnitudes, validate_vega_calibration
 from euclid_tools.backends import resolve_radius
 from euclid_tools.shared import add_magnitude, normalize_spectrum_table, convert_flux_to_mag, MagnitudeSystem
 from euclid_tools.releases import normalize_release
@@ -40,13 +41,15 @@ def catalog_table(release="q1", catalogue=None):
     return DR1_CATALOGUES[name]
 
 
-def retrieve_objects(ra: float, dec: float, radius: float = None, search_radius: float = None, *, release: str = "q1", catalogue=None, client=None) -> Table:
+def retrieve_objects(ra: float, dec: float, radius: float = None, search_radius: float = None, *, release: str = "q1", catalogue=None, vega_calibration=None, client=None) -> Table:
     """
     Perform a cone search on the explicitly selected IRSA MER catalog.
 
     Q1 (default) retains profile/aperture AB and Vega outputs. DR1 selects
     the Wide Survey by default; ``catalogue="deep_survey"`` selects the Deep Survey.
-    Raw columns are preserved and derived photometry is profile AB only.
+    Raw columns are preserved; derived profile photometry is AB by default.
+    ``vega_calibration`` optionally supplies explicit DR1 reference fluxes and sources;
+    see docs/DR1_VEGA_CALIBRATION.md. No official DR1 Vega defaults are inferred.
     ``client`` optionally supplies an Astroquery IRSA-compatible client.
 
     Parameters
@@ -61,7 +64,7 @@ def retrieve_objects(ra: float, dec: float, radius: float = None, search_radius:
     Returns
     -------
     Table
-        Astropy Table with profile AB magnitudes (and Q1 Vega/aperture magnitudes).
+        Profile AB magnitudes, Q1 Vega/aperture outputs, and optional explicit DR1 Vega.
         Returns `None` if no objects are found.
 
     Notes
@@ -74,6 +77,7 @@ def retrieve_objects(ra: float, dec: float, radius: float = None, search_radius:
     """
 
     table_name = catalog_table(release, catalogue)
+    vega_calibration = validate_vega_calibration(vega_calibration, release=release)
     client = Irsa if client is None else client
     radius = resolve_radius(radius=radius, search_radius=search_radius) * u.arcsec
     position = SkyCoord(ra, dec, unit=(u.deg, u.deg), frame="icrs")
@@ -83,7 +87,7 @@ def retrieve_objects(ra: float, dec: float, radius: float = None, search_radius:
     if len(table) == 0:
         return None
 
-    table = _prepare_catalog_table(table, release=release, catalogue=catalogue)
+    table = _prepare_catalog_table(table, release=release, catalogue=catalogue, vega_calibration=vega_calibration)
 
     # Create a SkyCoord object for the target
     target_coord = SkyCoord(ra, dec, unit=(u.deg, u.deg), frame="icrs")
@@ -106,7 +110,7 @@ def retrieve_objects(ra: float, dec: float, radius: float = None, search_radius:
     return table
 
 
-def retrieve_object_by_id(object_id: str, *, release: str = "q1", catalogue=None, client=None) -> Table:
+def retrieve_object_by_id(object_id: str, *, release: str = "q1", catalogue=None, vega_calibration=None, client=None) -> Table:
     """Retrieve an IRSA Q1 (default) or explicitly selected DR1 catalog object by ID.
 
     Returns an Astropy Table with the same release-specific catalog columns and derived
@@ -115,6 +119,7 @@ def retrieve_object_by_id(object_id: str, *, release: str = "q1", catalogue=None
     ``ValueError`` before querying the archive.
     """
     table_name = catalog_table(release, catalogue)
+    vega_calibration = validate_vega_calibration(vega_calibration, release=release)
     client = Irsa if client is None else client
     object_id = str(object_id)
     digits = object_id[1:] if object_id.startswith("-") else object_id
@@ -125,21 +130,15 @@ def retrieve_object_by_id(object_id: str, *, release: str = "q1", catalogue=None
     table = client.query_tap(query).to_table()
     if len(table) == 0:
         return None
-    return _prepare_catalog_table(table, release=release, catalogue=catalogue)
+    return _prepare_catalog_table(table, release=release, catalogue=catalogue, vega_calibration=vega_calibration)
 
 
-def _prepare_catalog_table(table: Table, *, release: str = "q1", catalogue=None) -> Table:
+def _prepare_catalog_table(table: Table, *, release: str = "q1", catalogue=None, vega_calibration=None) -> Table:
     """Apply the catalog formatting shared by cone searches and ID lookups."""
     if normalize_release(release) == "dr1":
         # IRSA supplies ra/dec in degrees, and these verified flux pairs in uJy.
         # Do not infer aperture or Vega calibrations from Q1.
-        for band, suffix in (("VIS", "psf"), ("Y", "templfit"), ("J", "templfit"), ("H", "templfit")):
-            mag, err = convert_flux_to_mag(table[f"flux_{band.lower()}_{suffix}"],
-                                           table[f"fluxerr_{band.lower()}_{suffix}"], MagnitudeSystem.AB)
-            table[f"{band}_AB_mag"] = mag
-            table[f"{band}_AB_err"] = err
-            table[f"{band}_AB_mag"].unit = u.mag
-            table[f"{band}_AB_err"].unit = u.mag
+        add_dr1_magnitudes(table, vega_calibration=vega_calibration)
         table.meta.update(release="DR1", catalogue_table=catalog_table(release, catalogue), archive="IRSA")
         return table
     table.remove_columns(COLUMNS_TO_REMOVE)

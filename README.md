@@ -172,9 +172,13 @@ search radius.
 - An Astropy Table containing objects within the search radius, or `None`
   when no objects are found.
 
-Both ESA and IRSA include AB and Vega magnitudes and their propagated uncertainties. Existing PSF (VIS) and
+For Q1, both ESA and IRSA include AB and Vega magnitudes and their propagated uncertainties. Existing PSF (VIS) and
 template-fit (Y, J, H) columns retain names such as `VIS_AB_mag`, `VIS_AB_err`, `Y_Vega_mag`, and `Y_Vega_err`.
-Additional aperture measurements use these input columns and output prefixes:
+DR1 returns profile AB columns by default. Optional `vega_calibration` supplies
+explicit reference fluxes, passbands and a Vega spectrum, with a recorded source;
+see the [DR1 Vega contract and template](docs/DR1_VEGA_CALIBRATION.md). Official DR1
+Vega coefficients are not bundled. Additional Q1 aperture measurements use these
+input columns and output prefixes:
 
 | Flux column | Flux uncertainty column | Output prefix |
 | --- | --- | --- |

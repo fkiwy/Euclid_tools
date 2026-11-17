@@ -22,7 +22,7 @@ DR1 explicitly selects `dr1.mer_catalogue_wide_survey`, renames
 `right_ascension`/`declination` to `ra`/`dec`, and keeps raw columns and flags.
 VIS uses `flux_vis_psf`/`fluxerr_vis_psf`; Y/J/H use
 `flux_<band>_templfit`/`fluxerr_<band>_templfit`. Coordinates are degrees and
-flux/error are µJy. Derived DR1 magnitudes are **AB only**, using the existing
+flux/error are µJy. Derived DR1 magnitudes are **AB by default**, using the existing
 3631 Jy convention and 0.001 mag rounding:
 
 ```
@@ -30,7 +30,9 @@ m_AB = -2.5 log10(flux_uJy * 1e-6 / 3631)
 sigma_m = 2.5 / ln(10) * fluxerr / flux
 ```
 
-No DR1 aperture or Vega magnitudes are inferred. Nonpositive flux has no ordinary
+No DR1 aperture or Vega calibration is inferred. Optional Vega columns require
+an explicit [source-recorded convention](DR1_VEGA_CALIBRATION.md); official DR1
+Vega coefficients remain unverified. Nonpositive flux has no ordinary
 logarithmic magnitude; existing arithmetic behavior is retained. There is no
 flag filtering, threshold change, extinction correction or calibration adjustment.
 

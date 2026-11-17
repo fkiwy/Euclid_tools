@@ -34,6 +34,10 @@ DR1 flux/error columns are `flux_vis_psf` / `fluxerr_vis_psf` and
 3631 Jy AB convention and 0.001 mag rounding are used, including the matching
 flux uncertainty. Raw fields, flags, exact integer IDs and `tileid` are retained.
 No DR1 aperture or Vega calibration is assumed and no quality filtering occurs.
+
+Optional DR1 Vega columns require the explicit, source-recorded
+[`vega_calibration` contract](DR1_VEGA_CALIBRATION.md). No automatic DR1 Vega
+reference fluxes are inferred from Q1; AB remains the default.
 Results retain the same separation-in-arcseconds behavior as Q1 cone searches.
 Empty results return None. Invalid releases fail before archive access, and an
 archive error never triggers a Q1 fallback. ID lookups retain multiple matching

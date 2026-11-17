@@ -1,0 +1,7 @@
+{
+  "release": "DR1",
+  "zero_points_jy": {"VIS": null, "Y": null, "J": null, "H": null},
+  "source": "REPLACE with the source/version or derivation of the zero-magnitude fluxes",
+  "passband_reference": "REPLACE with the adopted passbands and their versions",
+  "reference_spectrum": "REPLACE with the Vega spectrum/version and magnitude normalization"
+}
