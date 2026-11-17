@@ -18,6 +18,7 @@ from euclid_tools import get_backend
 
 calibration = json.load(open("my_dr1_vega_calibration.json", encoding="utf-8"))
 backend = get_backend("esa")  # The same option works with "irsa".
+ra, dec = 58.1332495, -49.1830038
 objects = backend.retrieve_objects(
     ra, dec, radius=5, release="dr1", catalogue="wide_survey",
     vega_calibration=calibration,
@@ -60,12 +61,6 @@ Table metadata `VEGACAL` contains deterministic JSON with the complete conventio
 `VEGASHA` hashes that JSON, and `VEGASTAT` labels it user-supplied and not
 independently validated for DR1. These fields survive FITS round trips. The
 examples expose `vega_calibration=None`; load the completed JSON to opt in.
-
-For `Euclid_search`, place this same object under `vega_calibration` in a copy of
-the selected archive JSON. `Archive.objects` passes it to the shared adapter;
-`gather_data` adds the optional Vega columns and calibration identity to its CSV.
-The existing `vis/y/j/h_mag`, colors, photometric types and distance inputs remain
-AB. The archive provenance sidecar also retains the full supplied convention.
 
 ## Official sources checked and limits
 

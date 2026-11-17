@@ -1,146 +1,113 @@
-# DR1-Foundation support and validation (12 November 2026)
+# Q1 and DR1-Foundation support
 
-## Implemented
+Current library support, reviewed 17 November 2026. The runnable archive examples
+now default to DR1 deep survey; the singular library retrieval methods keep Q1
+as their default. Public use requires only this repository and its dependencies.
 
-ESA `retrieve_objects`, `retrieve_object_by_id`, and `print_catalog_info` accept
-keyword-only `release="q1"` (default) or `release="dr1"`, case insensitive.
-The ESA backend forwards release arguments. Invalid releases fail before a query.
-IRSA catalog release selection is now available; see [IRSA DR1 catalogs](IRSA_DR1_CATALOG.md).
-IRSA DR1 image cutouts are also available via [verified SIA/S3 section reads](IRSA_DR1_IMAGES.md). Explicit DR1 spectrum retrieval is now
-available; see [IRSA DR1 spectra](IRSA_DR1_SPECTRA.md) for the 13 November extension.
+## Catalog and product selection
 
-Q1 retains positional arguments,
-aperture/profile outputs, AB/Vega zero points and rounding. Its table is now
-`q1.mer_catalogue`: a bounded live query against the retired
-`catalogue.mer_catalogue` alias returned HTTP 400 (unknown table), whereas
-`SELECT TOP 1 object_id FROM q1.mer_catalogue` returned a Q1 record.
-This is a table-name repair, not a scientific mapping change. No global release
-switch is used. An optional `client=` on catalog retrieval accepts an existing
-Astroquery-compatible client, including one authenticated by the caller.
+| Feature | Q1 | DR1 |
+|---|---|---|
+| ESA catalogs | `q1.mer_catalogue` | Explicit wide/deep survey; wide is the library default |
+| IRSA catalogs | `euclid_q1_mer_catalogue` | Wide/deep survey and mode collections; wide survey is the default |
+| Profile magnitudes | AB and legacy Vega | AB; optional explicit user-supplied Vega convention |
+| Aperture magnitudes | Existing VIS 4-FWHM and Y/J/H 2-FWHM outputs | Not enabled without verified calibration/units |
+| ESA spectra | Current `q1` schema and Q1 FSCALE handling | Native source/grism association and bounded DataLink retrieval |
+| IRSA spectra | Legacy VOTable or exact Q1 SpectrumDM file/HDU | Exact DR1 SpectrumDM file/HDU |
+| ESA images | Legacy Q1 mosaic/cutout route | Verified wide-survey, repeat-visit and deep server cutouts |
+| IRSA images | Legacy Q1 SIA route | SIA discovery and bounded S3 section reads |
 
-DR1 explicitly selects `dr1.mer_catalogue_wide_survey`, renames
-`right_ascension`/`declination` to `ra`/`dec`, and keeps raw columns and flags.
-VIS uses `flux_vis_psf`/`fluxerr_vis_psf`; Y/J/H use
-`flux_<band>_templfit`/`fluxerr_<band>_templfit`. Coordinates are degrees and
-flux/error are µJy. Derived DR1 magnitudes are **AB by default**, using the existing
-3631 Jy convention and 0.001 mag rounding:
+`release="q1"` / `"dr1"` are case-insensitive. Catalog selection never changes
+backend state or silently converts an ID to another release/survey. DR1 requests
+do not fall back to Q1. Plural spectra and discovery methods are DR1-only and
+accept explicit release selection; they default to DR1.
+
+```python
+from euclid_tools import get_backend
+
+backend = get_backend("esa")  # Or "irsa".
+objects = backend.retrieve_objects(
+    58.1332495, -49.1830038, radius=5,
+    release="dr1", catalogue="deep_survey",
+)
+if objects is not None:
+    # Closest position is an example choice; inspect counterparts for science.
+    source_id = str(objects[0]["object_id"])
+    spectrum = backend.retrieve_spectrum(source_id, release="dr1", grism="red")
+```
+
+See [ESA catalogs](ESA_DR1_CATALOG.md), [IRSA catalogs](IRSA_DR1_CATALOG.md),
+[ESA products](ESA_DR1_PRODUCTS.md), [IRSA spectra](IRSA_DR1_SPECTRA.md) and
+[IRSA images](IRSA_DR1_IMAGES.md) for exact mappings, selectors and format limits.
+Ambiguous spectra/images require explicit product/tile choices. Some ESA parents
+cannot be enforced because their native patch identifiers are shared; they stay
+blocked. IRSA grism classification needs wavelengths and is unavailable from
+association metadata alone. [Backend parity](BACKEND_PARITY.md) lists differences.
+
+## Verified profile schema and arithmetic
+
+The original 19 shared ESA Q1/DR1-wide catalog names, units and descriptions are
+recorded in [metadata](dr1_catalog_metadata.csv). Deep-survey metadata and IRSA
+mappings are recorded in their catalog guides. Coordinates are degrees; VIS PSF
+and Y/J/H template-fit fluxes and uncertainties are microJy. Raw flags/columns
+are retained. ESA renames right_ascension/declination to ra/dec.
 
 ```
 m_AB = -2.5 log10(flux_uJy * 1e-6 / 3631)
 sigma_m = 2.5 / ln(10) * fluxerr / flux
 ```
 
-No DR1 aperture or Vega calibration is inferred. Optional Vega columns require
-an explicit [source-recorded convention](DR1_VEGA_CALIBRATION.md); official DR1
-Vega coefficients remain unverified. Nonpositive flux has no ordinary
-logarithmic magnitude; existing arithmetic behavior is retained. There is no
-flag filtering, threshold change, extinction correction or calibration adjustment.
+Derived display columns round to 0.001 mag. Nonpositive flux has no ordinary
+logarithmic magnitude; the existing arithmetic behavior is retained. No quality
+cut, extinction correction or scientific calibration is inferred. DR1 Vega
+requires an [explicit source-recorded convention](DR1_VEGA_CALIBRATION.md);
+official release-specific Vega coefficients remain unverified.
 
-```python
-from euclid_tools import esa_tools
-objects = esa_tools.retrieve_objects(80.0821501085, -51.2463548253,
-                                     radius=2, limit=3, release="dr1")
-obj = esa_tools.retrieve_object_by_id("-800821501512463548", release="dr1")
-```
+## Spectral units, image metadata and unresolved assumptions
 
-## What was tested
+DR1 combined SIGNAL/VAR units already embed the physical scale; the DPDD marks
+FSCALE deprecated. DR1 decoders preserve native scaled units and never multiply
+FSCALE again. Q1 ESA spectra retain their separate FSCALE calculation. Negative
+variance remains invalid, with no zero-uncertainty clipping. Retrieval retains
+all bins/masks; scientific masking is an explicit downstream choice.
 
-`dr1_validation.json` records the exact UTC timestamp, TAP endpoint, bounded
-ADQL, metadata query and independently calculated magnitudes/errors.
-`dr1_catalog_metadata.csv` records the 19 Q1/DR1 metadata pairs. The three-row
-fixture is `tests/data/dr1_sample.csv`. TOP without ORDER BY is intentionally
-non-deterministic: the fixture records one response, not representative sampling.
+Image routes verify supported processing identity, native pixel units/calibration
+and celestial WCS. This preserves metadata, without independently recalibrating
+the survey. Unsupported planes, encodings or WCS forms fail explicitly. See the
+[product provenance contract](PRODUCT_PROVENANCE.md) for evidence and unknowns.
 
-Reproduce the bounded network check (three science rows and <=100 metadata rows):
+Matching column metadata does not establish identical calibration, flag
+semantics, processing, completeness or selection functions. Initial DR1 aperture
+fields and fwhm lacked sufficient unit/description metadata for a scientific
+migration. Aperture corrections, morphology cuts, mask policies and empirical
+photometric relations need release-applicable validation. No production
+candidate-selection policy is supplied by this library.
 
-```sh
-python scripts/validate_dr1.py --output /tmp/dr1-validation
-python -m pytest tests -q
-```
+## Sources and validation
 
-HTTPS TAP queries through `requests` succeeded; all 19 names, units and TAP
-descriptions matched, and four-band AB magnitudes and errors agreed within
-0.000501 mag of the rounded helper output. This verifies schema and arithmetic,
-not calibration or the astrophysical validity of a selection. Installed
-Astroquery's ESA transport failed with `Connection refused` in this managed
-execution environment, despite HTTPS TAP working through its proxy. Direct
-Astroquery end-to-end retrieval is therefore **not validated here**. Mocked
-Astroquery-compatible clients test cone arguments, ID lookup, sorting, empty
-responses, negative IDs, release isolation and integration; no fallback to Q1
-is attempted on failure. Existing Q1 tests remain part of the regression suite.
+[Validation and reproduction](VALIDATION.md) distinguish current offline checks
+from dated, small live archive samples. The original three-row catalog check
+verified metadata and independent four-band AB arithmetic, not calibration.
+Unordered TOP samples are response snapshots, not representative survey samples.
+An initial installed Astroquery transport failed in the managed host while
+HTTPS TAP requests succeeded; later bounded native product checks are separately
+recorded. This historical environment issue is not a claim about current service
+availability.
 
-## Product interfaces and scientific limits
+Official sources, initially inspected 12 November 2026 and extended in the
+archive guides:
 
-ESA DR1 spectra and server cutouts are now available through the separately
-validated [ESA DR1 product route](ESA_DR1_PRODUCTS.md). Q1 remains the default;
-DR1 never falls back to Q1 products. The initial access limitations below are
-historical; the new document records current live checks and remaining limits.
-
-Live TAP exposes `dr1.spectra_source`, `dr1.mosaic_product` and
-`dr1.mer_cutouts_wide_survey`; their existence does not verify the DataLink
-schema/retrieval selector, the release/processing identity of returned files,
-cutout HDU selection, or how catalog sources link to a particular coadd.
-Product metadata queried in this investigation had blank descriptions/units.
-The current archive user-guide URL returned a JavaScript shell to the HTTP
-client; its detailed interface contracts could not be inspected that way.
-
-The official DR1 combined-spectra DPDD describes multiple source/dither and
-combined extensions. For `m_COMBINED1D_SIGNAL`, WAVELENGTH is Angstrom, SIGNAL
-has units `10**-16 erg/s/cm2/Angstrom`, VAR has the squared unit, and FSCALE is
-**deprecated, with scaling embedded in the unit**. Reusing the Q1 decoder's
-FSCALE multiplication could double-scale DR1 data. The dedicated ESA DR1 decoder now preserves this native scaling; image calibration headers are preserved without independent recalibration.
-The separately documented IRSA SpectrumDM decoder preserves native units and bins.
-
-DR1 aperture fields and `fwhm` exist in live TAP but had empty unit/description
-metadata. They are not substitutes for the verified profile measurements.
-Matching Q1/DR1 profile metadata does not establish equal calibration,
-quality-flag meanings, processing, completeness or selection functions.
-Vega offsets, aperture corrections, morphology cuts, spectral masks and
-photometric type/distance calibrations still need release-specific validation.
-
-## Exact official sources inspected
-
-Accessed 12 November 2026:
-
-- [ESA DR1 release page](https://www.cosmos.esa.int/web/euclid/data-release-dr1)
-  identifies the release and links to the DR1 data model.
-- [ESA DR1 data access](https://www.cosmos.esa.int/web/euclid/dr1-data)
-  describes anonymous discovery and Astroquery/IVOA access.
-- [ESA DR1 documentation](https://www.cosmos.esa.int/web/euclid/dr1-documentation)
-  is the release documentation landing page.
-- [Official TAP synchronous endpoint](https://eas.esac.esa.int/tap-server/tap/sync),
-  including `TAP_SCHEMA.tables` and `TAP_SCHEMA.columns`; exact catalog queries
-  and metadata response are checked in alongside this document.
-- [DR1 DPDD index](https://euclid.esac.esa.int/dr/dr1/dpdd/) and
-  [DR1 combined spectra product](https://euclid.esac.esa.int/dr/dr1/dpdd/sirdpd/dpcards/sir_combinedspectra.html),
-  specifically the combined extension header and six-column table.
-- [ESA archive user guide](https://euclid.dataspace.esa.int/community/help-pages/Euclid_Science_Archive_User_Guide.html)
-  was attempted; only a JavaScript-required shell was returned.
-- [Official Astroquery ESA API](https://astroquery.readthedocs.io/en/latest/esa/euclid/euclid.html)
-  is the client reference; installed Astroquery source was inspected for
-  `get_spectrum(schema=..., retrieval_type=...)` defaults (`sedm`, `ALL`).
-
-No documentation justified altering the existing scientific cuts.
-
-## Companion integration
-
-Use this branch together with `fkiwy/Euclid_search` branch
-`codex/dr1-foundation`; see its `euclid_dr1/DR1_FOUNDATION.md`.
-Install this checkout or set the search workflow's `EUCLID_TOOLS_PATH` to it.
-Run both suites in the same Python environment:
-
-```sh
-PYTHONPATH=/path/Euclid_tools/src:/path/Euclid_search python -m pytest \
-  /path/Euclid_tools/tests /path/Euclid_search/euclid_dr1/tests -q
-```
-
-The search branch requires this tools change for DR1. Q1 workflows can keep
-using their existing configuration. No PR should be merged automatically.
-
-Initial catalog migration validation (12 November): **101 passed, 24 subtests passed** (Python 3.12,
-12 November 2026). Both repository diffs passed `git diff --check`.
-The exact search sample SQL also returned three live DR1 rows; its first row's
-profile photometry passed through `gather_data.photometry` successfully.
-
-
-ESA catalog extension: [explicit wide/deep survey selection](ESA_DR1_CATALOG.md) is now supported for cone searches, ID lookup and metadata display. Q1 remains the default, and DR1 without a selector still uses the wide survey. The 19 shared catalog columns were checked against live ESA metadata before enabling deep profile photometry; no flag/calibration equivalence or science selection is assumed.
+- [ESA DR1 release](https://www.cosmos.esa.int/web/euclid/data-release-dr1),
+  [data access](https://www.cosmos.esa.int/web/euclid/dr1-data), and
+  [documentation](https://www.cosmos.esa.int/web/euclid/dr1-documentation).
+- [ESA TAP](https://eas.esac.esa.int/tap-server/tap/sync): TAP_SCHEMA tables/columns;
+  exact catalog queries and responses are preserved in the validation records.
+- [DR1 DPDD](https://euclid.esac.esa.int/dr/dr1/dpdd/) and
+  [combined spectra](https://euclid.esac.esa.int/dr/dr1/dpdd/sirdpd/dpcards/sir_combinedspectra.html):
+  units, FSCALE deprecation and diagnostic columns.
+- [Astroquery ESA guide](https://astroquery.readthedocs.io/en/latest/esa/euclid/euclid.html):
+  release and product interfaces. Tools explicitly use q1 instead of the retired
+  sedm/catalogue aliases; they do not inherit those old client defaults.
+- [IRSA DR1 MER tutorial](https://caltech-ipac.github.io/irsa-tutorials/euclid-intro-mer-catalog/),
+  [spectra tutorial](https://caltech-ipac.github.io/irsa-tutorials/euclid-intro-1d-spectra/)
+  and [image tutorial](https://caltech-ipac.github.io/irsa-tutorials/euclid-intro-mer-images/).

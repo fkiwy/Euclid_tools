@@ -30,13 +30,5 @@
     "flux_cgs_per_Angstrom": 7.49826705073568e-16,
     "error_cgs_per_Angstrom": 1.662549175796988e-18
   },
-  "limitations": "One public red spectrum; scientific calibration and live blue/repeat ambiguity are not validated",
-  "search_workflow": {
-    "entry_point": "euclid_dr1.save_spectra",
-    "config": "archive_dr1_irsa_spectra.json",
-    "status": "ok",
-    "bins": 531,
-    "spectrum_fits_sha256": "4575295223bf0476b906724e7550fd5cc1b6abc154847d1de8ae89a6a9c0a1ef",
-    "raw_votable_sha256": "c581a81a4851a54304b9cdb19e063bac3bf148af3a51efcd4aad747f3afea71e"
-  }
+  "limitations": "One public red spectrum; scientific calibration and live blue/repeat ambiguity are not validated"
 }

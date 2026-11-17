@@ -215,7 +215,7 @@ def print_results(results):
     if "separation" in results.colnames:
         columns.append("separation")
 
-    # DR1 provides verified profile AB columns without Q1 aperture/Vega fields.
+    # DR1 has profile AB columns and optional explicitly calibrated Vega columns.
     table = results[[name for name in columns if name in results.colnames]]
     table.pprint_all()
 

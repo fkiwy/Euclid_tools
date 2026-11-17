@@ -99,8 +99,7 @@ python -m pytest tests -q
 re-serialized with Astropy while preserving values, units and table identity.
 Offline tests cover both grisms, repeated products, no matches, malformed input,
 HTTP/size/service errors, negative variance, identity checks, Q1 compatibility,
-backend forwarding and roundtrip. Cross-repository tests cover the actual decoder
-through the search archive adapter, manifest and cache selection.
+backend forwarding and roundtrip. Tests exercise the actual decoder and public backend adapters with small fixtures.
 
 Only one live red spectrum was validated. Blue and repeat-product selection have
 synthetic offline tests; no live blue-spectrum calibration is claimed. IRSA's
@@ -121,19 +120,6 @@ Read 13 November 2026:
 - [IRSA data access guide](https://irsa.ipac.caltech.edu/euclid-archive-documentation/data-access/),
   spectra section: DR1 association table and current lack of DR1 SSA access.
 - [IRSA DR1 overview](https://irsa.ipac.caltech.edu/data/Euclid/docs/overview_dr1.html).
-
-## Search integration
-
-Use the companion Euclid_search branch `codex/dr1-foundation` and
-`euclid_dr1/archive_dr1_irsa_spectra.json`. It explicitly combines the existing
-ESA DR1 catalog mapping with IRSA DR1 spectra and defaults to red, appropriate
-for the existing 1.22–1.88 µm spectral fitting range. ESA image/spectrum methods
-remain disabled; the separate [IRSA DR1 image implementation](IRSA_DR1_IMAGES.md) is opt-in.
-
-Combined validation: **128 passed, 24 subtests passed** on Python 3.12.
-The actual search `save_spectra` command also wrote a successful live manifest
-and 531-bin FITS cache for the same public object. Both diffs passed whitespace checks.
-
 
 ## MaskedColumn plotting compatibility (14 November 2026)
 
@@ -156,7 +142,7 @@ with NumPy 2.5.4, Astropy 8.0.2 and Matplotlib 3.11.2, explicitly reproducing th
 polygon operation so the regression does not depend on Matplotlib's installed
 internal implementation. No archive download or package downgrade was needed.
 
-Combined validation after the plotting fix: **148 passed, 24 subtests passed**.
+See [validation](VALIDATION.md) for local tests and dated live records.
 
 
 ## Q1 FITS association compatibility

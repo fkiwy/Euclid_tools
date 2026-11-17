@@ -22,7 +22,7 @@ python -m pip install -e .
 from euclid_tools import get_backend
 
 backend = get_backend("irsa")
-# Discover each collection independently; all candidates/statuses remain visible.
+# Discover each collection independently; default survey/deep candidates and verification errors remain visible.
 for tiling in ("wide", "deep"):
     mosaics = backend.discover_mosaics(273.167, 64.3687,
         search_radius=1, band="VIS", tiling=tiling)
@@ -32,7 +32,8 @@ for tiling in ("wide", "deep"):
 hdu = backend.retrieve_cutout(273.167, 64.3687,
     search_radius=1, cutout_size=3, band="VIS", release="dr1",
     tiling="deep", tile_id="101829777")
-hdu.writeto("deep_VIS_cutout.fits", overwrite=True)
+if hdu is not None:
+    hdu.writeto("deep_VIS_cutout.fits", overwrite=True)
 
 # Official wide-survey processing; repeat visits require selection="repeat".
 hdu = backend.retrieve_cutout(273.167, 64.3687,
@@ -48,7 +49,8 @@ the requested band are inspected. The source bucket/key comes from `cloud_access
 not a guessed file name. Bucket, DR1 prefix, tile and instrument directory must
 agree with the selected collection and band.
 
-Discovery returns a Table of every matching candidate, its URI, status/error,
+Public discovery returns a Table for the selected class, retaining verification
+errors even when their class is unknown. Rows include URI, status/error,
 classification, dataset, processing plan/version, calibration and header hash.
 It reads only headers. Missing files or unverified metadata remain error rows.
 The singular cutout call rejects an unresolved error candidate, and raises on
@@ -126,27 +128,16 @@ Offline tests use small synthetic mosaics and headers sampled from the live
 products. They verify pixel identity, rotated WCS, calibration preservation,
 no full-array reads, official/repeat/deep separation, overlap ambiguity, missing
 objects, invalid metadata, limits, edge behavior, Q1 compatibility and backend
-forwarding. Companion search tests exercise the actual section reader through
-archive configuration, calibrated FITS output, manifest and PDF generation.
+forwarding and FITS persistence.
 This validates transport/metadata/geometry, not survey calibration, processing
 quality, completeness or the scientific equivalence of deep and wide products.
 
-## Search workflow and example
+## Runnable example
 
-The updated `irsa_tools_example.py` explicitly derives wide/deep tiling from the
-chosen catalog and uses its selected object's tileid. It now downloads DR1 cutouts
-with the same release, rather than skipping them or querying Q1. Use discovery
-and exact products if a tile/processing class remains ambiguous.
-
-In the companion Euclid_search branch, opt in with
-`euclid_dr1/archive_dr1_irsa_images.json`. It keeps the existing ESA wide catalog
-mapping and IRSA spectra, and adds IRSA wide official-survey images. It is a
-separate config: existing catalog-only, spectrum-only and Q1 configs keep their
-behavior. Set image_tiling=deep and image_selection=deep only if you intentionally
-want deep images. Per-source `image_tile_id`, per-band `image_VIS_tile_id`, and
-per-band `image_VIS_product` (likewise Y/J/H) resolve overlaps/repeats explicitly.
-The image workflow saves calibrated FITS files with --cutouts-dir, a PDF preview,
-and per-band provenance/hashes; it does not merge images or silently mix products.
+`irsa_tools_example.py` defaults to DR1 deep survey at
+`(58.1332495, -49.1830038)`, derives image tiling from `dr1_catalogue` and uses
+the selected object's native tileid. Set `release="q1"` to keep the coordinates
+and use Q1. Use discovery and exact products for unresolved ambiguity.
 
 ## Exact official sources
 
@@ -166,14 +157,11 @@ ESA DR1 products now have a [separately verified route](ESA_DR1_PRODUCTS.md). No
 selection criteria were changed by this implementation.
 
 
-Final combined validation: **169 passed, 24 subtests passed** on Python 3.12.
-The live search workflow saved all four VIS/Y/J/H FITS cutouts and a PDF preview,
-which was visually inspected. The earlier spectrum target at
-(273.018929496624, 68.231870619389) also returned a verified 30x30 VIS cutout
-from deep tile 101839130 using 9,440 bytes of FITS reads. Those results are in
-the validation JSON. Only science-plane pixels are retrieved; associated weight,
-RMS and pixel-quality image planes are outside this implementation.
-
+The spectrum-validation target at `(273.018929496624, 68.231870619389)`
+returned a verified 30x30 VIS cutout from deep tile 101839130 using 9,440 bytes
+of FITS reads; its record remains in the validation JSON. Only science-plane
+pixels are supported; weight, RMS and pixel-quality planes are outside this
+implementation.
 
 ## File-only plotting and Tk shutdown
 
@@ -182,7 +170,6 @@ importing plotting modules. These scripts save files and open them in the system
 viewer; they do not need Tk windows or a Tk main loop. This avoids creating Tk
 canvas objects that can later be finalized from an S3/async worker and trigger
 `RuntimeError: main thread is not in main loop` or `Tcl_AsyncDelete` failures.
-The search image command likewise selects Agg before archive initialization.
 Library plotting imports/functions do not force a backend on interactive callers.
 
 After updating, restart the Python process or IDE kernel before rerunning.
@@ -203,4 +190,4 @@ on the Linux test host; the tested fix prevents Tk plotting objects from being
 created by these file-export paths. Data retrieval and scientific calculations
 are unchanged, and no package downgrade is required.
 
-Combined validation after file-backend selection: **173 passed, 24 subtests passed**.
+See [validation](VALIDATION.md) for local tests and dated live evidence.

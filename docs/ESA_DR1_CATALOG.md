@@ -37,29 +37,14 @@ see [reference fluxes, required sources and scientific limitations](DR1_VEGA_CAL
 The same option works for ESA/IRSA cone searches and ID lookups. Default AB
 photometry and all native measurements remain unchanged.
 
-For the example script, set:
+For the example script, keep its current defaults:
 
 ```python
 release = 'dr1'
-catalogue = 'deep_survey'
+dr1_catalogue = 'deep_survey'
 ```
 
 Set the desired RA/Dec in the coordinates block. Changing the survey does not change the DR1 coordinates. Metadata display, cone search and ID lookup use the same selection. The example sets image `tiling="deep", selection="deep"` for the deep survey, and `tiling="wide", selection="survey"` for wide. When using image methods directly, pass these image arguments explicitly: catalog queries do not mutate backend state. Ambiguous mosaics still require a tile/exact product.
-
-## Search integration
-
-Use the companion `euclid_dr1/archive_dr1_esa_deep_products.json` for ESA deep catalog, spectra and deep mosaics. It explicitly sets `catalogue="deep_survey"` and the matching native table. The existing `archive_dr1_esa_products.json` remains wide by default; the Q1/IRSA configs retain their behavior. A deep table with an omitted/wide selector is rejected instead of querying the wide table silently.
-
-Set `TEMPLATE_COLOR_SCATTER` to the same adopted value (mag) you already use; gathering still requires this explicit scientific assumption. No new value is supplied by this change.
-
-```sh
-python -m pip install -e /path/Euclid_tools
-python -m euclid_dr1.gather_data --archive-config euclid_dr1/archive_dr1_esa_deep_products.json --input /tmp/targets.csv --output /tmp/deep-gathered.csv --template-color-scatter "$TEMPLATE_COLOR_SCATTER"
-python -m euclid_dr1.save_spectra --archive-config euclid_dr1/archive_dr1_esa_deep_products.json --input /tmp/deep-gathered.csv --output /tmp/deep-spectra.csv --spectra-dir /tmp/deep-spectra
-python -m euclid_dr1.plot_images --archive-config euclid_dr1/archive_dr1_esa_deep_products.json --input /tmp/deep-gathered.csv --output /tmp/deep-images.csv --cutouts-dir /tmp/deep-cutouts --plots-dir /tmp/deep-plots
-```
-
-Use coordinate-only inputs (or deep IDs) for deep gathering; supplying a wide ID does not authorize substituting its deep counterpart. Keep separate outputs when comparing surveys. Existing wrong-ID/backend/config cache checks remain active.
 
 ## Verification and scientific limits
 
@@ -77,19 +62,15 @@ All four checks returned the expected IDs and 531-bin red spectra. Deep stacks h
 Other exact official sources: [ESA DR1 data access](https://www.cosmos.esa.int/web/euclid/dr1-data), [SIR processing overview](https://euclid.esac.esa.int/dr/dr1/expsup/Ch11.S1.html), and the [ESA product interface sources/limits](ESA_DR1_PRODUCTS.md). Individual visits and wide/deep mode catalog helpers are not enabled here. Production candidate-selection equivalence and detailed causes of the degraded wide spectra remain unresolved. No flux scaling, masks, fitting thresholds or scientific selection criteria changed; no bulk survey products were downloaded.
 
 
-The actual companion `Archive` also retrieved the deep catalog source, saved its spectrum, and saved a 31 x 31 deep VIS cutout at `(59.7913643, -47.6826163)` using the new config. [Workflow identity record](esa_dr1_deep_workflow_validation.json) captures the native table, file/HDU, deep mosaic processing plan and hashes.
-
 Deep queries explicitly request CSV, which Astroquery's current ESA interface also defaults to. The live full-column VOTable response has malformed `arraysize="100x*"` metadata on `calblock_id_list`; CSV avoids that parser error while retaining all native columns and exact integer IDs. The public deep ID helper was additionally checked against a full native CSV response (479 input columns), not only the 19-column validation cone. No scientific field is dropped to work around the archive issue.
 
-Final combined validation: **224 passed, 24 subtests passed** across tools and search, including Q1 defaults, unchanged DR1-wide defaults, cone/ID/metadata selection, invalid-selector rejection, the example's stable coordinates and deep-image routing, and actual companion catalog-ID-to-spectrum integration. Both diffs pass whitespace checks.
 
 ## Overlapping mosaics at 58.1332495, -49.1830038
 
 Both deep tiles `101280483` and `101280484` cover this position in VIS/Y/J/H.
 The selected deep catalog object `-581332463491830110` explicitly records
 `tile_index=101280484`. The example now uses that catalog tile for DR1 images
-when `image_tile_id` is None. Set `image_tile_id="101280484"` explicitly in
-older checkouts; a user-supplied override always takes precedence. The tile
+when `image_tile_id` is None. Set `image_tile_id="101280484"` to select that tile explicitly; a user-supplied override always takes precedence. The tile
 comes from the selected catalog row, not from a spectrum filename, a nearest
 mosaic calculation or a quality ranking.
 
@@ -98,8 +79,7 @@ mosaics match. Errors now list candidate tiles, releases and exact paths; use
 `backend.discover_mosaics(..., tiling="deep", selection="deep")` to inspect all
 candidates. A tile with multiple product versions remains ambiguous and requires
 an exact product path. Missing/masked catalog tile metadata does not authorize
-arbitrary selection. In `euclid_dr1` inputs, use the existing `image_tile_id` or
-per-band image tile/product fields to make the same explicit choice.
+arbitrary selection. Pass `tile_id` or `product` explicitly to the library methods.
 
 On 2026-11-17 the catalog tile and the two overlapping candidates were checked
 against live ESA metadata. [Overlap validation](esa_dr1_mosaic_overlap_validation.json)
@@ -107,4 +87,4 @@ records successful, small four-band cutouts from catalog tile 101280484, with
 native processing/calibration/WCS checks and FITS re-serialization. Q1 routing,
 scientific cuts and the library's ambiguity guard are unchanged.
 
-Overlap-fix regression validation: **226 passed, 24 subtests passed** across both repositories; the example additionally tests catalog-tile use and explicit override precedence for both wide and deep selection. Ambiguity tests verify candidate details are reported before any product download.
+See [validation](VALIDATION.md) for current local checks and dated archive evidence.

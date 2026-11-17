@@ -183,15 +183,15 @@ def retrieve_spectrum(object_id: str, save_spectrum: bool = False, output_dir: s
     -------
     QTable
         A table containing wavelength (microns), flux, flux error, mask, quality flags, and number of dither positions.
-        Flux and error are scaled using the FITS header FSCALE keyword.
+        Q1 ESA uses FSCALE; DR1 preserves the scale already embedded in column units.
         Returns `None` if no spectrum is available for the given object ID.
 
     Notes
     -----
     - Wavelength is converted to microns.
-    - Data is masked based on the bitmask in the `MASK` column if requested.
+    - Retrieval retains bins and flags; apply a scientifically justified mask separately.
     - If no spectrum is found, returns `None`.
-    - The output FITS file is named using the object's RA and DEC coordinates, formatted as 'E{ra}{dec}_spectrum.fits'.
+    - Saved output is '<object_name>_spectrum.fits', defaulting to 'E<object_id>_spectrum.fits'.
     - The output directory defaults to a temporary directory if not specified.
     """
 
@@ -304,6 +304,13 @@ def retrieve_cutout(ra: float, dec: float, search_radius: float = None, cutout_s
     fits.HDU
         FITS HDU containing the image cutout.
         Returns `None` if no suitable image is found.
+
+    Notes
+    -----
+    Q1 is the default. DR1 requires release="dr1" and explicit wide/deep
+    tiling/class choices when needed; ambiguity requires tile_id or an exact
+    product. See docs/ESA_DR1_PRODUCTS.md. Native pixels, WCS and calibration
+    metadata are preserved within the supported formats.
 
     Raises
     ------

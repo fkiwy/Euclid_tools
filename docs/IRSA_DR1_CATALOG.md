@@ -44,12 +44,13 @@ archive error never triggers a Q1 fallback. ID lookups retain multiple matching
 rows without deduplication or silently selecting one.
 
 `print_results` now prints the available summary columns, so DR1 results do not
-require the Q1-only aperture/Vega columns. Complete Q1 summaries are unchanged.
+require Q1 aperture columns or optional Vega output. Complete Q1 summaries are unchanged.
 The example's `release` variable is passed to catalog metadata, cone search, ID
 lookup and spectrum retrieval. For DR1 it explicitly selects red spectra and
-selects images from the same explicit DR1 tiling and catalog tileid. Its default remains
-Q1. Changing the release does not establish coverage at the example coordinates
-or guarantee an unambiguous spectrum for the nearest object.
+selects images from the same explicit DR1 tiling and catalog tileid. The runnable example defaults to DR1 deep survey at `(58.1332495, -49.1830038)`;
+setting `release="q1"` retains the coordinates and automatically selects Q1.
+The library defaults remain Q1, or wide survey when only DR1 is specified.
+Catalog coverage does not guarantee an unambiguous spectrum for every object.
 
 ## Sources and validation
 
@@ -65,8 +66,7 @@ Read 13 November 2026:
 
 Regression tests reproduce the reported backend call, summary printing, negative
 IDs and multiple matches, release rejection, empty responses, metadata selection,
-and default/explicit Q1 aperture and Vega outputs. The companion Euclid_search
-suite is run alongside these tests; its ESA catalog configuration is unchanged.
+and default/explicit Q1 aperture and Vega outputs.
 
 Live validation succeeded through the actual installed IRSA client: a 0.1-arcsec
 cone around `(80.26369611992676, -51.25428251026353)` returned one DR1 record,
@@ -75,7 +75,6 @@ all four AB magnitudes/errors agreed with independent µJy calculations within
 0.000501 mag. Exact inputs, UTC timestamp and values are recorded in
 `irsa_dr1_catalog_validation.json`. An earlier untargeted TOP 3 probe timed out
 after 30 seconds; the targeted tests succeeded without a fallback or bulk data.
-Combined regression validation: **137 passed, 24 subtests passed**.
 
 
 ## Spectrum validation target: choose the Deep Survey catalog
@@ -100,7 +99,7 @@ Set these variables in `irsa_tools_example.py` to reproduce the target:
 
 ```python
 release = "dr1"
-catalogue = "deep_survey"
+dr1_catalogue = "deep_survey"
 ra, dec = 273.018929496624, 68.231870619389
 ```
 
@@ -119,7 +118,6 @@ units for all four profile flux/error pairs; those 10 metadata rows are stored
 in `irsa_dr1_deep_catalog_metadata.csv`. Coverage-check inputs/results are recorded
 in `irsa_dr1_catalog_coverage_validation.json`.
 
-After explicit collection selection and corrected messages: **146 passed, 24 subtests passed**.
 
 A separate live deep-catalog exact-ID query did not finish within a 90-second
 local validation budget. Deep ID routing is tested offline; the coverage results

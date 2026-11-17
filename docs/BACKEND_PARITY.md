@@ -87,18 +87,10 @@ Missing values can be masks or NaN depending on serialization. Saving uses
 `tests/test_backend_parity.py` compares catalog geometry/values/photometry,
 defaults, inputs, empty/error/ambiguity behavior, discovery, real decoding, units,
 saving and provenance. Existing tests cover bounded transport and image WCS/
-calibration. Companion `euclid_dr1/tests/test_backend_integration_parity.py` runs
-both actual adapters through the same manifest/FITS/cache workflow with the same
-spectral data. This is not a new empirical quality/availability comparison.
-
-Combined regression run: **368 tests and 24 subtests passed** (266 tools tests,
-102 search tests). Command:
-
-```sh
-PYTHONPATH=/workspace/Euclid_tools/src:/workspace/Euclid_search \
-  /workspace/.venvs/euclid-tools/bin/python -m pytest \
-  /workspace/Euclid_tools/tests /workspace/Euclid_search/euclid_dr1/tests -q
-```
+calibration. These are deterministic local checks, not a new empirical
+quality/availability comparison. Run `python -m pytest tests -q` from this
+repository; current counts and reproducibility are recorded in
+[validation](VALIDATION.md).
 
 Official formats, sources and earlier live evidence: [ESA catalogs](ESA_DR1_CATALOG.md),
 [IRSA catalogs](IRSA_DR1_CATALOG.md), [ESA products](ESA_DR1_PRODUCTS.md),

@@ -62,6 +62,9 @@ def retrieve_objects(ra: float, dec: float, radius: float = None, search_radius:
     radius : float
         Search radius in arcseconds.
 
+    limit : int or None, optional
+        Set client ROW_LIMIT when supplied; None preserves the client setting.
+
     Returns
     -------
     Table
@@ -201,9 +204,9 @@ def retrieve_spectrum(object_id: str, save_spectrum: bool = False, output_dir: s
     Notes
     -----
     - Wavelength is converted to microns.
-    - Data is masked based on the bitmask in the `MASK` column if requested.
+    - Retrieval retains bins and flags; apply a scientifically justified mask separately.
     - If no spectrum is found, returns `None`.
-    - The output FITS file is named using the object's RA and DEC coordinates, formatted as 'E{ra}{dec}_spectrum.fits'.
+    - Saved output is '<object_name>_spectrum.fits', defaulting to 'E<object_id>_spectrum.fits'.
     - The output directory defaults to a temporary directory if not specified.
     """
 
@@ -354,6 +357,13 @@ def retrieve_cutout(ra: float, dec: float, search_radius: float = None, cutout_s
     fits.HDU
         FITS HDU containing the image cutout.
         Returns `None` if no suitable image is found.
+
+    Notes
+    -----
+    Q1 is the default. DR1 requires release="dr1" and explicit wide/deep
+    tiling/class choices when needed; ambiguity requires tile_id or an exact
+    product. See docs/IRSA_DR1_IMAGES.md. Native pixels, WCS and calibration
+    metadata are preserved within the supported formats.
 
     Raises
     ------

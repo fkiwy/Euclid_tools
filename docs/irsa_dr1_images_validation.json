@@ -1074,54 +1074,5 @@
       "RAWHDR": "9ef3ad416667f26d1fc9e236e06306f820b01c44340d50ef8e52be0129a96c7b",
       "CUTBYTES": 9440
     }
-  },
-  "live_search_workflow": {
-    "entry_point": "euclid_dr1.plot_images",
-    "config": "archive_dr1_irsa_images.json",
-    "status": "ok",
-    "cutout_size_arcsec": 3,
-    "bands": {
-      "VIS": {
-        "MAGZERO": 24.5,
-        "BUNIT": "ADU/s",
-        "DATASETR": "DR1_R2",
-        "PPLANID": "MER_ProcessTile_EUCLID_2.0.32-DATA_RELEASE-pcasenov-PLAN-000000",
-        "SRCS3": "s3://nasa-irsa-euclid-dr1/dr1/MER/102158277/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE102158277-5EF3F0_20250803T105320.820305Z_00.00.fits",
-        "RAWHDR": "a5aa759d52e3dc9aa2be5001519b92eed043429c4d30d5990ffcabf3192a3a26",
-        "CUTBYTES": 9440,
-        "cutout_fits_sha256": "76d094f52991babde07dfcb72127a7713303ad2e01e64d0d510913a6d97e90c8"
-      },
-      "Y": {
-        "MAGZERO": 29.8,
-        "BUNIT": "ELECTRON/s",
-        "DATASETR": "DR1_R2",
-        "PPLANID": "MER_ProcessTile_EUCLID_2.0.32-DATA_RELEASE-pcasenov-PLAN-000000",
-        "SRCS3": "s3://nasa-irsa-euclid-dr1/dr1/MER/102158277/NISP/EUC_MER_BGSUB-MOSAIC-NIR-Y_TILE102158277-B62363_20250802T171104.054818Z_00.00.fits",
-        "RAWHDR": "d1abdc4c5d2396f60d7a625ba8ae5beba08b47e65370cfca621f6024c1a2c45e",
-        "CUTBYTES": 9440,
-        "cutout_fits_sha256": "5a4f638bfbaf6c9dbb9d2c8edf4111ba45b47301b2939fb1c20deb1a2b81f194"
-      },
-      "J": {
-        "MAGZERO": 30.1,
-        "BUNIT": "ELECTRON/s",
-        "DATASETR": "DR1_R2",
-        "PPLANID": "MER_ProcessTile_EUCLID_2.0.32-DATA_RELEASE-pcasenov-PLAN-000000",
-        "SRCS3": "s3://nasa-irsa-euclid-dr1/dr1/MER/102158277/NISP/EUC_MER_BGSUB-MOSAIC-NIR-J_TILE102158277-96D8A2_20250802T170831.080782Z_00.00.fits",
-        "RAWHDR": "17e5387854cd9ad82345749a4165e5e4123774ece24e035c32f4e2550d0ef2d1",
-        "CUTBYTES": 9440,
-        "cutout_fits_sha256": "cd5c505e822b058eae9c17078b12dcd3a8306926d68b2e8613ff17b671f35392"
-      },
-      "H": {
-        "MAGZERO": 30.0,
-        "BUNIT": "ELECTRON/s",
-        "DATASETR": "DR1_R2",
-        "PPLANID": "MER_ProcessTile_EUCLID_2.0.32-DATA_RELEASE-pcasenov-PLAN-000000",
-        "SRCS3": "s3://nasa-irsa-euclid-dr1/dr1/MER/102158277/NISP/EUC_MER_BGSUB-MOSAIC-NIR-H_TILE102158277-3C313F_20250802T171057.910045Z_00.00.fits",
-        "RAWHDR": "770bdacd925b1789d607f6d11bcdd1047ff6c82a810e1bdd9110e0fdc31e64c6",
-        "CUTBYTES": 9440,
-        "cutout_fits_sha256": "8d36a2db57fbfa4ab0c171b9d9f34864abd2d9c662ad03b7da61888df889806c"
-      }
-    },
-    "pdf_rendered": true
   }
 }
