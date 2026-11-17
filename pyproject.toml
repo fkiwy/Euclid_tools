@@ -5,14 +5,14 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "Euclid_tools"
 version = "0.3.1"
-description = "Package for Euclid Q1 spectra, catalog queries, and image cutouts."
+description = "Release-aware Euclid catalog queries, spectra, and image cutouts."
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
 authors = [{name = "Frank Kiwy", email = "frank.kiwy@outlook.com"}]
 dependencies = [
     "aiohttp",
-    "astropy",
+    "astropy>=5.3",
     "astroquery",
     "beautifulsoup4",
     "matplotlib",
@@ -22,6 +22,8 @@ dependencies = [
     "scipy",
     "Pillow",
     "pyvo",
+    "fsspec",
+    "s3fs",
 ]
 
 [project.urls]

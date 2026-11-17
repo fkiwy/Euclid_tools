@@ -3,7 +3,8 @@
 [![astropy](https://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat)](https://www.astropy.org/)
 
 Python tools for retrieving, visualizing, and comparing spectra and image cutouts
-from the **Euclid Quick Release 1 (Q1)**. Query the MER catalog through ESA or
+from **Euclid Q1 and DR1-Foundation**. The singular retrieval methods default
+to Q1; select DR1 explicitly with `release="dr1"`. Query the MER catalog through ESA or
 IRSA, plot NISP spectra and VIS/Y/J/H images, and compare spectra with bundled
 template libraries.
 
@@ -14,6 +15,7 @@ template libraries.
 - [Functionality overview](#functionality-overview)
 - [API guide](#api-guide)
 - [Examples](#examples)
+- [Release and archive guides](#release-and-archive-guides)
 - [Development](#development)
 - [Troubleshooting](#troubleshooting)
 - [Citation](#citation)
@@ -72,8 +74,8 @@ else:
 
 Both backends expose the same core methods. `radius` and `search_radius` are
 aliases: supply either one; if both are provided, their values must agree.
-Backend-specific options can differ (for example, ESA supports a catalog row
-`limit`). ESA is the recommended starting backend; response times depend on the
+Both cone-search helpers accept an explicit catalog row `limit`; their
+archive/client defaults differ. Transport-specific options also differ. ESA is the recommended starting backend; response times depend on the
 archive and request.
 
 ## Functionality overview
@@ -84,19 +86,18 @@ This toolkit provides the following core functionality:
     - Search for Euclid sources near specified sky coordinates.
     - Retrieve source data from the Euclid MER catalog.
 
-> **Note:** The Euclid MER catalog does **not include magnitudes for Euclid bands**. To address this, the toolkit
-> calculates magnitudes with uncertainties from the available flux columns using appropriate zero-points. Magnitudes are
-> computed in both **AB** and **Vega** systems, and added directly to the result table returned by `retrieve_objects()`.
-> VIS magnitude is derived from `flux_vis_psf` and Y, J, H magnitudes from `flux_[band]_templfit`.
-> Both ESA and IRSA also return aperture magnitudes and uncertainties from the VIS 4 FWHM and Y, J, H 2 FWHM
-> aperture fluxes, as detailed below.
+The helpers derive magnitudes from catalog fluxes in microJy. Q1 includes
+profile and aperture AB/Vega outputs. DR1 includes VIS PSF and Y/J/H template-fit
+AB magnitudes by default; optional Vega columns require an explicit,
+source-recorded convention. No official DR1 Vega coefficients or DR1 aperture
+calibration are inferred. See [release support](docs/DR1_FOUNDATION.md).
 
 - **Spectrum Retrieval and Visualization**
     - Retrieve NISP spectra (slitless grism) for individual sources.
     - Plot flux and uncertainty versus wavelength.
 
 - **Image Cutout Retrieval**
-    - Retrieve image cutouts in VIS, Y, J, and H bands for any Euclid-detected source.
+    - Retrieve available VIS, Y, J and H cutouts around requested sky coordinates.
     - Plot single- and multi-band image views (with customizable RGB assignments).
 
 - **Spectral Comparison**
@@ -156,16 +157,24 @@ search radius.
 
 - `ra`: Right Ascension of the target object, in degrees.
 - `dec`: Declination of the target object, in degrees.
-- `search_radius`: Radius (in arcseconds) around the target to search for objects.
+- `search_radius` / `radius`: Positive finite radius in arcseconds; aliases must agree.
+- `release`: `"q1"` (default) or `"dr1"`.
+- `catalogue`: For DR1, `"wide_survey"` (default) or `"deep_survey"`; IRSA also supports mode catalogs. Omit for Q1.
+- `limit`: Optional client row limit; defaults are archive-specific.
+- `vega_calibration`: Optional explicit DR1 Vega convention; [required fields](docs/DR1_VEGA_CALIBRATION.md).
 
 #### Returns:
 
 - An Astropy Table containing objects within the search radius, or `None`
   when no objects are found.
 
-Both ESA and IRSA include AB and Vega magnitudes and their propagated uncertainties. Existing PSF (VIS) and
+For Q1, both ESA and IRSA include AB and Vega magnitudes and their propagated uncertainties. Existing PSF (VIS) and
 template-fit (Y, J, H) columns retain names such as `VIS_AB_mag`, `VIS_AB_err`, `Y_Vega_mag`, and `Y_Vega_err`.
-Additional aperture measurements use these input columns and output prefixes:
+DR1 returns profile AB columns by default. Optional `vega_calibration` supplies
+explicit reference fluxes, passbands and a Vega spectrum, with a recorded source;
+see the [DR1 Vega contract and template](docs/DR1_VEGA_CALIBRATION.md). Official DR1
+Vega coefficients are not bundled. Additional Q1 aperture measurements use these
+input columns and output prefixes:
 
 | Flux column | Flux uncertainty column | Output prefix |
 | --- | --- | --- |
@@ -181,13 +190,18 @@ three decimal places.
 
 ### 2. `retrieve_spectrum()`
 
+ESA/IRSA shared behavior, corrections and retained differences are documented in
+the [backend parity audit](docs/BACKEND_PARITY.md).
+
 Access via `get_backend('esa')` or `get_backend('irsa')` — backends implement this method.
 
 This function retrieves the spectrum of a given object from the Euclid archive based on the object ID.
 
 #### Parameters:
 
-- `object_id`: The unique identifier of the object.
+- `object_id`: Exact numeric MER identifier for the selected release; association multiplicity is handled explicitly.
+- `release`: `"q1"` (default) or `"dr1"`.
+- `grism`, `product`: DR1 red/blue or exact file/HDU selection. Use `discover_spectra` and `retrieve_spectra` when needed.
 - `save_spectrum`: If True, saves the spectrum to a FITS file in the specified output directory.
 - `output_dir`: Directory where the spectrum FITS file will be saved if `save_spectrum` is True.
 - `object_name`: Name of the object to use for the output file name. If not provided, defaults to 'E{object_id}'.
@@ -195,7 +209,7 @@ This function retrieves the spectrum of a given object from the Euclid archive b
 #### Returns:
 
 - An Astropy QTable containing the spectrum data, including wavelength, flux, error, mask, quality flags, and number of
-  dither positions.
+  dither positions when supplied; `None` for no matching spectrum. Ambiguity and malformed products raise.
 
 ### 3. `remove_bad_values()`
 
@@ -231,11 +245,13 @@ H).
 - `dec`: Declination of the target object, in degrees.
 - `search_radius`: Radius (in arcseconds) to define the region of interest.
 - `cutout_size`: Size (in arcseconds) of the cutout.
-- `band`: The band (e.g., "VIS", "Y", "J", "H") to retrieve.
+- `band`: `"VIS"`, `"Y"`, `"J"` or `"H"`.
+- `release`: `"q1"` (default) or `"dr1"`.
+- `tiling`, `selection`, `tile_id`, `product`: DR1 mosaic collection/class and exact tile/product selectors. See the archive guides below.
 
 #### Returns:
 
-- A FITS HDU containing the image cutout for the specified band.
+- A FITS image HDU, or `None` for no matching image. DR1 ambiguity requires an explicit tile/product.
 
 ### 5. Plotting spectra (`SED.plot()`)
 
@@ -256,7 +272,7 @@ visualization logic in `flux_comp` rather than a separate local plotting helper.
 
 ### 6. `plot_images()`
 
-Located in `euclid_tools/image_plotter.py`.
+Import with `from euclid_tools.image_plotter import plot_images`; implementation is in `src/euclid_tools/image_plotter.py`.
 
 This function generates plots for multiple images (cutouts) of the object in different bands (e.g., VIS, Y, J, H). The
 images can be combined into RGB composites.
@@ -290,6 +306,23 @@ To compare an observed spectrum to a template, the `flux_comp` package is used. 
 5. Plot the comparison.
 
 ## Examples
+
+Run `python esa_tools_example.py` or `python irsa_tools_example.py` after
+installation. Both default to DR1 `deep_survey` at **58.1332495, -49.1830038**,
+with **59.7913643, -47.6826163** as an alternative. Set `release="q1"` to keep
+the coordinates and automatically select Q1's catalog. Set
+`dr1_catalogue="wide_survey"` for DR1 wide products. The examples derive image
+tiling and tile selection from the selected catalog. Their module docstrings
+explain product selectors, units, plotting and limitations.
+
+ESA's runnable example exports PNG and IRSA's exports PDF; both use Agg and the
+system temporary directory unless plotting options are changed. Use separate
+output directories to keep plots from different releases. DR1 defaults to AB
+photometry and no quality-mask filtering is imposed by these retrieval examples.
+
+The smaller snippets below deliberately illustrate the library's **Q1 default**.
+They are separate from the runnable scripts' DR1 configuration. Bundled plots
+illustrate earlier retrievals and do not establish Q1/DR1 calibration equivalence.
 
 ### Example 1: Retrieving and Plotting a Spectrum
 
@@ -402,7 +435,7 @@ data = backend.retrieve_spectrum(object_id)
 if data is None:
     raise RuntimeError("No spectrum is available for this object.")
 
-# Remove bad values from the spectrum to improve comparison results
+# Illustrative Q1 filter: verify flag meanings for your release and analysis.
 data = remove_bad_values(data, mask_func=lambda mask: (mask % 2 == 1) | (mask >= 64))
 
 # Retrieve templates for comparison
@@ -425,6 +458,16 @@ sed.plot(reference_on_top=False, spec_uncertainty=True, open_plot=False, output_
 ![Comparison1](example_plots/J035231.98-491058.81_vs._Theissen+2022.png)
 ![Comparison2](example_plots/J035909.93-474057.42_vs._Theissen+2022.png)
 ![Comparison3](example_plots/J174556.40+645937.11_vs._Theissen+2022.png)
+
+## Release and archive guides
+
+- [DR1-Foundation support and scientific limits](docs/DR1_FOUNDATION.md)
+- [ESA catalog selection](docs/ESA_DR1_CATALOG.md) and [ESA spectra/images](docs/ESA_DR1_PRODUCTS.md)
+- [IRSA catalogs](docs/IRSA_DR1_CATALOG.md), [spectra](docs/IRSA_DR1_SPECTRA.md) and [images](docs/IRSA_DR1_IMAGES.md)
+- [Backend parity and retained differences](docs/BACKEND_PARITY.md)
+- [Product provenance](docs/PRODUCT_PROVENANCE.md)
+- [Explicit DR1 Vega convention](docs/DR1_VEGA_CALIBRATION.md)
+- [Validation records and reproduction](docs/VALIDATION.md)
 
 ## Development
 

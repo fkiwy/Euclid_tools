@@ -1,0 +1,249 @@
+{
+  "checked_at": "2026-11-17T09:18:21.150551+00:00",
+  "sources": [
+    "https://docs.astropy.org/projects/astroquery/en/latest/api/astroquery.esa.euclid.EuclidClass.html",
+    "https://eas.esac.esa.int/tap-server/tap/sync"
+  ],
+  "checks": [
+    {
+      "source_id": "-629553356493020915",
+      "source_path": "/data/euclid/repository_dr1/DR1/R1/SIR_COMBINED_SPECTRA/102020064/EUC_SIR_W-COMBSPEC_102020064_20251016T182953.101184Z.fits",
+      "source_hdu": 3226,
+      "linking_id": "-629553356493020915115",
+      "status": "ok",
+      "bins": 531,
+      "provenance": {
+        "schema": "euclid.product-provenance/v1",
+        "metadata_version": 1,
+        "release": "DR1",
+        "archive": "ESA",
+        "product_type": "spectrum",
+        "source_id": "-629553356493020915",
+        "source_file": "/data/euclid/repository_dr1/DR1/R1/SIR_COMBINED_SPECTRA/102020064/EUC_SIR_W-COMBSPEC_102020064_20251016T182953.101184Z.fits",
+        "source_hdu": 3226,
+        "grism": "red",
+        "grism_reference": "ESA dr1.spectra_source.lambda_range",
+        "retrieval_route": "tap-sourcepatch+esa-datalink",
+        "retrieval_url": "https://eas.esac.esa.int/sas-dd/data?ID=dr1+-629553356493020915115&RELEASE=dr1&LINKING_PARAMETER=SOURCEPATCH_ID&RETRIEVAL_TYPE=SPECTRA_RGS&USE_ZIP_ALWAYS=true&TAPCLIENT=ASTROQUERY",
+        "dataset": "dr1",
+        "association_table": "dr1.spectra_source",
+        "linking_parameter": "SOURCEPATCH_ID",
+        "linking_id": "-629553356493020915115",
+        "tile_id": null,
+        "band": null,
+        "mosaic_class": null,
+        "processing_dataset": null,
+        "processing_plan": null,
+        "processing_pipeline": null,
+        "processing_version": null,
+        "raw_sha256": "266c2bd328554f78da10c321df8ee1dc7abb1b6fc04d51060e11249ae790ac57",
+        "source_header_sha256": null,
+        "cutout_header_sha256": null,
+        "requested_source_id": null
+      },
+      "seconds": 54.19113954800014
+    },
+    {
+      "source_id": "-629553356493020915",
+      "source_path": "/data/euclid/repository_dr1/DR1/R2/SIR_COMBINED_SPECTRA/102020064/EUC_SIR_W-COMBSPEC_102020064_20250825T082046.534274Z.fits",
+      "source_hdu": 3676,
+      "linking_id": "-62955335649302091553",
+      "status": "ok",
+      "bins": 531,
+      "provenance": {
+        "schema": "euclid.product-provenance/v1",
+        "metadata_version": 1,
+        "release": "DR1",
+        "archive": "ESA",
+        "product_type": "spectrum",
+        "source_id": "-629553356493020915",
+        "source_file": "/data/euclid/repository_dr1/DR1/R2/SIR_COMBINED_SPECTRA/102020064/EUC_SIR_W-COMBSPEC_102020064_20250825T082046.534274Z.fits",
+        "source_hdu": 3676,
+        "grism": "red",
+        "grism_reference": "ESA dr1.spectra_source.lambda_range",
+        "retrieval_route": "tap-sourcepatch+esa-datalink",
+        "retrieval_url": "https://eas.esac.esa.int/sas-dd/data?ID=dr1+-62955335649302091553&RELEASE=dr1&LINKING_PARAMETER=SOURCEPATCH_ID&RETRIEVAL_TYPE=SPECTRA_RGS&USE_ZIP_ALWAYS=true&TAPCLIENT=ASTROQUERY",
+        "dataset": "dr1",
+        "association_table": "dr1.spectra_source",
+        "linking_parameter": "SOURCEPATCH_ID",
+        "linking_id": "-62955335649302091553",
+        "tile_id": null,
+        "band": null,
+        "mosaic_class": null,
+        "processing_dataset": null,
+        "processing_plan": null,
+        "processing_pipeline": null,
+        "processing_version": null,
+        "raw_sha256": "f12a23b07dac6c9be99fd87084048f6f874a950534228aa54d500b8122582c2d",
+        "source_header_sha256": null,
+        "cutout_header_sha256": null,
+        "requested_source_id": null
+      },
+      "seconds": 51.955700926999725
+    },
+    {
+      "source_id": "2714057875648364582",
+      "source_path": "/data/euclid/repository_dr1/DR1/R1/SIR_COMBINED_SPECTRA/102158587/EUC_SIR_W-COMBSPEC_102158587_20250823T175316.507020Z.fits",
+      "source_hdu": 622,
+      "linking_id": "",
+      "status": "blocked_as_expected",
+      "reason": "Ambiguous ESA spectrum: no unique native sourcepatch_id identifies product=('/data/euclid/repository_dr1/DR1/R1/SIR_COMBINED_SPECTRA/102158587/EUC_SIR_W-COMBSPEC_102158587_20250823T175316.507020Z.fits', 622); use discover_spectra. This parent cannot be enforced by the documented DataLink route",
+      "seconds": 0.7418035549999331
+    },
+    {
+      "source_id": "2714057875648364582",
+      "source_path": "/data/euclid/repository_dr1/DR1/R1/SIR_COMBINED_SPECTRA/101831023/EUC_SIR_W-COMBSPEC_101831023_20250908T182303.358674Z.fits",
+      "source_hdu": 9906,
+      "linking_id": "2714057875648364582114",
+      "status": "ok",
+      "bins": 531,
+      "provenance": {
+        "schema": "euclid.product-provenance/v1",
+        "metadata_version": 1,
+        "release": "DR1",
+        "archive": "ESA",
+        "product_type": "spectrum",
+        "source_id": "2714057875648364582",
+        "source_file": "/data/euclid/repository_dr1/DR1/R1/SIR_COMBINED_SPECTRA/101831023/EUC_SIR_W-COMBSPEC_101831023_20250908T182303.358674Z.fits",
+        "source_hdu": 9906,
+        "grism": "red",
+        "grism_reference": "ESA dr1.spectra_source.lambda_range",
+        "retrieval_route": "tap-sourcepatch+esa-datalink",
+        "retrieval_url": "https://eas.esac.esa.int/sas-dd/data?ID=dr1+2714057875648364582114&RELEASE=dr1&LINKING_PARAMETER=SOURCEPATCH_ID&RETRIEVAL_TYPE=SPECTRA_RGS&USE_ZIP_ALWAYS=true&TAPCLIENT=ASTROQUERY",
+        "dataset": "dr1",
+        "association_table": "dr1.spectra_source",
+        "linking_parameter": "SOURCEPATCH_ID",
+        "linking_id": "2714057875648364582114",
+        "tile_id": null,
+        "band": null,
+        "mosaic_class": null,
+        "processing_dataset": null,
+        "processing_plan": null,
+        "processing_pipeline": null,
+        "processing_version": null,
+        "raw_sha256": "f943439d58e67ce3aadec81e919f8e96dc521703e10e97b45e108c9a1315f671",
+        "source_header_sha256": null,
+        "cutout_header_sha256": null,
+        "requested_source_id": null
+      },
+      "seconds": 53.336120476999895
+    }
+  ],
+  "requests": [
+    {
+      "url": "https://eas.esac.esa.int/tap-server/tap/sync",
+      "parameters": {
+        "REQUEST": "doQuery",
+        "LANG": "ADQL",
+        "FORMAT": "csv",
+        "QUERY": "SELECT TOP 101 source_id,file_path,file_name,hdu_index,lambda_range,sourcepatch_id FROM dr1.spectra_source WHERE source_id=-629553356493020915 AND lambda_range='RGS'"
+      },
+      "status": 200,
+      "header_seconds": 1.5686139519998505,
+      "bytes": 448
+    },
+    {
+      "url": "https://eas.esac.esa.int/tap-server/tap/sync",
+      "parameters": {
+        "REQUEST": "doQuery",
+        "LANG": "ADQL",
+        "FORMAT": "csv",
+        "QUERY": "SELECT TOP 101 source_id,file_path,file_name,hdu_index,lambda_range,sourcepatch_id FROM dr1.spectra_source WHERE source_id=-629553356493020915 AND lambda_range='RGS'"
+      },
+      "status": 200,
+      "header_seconds": 0.6517054599999028,
+      "bytes": 448
+    },
+    {
+      "url": "https://eas.esac.esa.int/sas-dd/data",
+      "parameters": {
+        "ID": "dr1 -629553356493020915115",
+        "RELEASE": "dr1",
+        "LINKING_PARAMETER": "SOURCEPATCH_ID",
+        "RETRIEVAL_TYPE": "SPECTRA_RGS",
+        "USE_ZIP_ALWAYS": "true",
+        "TAPCLIENT": "ASTROQUERY"
+      },
+      "status": 200,
+      "header_seconds": 48.013245383999674,
+      "bytes": 9448
+    },
+    {
+      "url": "https://eas.esac.esa.int/tap-server/tap/sync",
+      "parameters": {
+        "REQUEST": "doQuery",
+        "LANG": "ADQL",
+        "FORMAT": "csv",
+        "QUERY": "SELECT TOP 101 source_id,file_path,file_name,hdu_index,lambda_range,sourcepatch_id FROM dr1.spectra_source WHERE source_id=-629553356493020915 AND lambda_range='RGS'"
+      },
+      "status": 200,
+      "header_seconds": 0.7126382209999065,
+      "bytes": 448
+    },
+    {
+      "url": "https://eas.esac.esa.int/sas-dd/data",
+      "parameters": {
+        "ID": "dr1 -62955335649302091553",
+        "RELEASE": "dr1",
+        "LINKING_PARAMETER": "SOURCEPATCH_ID",
+        "RETRIEVAL_TYPE": "SPECTRA_RGS",
+        "USE_ZIP_ALWAYS": "true",
+        "TAPCLIENT": "ASTROQUERY"
+      },
+      "status": 200,
+      "header_seconds": 51.102605521999976,
+      "bytes": 8725
+    },
+    {
+      "url": "https://eas.esac.esa.int/tap-server/tap/sync",
+      "parameters": {
+        "REQUEST": "doQuery",
+        "LANG": "ADQL",
+        "FORMAT": "csv",
+        "QUERY": "SELECT TOP 101 source_id,file_path,file_name,hdu_index,lambda_range,sourcepatch_id FROM dr1.spectra_source WHERE source_id=2714057875648364582 AND lambda_range='RGS'"
+      },
+      "status": 200,
+      "header_seconds": 0.6385688939999454,
+      "bytes": 587
+    },
+    {
+      "url": "https://eas.esac.esa.int/tap-server/tap/sync",
+      "parameters": {
+        "REQUEST": "doQuery",
+        "LANG": "ADQL",
+        "FORMAT": "csv",
+        "QUERY": "SELECT TOP 101 source_id,file_path,file_name,hdu_index,lambda_range,sourcepatch_id FROM dr1.spectra_source WHERE source_id=2714057875648364582 AND lambda_range='RGS'"
+      },
+      "status": 200,
+      "header_seconds": 0.7409996760002286,
+      "bytes": 587
+    },
+    {
+      "url": "https://eas.esac.esa.int/tap-server/tap/sync",
+      "parameters": {
+        "REQUEST": "doQuery",
+        "LANG": "ADQL",
+        "FORMAT": "csv",
+        "QUERY": "SELECT TOP 101 source_id,file_path,file_name,hdu_index,lambda_range,sourcepatch_id FROM dr1.spectra_source WHERE source_id=2714057875648364582 AND lambda_range='RGS'"
+      },
+      "status": 200,
+      "header_seconds": 0.631005703000028,
+      "bytes": 587
+    },
+    {
+      "url": "https://eas.esac.esa.int/sas-dd/data",
+      "parameters": {
+        "ID": "dr1 2714057875648364582114",
+        "RELEASE": "dr1",
+        "LINKING_PARAMETER": "SOURCEPATCH_ID",
+        "RETRIEVAL_TYPE": "SPECTRA_RGS",
+        "USE_ZIP_ALWAYS": "true",
+        "TAPCLIENT": "ASTROQUERY"
+      },
+      "status": 200,
+      "header_seconds": 52.435899226999936,
+      "bytes": 9741
+    }
+  ],
+  "total_response_bytes": 31019
+}

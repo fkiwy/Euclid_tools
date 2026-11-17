@@ -1,0 +1,39 @@
+table_name,column_name,unit,description
+dr1.mer_catalogue_wide_survey,flag_y,NA,Objects flag keeping track of the flagged pixels in the NIR Y flag image
+dr1.mer_catalogue_wide_survey,object_id,NA,Euclid unique source identifier
+dr1.mer_catalogue_wide_survey,gaia_match_quality,NA,The quality of the GAIA match
+dr1.mer_catalogue_wide_survey,flag_vis,NA,Objects flag keeping track of the flagged pixels in the VIS flag image
+dr1.mer_catalogue_wide_survey,fluxerr_vis_psf,uJy,VIS band source PSF-fitting photometry flux error (TPHOT measurement)
+dr1.mer_catalogue_wide_survey,fluxerr_j_templfit,uJy,NIR J band source template fitting flux error (TPHOT measurement)
+dr1.mer_catalogue_wide_survey,declination,deg,Source barycenter DEC coordinate (SExtractor DELTA_J2000) decimal degrees
+dr1.mer_catalogue_wide_survey,right_ascension,deg,Source barycenter RA coordinate (SExtractor ALPHA_J2000) decimal degrees
+dr1.mer_catalogue_wide_survey,point_like_prob,NA,"Probability between 0 and 1 that the source is point-like (the estimation uses a ""star probability cube"" defined in the MDB).  Value is set to NaN for NIR-only objects (use MUMAX_MINUS_MAG for NIR-only objcts)"
+dr1.mer_catalogue_wide_survey,det_quality_flag,NA,Detection step flags that could indicate the possible corruption of the MAG_STARGAL_SEP values
+dr1.mer_catalogue_wide_survey,flux_y_templfit,uJy,NIR Y band source template fitting flux (TPHOT measurement)
+dr1.mer_catalogue_wide_survey,flag_h,NA,Objects flag keeping track of the flagged pixels in the NIR H flag image
+dr1.mer_catalogue_wide_survey,flag_j,NA,Objects flag keeping track of the flagged pixels in the NIR J flag image
+dr1.mer_catalogue_wide_survey,flux_vis_psf,uJy,VIS band source PSF-fitting photometry flux (TPHOT measurement)
+dr1.mer_catalogue_wide_survey,flux_j_templfit,uJy,NIR J band source template fitting flux (TPHOT measurement)
+dr1.mer_catalogue_wide_survey,fluxerr_y_templfit,uJy,NIR Y band source template fitting flux error (TPHOT measurement)
+dr1.mer_catalogue_wide_survey,fluxerr_h_templfit,uJy,NIR H band source template fitting flux error (TPHOT measurement)
+dr1.mer_catalogue_wide_survey,flux_h_templfit,uJy,NIR H band source template fitting flux (TPHOT measurement)
+dr1.mer_catalogue_wide_survey,point_like_flag,NA,"Point-like flag : flag set to 1 for VIS detections with (DET_QUALITY_FLAG==0) AND (POINT_LIKE_PROBA&gt;threshold), otherwise set to NaN"
+q1.mer_catalogue,flux_h_templfit,uJy,NIR H band source template fitting flux (TPHOT measurement)
+q1.mer_catalogue,flux_j_templfit,uJy,NIR J band source template fitting flux (TPHOT measurement)
+q1.mer_catalogue,flux_y_templfit,uJy,NIR Y band source template fitting flux (TPHOT measurement)
+q1.mer_catalogue,object_id,NA,Euclid unique source identifier
+q1.mer_catalogue,fluxerr_y_templfit,uJy,NIR Y band source template fitting flux error (TPHOT measurement)
+q1.mer_catalogue,fluxerr_j_templfit,uJy,NIR J band source template fitting flux error (TPHOT measurement)
+q1.mer_catalogue,fluxerr_h_templfit,uJy,NIR H band source template fitting flux error (TPHOT measurement)
+q1.mer_catalogue,flux_vis_psf,uJy,VIS band source PSF-fitting photometry flux (TPHOT measurement)
+q1.mer_catalogue,fluxerr_vis_psf,uJy,VIS band source PSF-fitting photometry flux error (TPHOT measurement)
+q1.mer_catalogue,flag_vis,NA,Objects flag keeping track of the flagged pixels in the VIS flag image
+q1.mer_catalogue,flag_y,NA,Objects flag keeping track of the flagged pixels in the NIR Y flag image
+q1.mer_catalogue,flag_j,NA,Objects flag keeping track of the flagged pixels in the NIR J flag image
+q1.mer_catalogue,flag_h,NA,Objects flag keeping track of the flagged pixels in the NIR H flag image
+q1.mer_catalogue,point_like_prob,NA,"Probability between 0 and 1 that the source is point-like (the estimation uses a ""star probability cube"" defined in the MDB).  Value is set to NaN for NIR-only objects (use MUMAX_MINUS_MAG for NIR-only objcts)"
+q1.mer_catalogue,det_quality_flag,NA,Detection step flags that could indicate the possible corruption of the MAG_STARGAL_SEP values
+q1.mer_catalogue,gaia_match_quality,NA,The quality of the GAIA match
+q1.mer_catalogue,right_ascension,deg,Source barycenter RA coordinate (SExtractor ALPHA_J2000) decimal degrees
+q1.mer_catalogue,declination,deg,Source barycenter DEC coordinate (SExtractor DELTA_J2000) decimal degrees
+q1.mer_catalogue,point_like_flag,NA,"Point-like flag : flag set to 1 for VIS detections with (DET_QUALITY_FLAG==0) AND (POINT_LIKE_PROBA&gt;threshold), otherwise set to NaN"

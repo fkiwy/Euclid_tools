@@ -1,0 +1,79 @@
+{
+  "utc": "2026-11-12T16:32:30.252909+00:00",
+  "endpoint": "https://eas.esac.esa.int/tap-server/tap/sync",
+  "query": "SELECT TOP 3 object_id,right_ascension,declination,flux_vis_psf,fluxerr_vis_psf,flux_y_templfit,fluxerr_y_templfit,flux_j_templfit,fluxerr_j_templfit,flux_h_templfit,fluxerr_h_templfit,det_quality_flag,flag_vis,flag_y,flag_j,flag_h,point_like_flag,point_like_prob,gaia_match_quality FROM dr1.mer_catalogue_wide_survey",
+  "metadata_query": "SELECT TOP 100 table_name,column_name,unit,description FROM TAP_SCHEMA.columns WHERE table_name IN ('q1.mer_catalogue','dr1.mer_catalogue_wide_survey') AND column_name IN ('object_id','right_ascension','declination','flux_vis_psf','fluxerr_vis_psf','flux_y_templfit','fluxerr_y_templfit','flux_j_templfit','fluxerr_j_templfit','flux_h_templfit','fluxerr_h_templfit','det_quality_flag','flag_vis','flag_y','flag_j','flag_h','point_like_flag','point_like_prob','gaia_match_quality')",
+  "rows": 3,
+  "metadata_columns_equal": [
+    "object_id",
+    "right_ascension",
+    "declination",
+    "flux_vis_psf",
+    "fluxerr_vis_psf",
+    "flux_y_templfit",
+    "fluxerr_y_templfit",
+    "flux_j_templfit",
+    "fluxerr_j_templfit",
+    "flux_h_templfit",
+    "fluxerr_h_templfit",
+    "det_quality_flag",
+    "flag_vis",
+    "flag_y",
+    "flag_j",
+    "flag_h",
+    "point_like_flag",
+    "point_like_prob",
+    "gaia_match_quality"
+  ],
+  "photometry": {
+    "VIS": {
+      "AB_mag": [
+        26.813497808729135,
+        26.85732384653095,
+        26.77049794344958
+      ],
+      "AB_err": [
+        0.15680921132555364,
+        0.15774977203227086,
+        0.17089918252434572
+      ]
+    },
+    "Y": {
+      "AB_mag": [
+        24.77820868953806,
+        25.670355404525814,
+        25.45110592162406
+      ],
+      "AB_err": [
+        0.259520268252361,
+        0.48726575130851446,
+        0.31749106978567987
+      ]
+    },
+    "J": {
+      "AB_mag": [
+        24.38083042774986,
+        25.617330370111656,
+        25.563705561392986
+      ],
+      "AB_err": [
+        0.1764223288243155,
+        0.46027887755465013,
+        0.3196168018925314
+      ]
+    },
+    "H": {
+      "AB_mag": [
+        24.81158327734844,
+        24.982147200032642,
+        25.22807615089232
+      ],
+      "AB_err": [
+        0.26630141818540876,
+        0.2795886181342074,
+        0.2580445219474202
+      ]
+    }
+  },
+  "limitations": "Schema and arithmetic checks only; no calibration or selection validation"
+}

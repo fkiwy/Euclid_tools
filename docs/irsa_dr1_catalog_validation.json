@@ -1,0 +1,46 @@
+{
+  "utc": "2026-11-13T19:19:53.230777+00:00",
+  "catalogue": "euclid_dr1_mer_catalogue_wide_survey",
+  "object_id": "-802636961512542825",
+  "ra": 80.26369611992676,
+  "dec": -51.25428251026353,
+  "radius_arcsec": 0.1,
+  "cone_rows": 1,
+  "id_rows": 1,
+  "photometry": {
+    "VIS": {
+      "AB_mag": [
+        26.813497808736514
+      ],
+      "AB_error": [
+        0.15680921132639067
+      ]
+    },
+    "Y": {
+      "AB_mag": [
+        24.77820868954781
+      ],
+      "AB_error": [
+        0.25952026826185554
+      ]
+    },
+    "J": {
+      "AB_mag": [
+        24.380830427756557
+      ],
+      "AB_error": [
+        0.17642232882949133
+      ]
+    },
+    "H": {
+      "AB_mag": [
+        24.811583277339682
+      ],
+      "AB_error": [
+        0.2663014181754523
+      ]
+    }
+  },
+  "limitations": "Schema, transport and arithmetic only; calibration and flag semantics not validated",
+  "untargeted_top3_probe": "ReadTimeout after 30 seconds; narrow cone and exact ID used instead"
+}

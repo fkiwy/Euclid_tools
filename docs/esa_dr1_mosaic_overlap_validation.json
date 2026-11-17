@@ -1,0 +1,248 @@
+{
+  "catalog": [
+    {
+      "object_id": "-581332463491830110",
+      "tile_index": "101280484"
+    }
+  ],
+  "bands": {
+    "VIS": [
+      {
+        "file_name": "EUC_MER_BGSUB-MOSAIC-VIS_TILE101280484-312969_20251007T222457.687000Z_00.00.fits",
+        "file_path": "/data/euclid/repository_dr1/DR1/R1/MER/101280484/VIS",
+        "instrument_name": "VIS",
+        "filter_name": "VIS",
+        "tile_index": "101280484",
+        "data_set_release": "DR1_R1",
+        "purpose": "DATA_RELEASE_DEEP",
+        "processing_mode": "DEEP",
+        "product": "/data/euclid/repository_dr1/DR1/R1/MER/101280484/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE101280484-312969_20251007T222457.687000Z_00.00.fits"
+      },
+      {
+        "file_name": "EUC_MER_BGSUB-MOSAIC-VIS_TILE101280483-719C38_20251010T132850.202986Z_00.00.fits",
+        "file_path": "/data/euclid/repository_dr1/DR1/R1/MER/101280483/VIS",
+        "instrument_name": "VIS",
+        "filter_name": "VIS",
+        "tile_index": "101280483",
+        "data_set_release": "DR1_R1",
+        "purpose": "DATA_RELEASE_DEEP",
+        "processing_mode": "DEEP",
+        "product": "/data/euclid/repository_dr1/DR1/R1/MER/101280483/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE101280483-719C38_20251010T132850.202986Z_00.00.fits"
+      }
+    ],
+    "Y": [
+      {
+        "file_name": "EUC_MER_BGSUB-MOSAIC-NIR-Y_TILE101280483-552DE5_20251009T120827.724105Z_00.00.fits",
+        "file_path": "/data/euclid/repository_dr1/DR1/R1/MER/101280483/NISP",
+        "instrument_name": "NISP",
+        "filter_name": "NIR_Y",
+        "tile_index": "101280483",
+        "data_set_release": "DR1_R1",
+        "purpose": "DATA_RELEASE_DEEP",
+        "processing_mode": "DEEP",
+        "product": "/data/euclid/repository_dr1/DR1/R1/MER/101280483/NISP/EUC_MER_BGSUB-MOSAIC-NIR-Y_TILE101280483-552DE5_20251009T120827.724105Z_00.00.fits"
+      },
+      {
+        "file_name": "EUC_MER_BGSUB-MOSAIC-NIR-Y_TILE101280484-415DEA_20251007T085023.766695Z_00.00.fits",
+        "file_path": "/data/euclid/repository_dr1/DR1/R1/MER/101280484/NISP",
+        "instrument_name": "NISP",
+        "filter_name": "NIR_Y",
+        "tile_index": "101280484",
+        "data_set_release": "DR1_R1",
+        "purpose": "DATA_RELEASE_DEEP",
+        "processing_mode": "DEEP",
+        "product": "/data/euclid/repository_dr1/DR1/R1/MER/101280484/NISP/EUC_MER_BGSUB-MOSAIC-NIR-Y_TILE101280484-415DEA_20251007T085023.766695Z_00.00.fits"
+      }
+    ],
+    "J": [
+      {
+        "file_name": "EUC_MER_BGSUB-MOSAIC-NIR-J_TILE101280484-CDCCF9_20251007T085003.645358Z_00.00.fits",
+        "file_path": "/data/euclid/repository_dr1/DR1/R1/MER/101280484/NISP",
+        "instrument_name": "NISP",
+        "filter_name": "NIR_J",
+        "tile_index": "101280484",
+        "data_set_release": "DR1_R1",
+        "purpose": "DATA_RELEASE_DEEP",
+        "processing_mode": "DEEP",
+        "product": "/data/euclid/repository_dr1/DR1/R1/MER/101280484/NISP/EUC_MER_BGSUB-MOSAIC-NIR-J_TILE101280484-CDCCF9_20251007T085003.645358Z_00.00.fits"
+      },
+      {
+        "file_name": "EUC_MER_BGSUB-MOSAIC-NIR-J_TILE101280483-E61D3B_20251009T125507.144287Z_00.00.fits",
+        "file_path": "/data/euclid/repository_dr1/DR1/R1/MER/101280483/NISP",
+        "instrument_name": "NISP",
+        "filter_name": "NIR_J",
+        "tile_index": "101280483",
+        "data_set_release": "DR1_R1",
+        "purpose": "DATA_RELEASE_DEEP",
+        "processing_mode": "DEEP",
+        "product": "/data/euclid/repository_dr1/DR1/R1/MER/101280483/NISP/EUC_MER_BGSUB-MOSAIC-NIR-J_TILE101280483-E61D3B_20251009T125507.144287Z_00.00.fits"
+      }
+    ],
+    "H": [
+      {
+        "file_name": "EUC_MER_BGSUB-MOSAIC-NIR-H_TILE101280483-85DBFC_20251009T141703.762538Z_00.00.fits",
+        "file_path": "/data/euclid/repository_dr1/DR1/R1/MER/101280483/NISP",
+        "instrument_name": "NISP",
+        "filter_name": "NIR_H",
+        "tile_index": "101280483",
+        "data_set_release": "DR1_R1",
+        "purpose": "DATA_RELEASE_DEEP",
+        "processing_mode": "DEEP",
+        "product": "/data/euclid/repository_dr1/DR1/R1/MER/101280483/NISP/EUC_MER_BGSUB-MOSAIC-NIR-H_TILE101280483-85DBFC_20251009T141703.762538Z_00.00.fits"
+      },
+      {
+        "file_name": "EUC_MER_BGSUB-MOSAIC-NIR-H_TILE101280484-DB5D74_20251007T084731.828892Z_00.00.fits",
+        "file_path": "/data/euclid/repository_dr1/DR1/R1/MER/101280484/NISP",
+        "instrument_name": "NISP",
+        "filter_name": "NIR_H",
+        "tile_index": "101280484",
+        "data_set_release": "DR1_R1",
+        "purpose": "DATA_RELEASE_DEEP",
+        "processing_mode": "DEEP",
+        "product": "/data/euclid/repository_dr1/DR1/R1/MER/101280484/NISP/EUC_MER_BGSUB-MOSAIC-NIR-H_TILE101280484-DB5D74_20251007T084731.828892Z_00.00.fits"
+      }
+    ]
+  },
+  "checks": [
+    {
+      "band": "VIS",
+      "status": "ok",
+      "shape": [
+        31,
+        31
+      ],
+      "provenance": {
+        "schema": "euclid.product-provenance/v1",
+        "metadata_version": 1,
+        "release": "DR1",
+        "archive": "ESA",
+        "product_type": "image",
+        "source_id": null,
+        "source_file": "/data/euclid/repository_dr1/DR1/R1/MER/101280484/VIS/EUC_MER_BGSUB-MOSAIC-VIS_TILE101280484-312969_20251007T222457.687000Z_00.00.fits",
+        "source_hdu": null,
+        "grism": null,
+        "grism_reference": null,
+        "retrieval_route": "tap-mosaic+esa-get_cutout",
+        "retrieval_url": "https://eas.esac.esa.int/sas-cutout/cutout?FILEPATH=%2Fdata%2Feuclid%2Frepository_dr1%2FDR1%2FR1%2FMER%2F101280484%2FVIS%2FEUC_MER_BGSUB-MOSAIC-VIS_TILE101280484-312969_20251007T222457.687000Z_00.00.fits&TAPCLIENT=ASTROQUERY&POS=CIRCLE%2C58.1332495%2C-49.1830038%2C0.0004166666666666667",
+        "dataset": null,
+        "association_table": null,
+        "tile_id": "101280484",
+        "band": "VIS",
+        "mosaic_class": "deep",
+        "processing_dataset": "DR1_R1",
+        "processing_plan": "MER_ProcessTile_EUCLID_2.0.32-DATA_RELEASE_DEEP-jbenarro-PLAN-000001",
+        "processing_pipeline": "MER_ProcessTile_EUCLID_2.0.32",
+        "processing_version": "11.3.1",
+        "raw_sha256": "d313e7c78ba0b6209dcd842b7eed1266841fe7f2d2d7505bc56539ebeca76da6",
+        "source_header_sha256": null,
+        "cutout_header_sha256": "aa6989507525920952662d970ea104cbdff31c624125f2cca5cc7f98a1f757e8",
+        "requested_source_id": "-581332463491830110"
+      }
+    },
+    {
+      "band": "Y",
+      "status": "ok",
+      "shape": [
+        31,
+        31
+      ],
+      "provenance": {
+        "schema": "euclid.product-provenance/v1",
+        "metadata_version": 1,
+        "release": "DR1",
+        "archive": "ESA",
+        "product_type": "image",
+        "source_id": null,
+        "source_file": "/data/euclid/repository_dr1/DR1/R1/MER/101280484/NISP/EUC_MER_BGSUB-MOSAIC-NIR-Y_TILE101280484-415DEA_20251007T085023.766695Z_00.00.fits",
+        "source_hdu": null,
+        "grism": null,
+        "grism_reference": null,
+        "retrieval_route": "tap-mosaic+esa-get_cutout",
+        "retrieval_url": "https://eas.esac.esa.int/sas-cutout/cutout?FILEPATH=%2Fdata%2Feuclid%2Frepository_dr1%2FDR1%2FR1%2FMER%2F101280484%2FNISP%2FEUC_MER_BGSUB-MOSAIC-NIR-Y_TILE101280484-415DEA_20251007T085023.766695Z_00.00.fits&TAPCLIENT=ASTROQUERY&POS=CIRCLE%2C58.1332495%2C-49.1830038%2C0.0004166666666666667",
+        "dataset": null,
+        "association_table": null,
+        "tile_id": "101280484",
+        "band": "Y",
+        "mosaic_class": "deep",
+        "processing_dataset": "DR1_R1",
+        "processing_plan": "MER_ProcessTile_EUCLID_2.0.32-DATA_RELEASE_DEEP-jbenarro-PLAN-000001",
+        "processing_pipeline": "MER_ProcessTile_EUCLID_2.0.32",
+        "processing_version": "11.3.1",
+        "raw_sha256": "9c1815dc73c2c257671858112d4e992021cb9177e97e88b2ecd2a5b9622ad13f",
+        "source_header_sha256": null,
+        "cutout_header_sha256": "da5333c201f3054efd26a27b3ad631bc4b3b03422c1f890dc88bf3e271ec8758",
+        "requested_source_id": "-581332463491830110"
+      }
+    },
+    {
+      "band": "J",
+      "status": "ok",
+      "shape": [
+        31,
+        31
+      ],
+      "provenance": {
+        "schema": "euclid.product-provenance/v1",
+        "metadata_version": 1,
+        "release": "DR1",
+        "archive": "ESA",
+        "product_type": "image",
+        "source_id": null,
+        "source_file": "/data/euclid/repository_dr1/DR1/R1/MER/101280484/NISP/EUC_MER_BGSUB-MOSAIC-NIR-J_TILE101280484-CDCCF9_20251007T085003.645358Z_00.00.fits",
+        "source_hdu": null,
+        "grism": null,
+        "grism_reference": null,
+        "retrieval_route": "tap-mosaic+esa-get_cutout",
+        "retrieval_url": "https://eas.esac.esa.int/sas-cutout/cutout?FILEPATH=%2Fdata%2Feuclid%2Frepository_dr1%2FDR1%2FR1%2FMER%2F101280484%2FNISP%2FEUC_MER_BGSUB-MOSAIC-NIR-J_TILE101280484-CDCCF9_20251007T085003.645358Z_00.00.fits&TAPCLIENT=ASTROQUERY&POS=CIRCLE%2C58.1332495%2C-49.1830038%2C0.0004166666666666667",
+        "dataset": null,
+        "association_table": null,
+        "tile_id": "101280484",
+        "band": "J",
+        "mosaic_class": "deep",
+        "processing_dataset": "DR1_R1",
+        "processing_plan": "MER_ProcessTile_EUCLID_2.0.32-DATA_RELEASE_DEEP-jbenarro-PLAN-000001",
+        "processing_pipeline": "MER_ProcessTile_EUCLID_2.0.32",
+        "processing_version": "11.3.1",
+        "raw_sha256": "7ecd6456ce95c9d273312a6a8b98a44a3e1a3ac555d6710469bf47afc8225ae5",
+        "source_header_sha256": null,
+        "cutout_header_sha256": "96741f08f9c5dee1c37bc752a4dc079719faef09ba275591bb93298c825366e5",
+        "requested_source_id": "-581332463491830110"
+      }
+    },
+    {
+      "band": "H",
+      "status": "ok",
+      "shape": [
+        31,
+        31
+      ],
+      "provenance": {
+        "schema": "euclid.product-provenance/v1",
+        "metadata_version": 1,
+        "release": "DR1",
+        "archive": "ESA",
+        "product_type": "image",
+        "source_id": null,
+        "source_file": "/data/euclid/repository_dr1/DR1/R1/MER/101280484/NISP/EUC_MER_BGSUB-MOSAIC-NIR-H_TILE101280484-DB5D74_20251007T084731.828892Z_00.00.fits",
+        "source_hdu": null,
+        "grism": null,
+        "grism_reference": null,
+        "retrieval_route": "tap-mosaic+esa-get_cutout",
+        "retrieval_url": "https://eas.esac.esa.int/sas-cutout/cutout?FILEPATH=%2Fdata%2Feuclid%2Frepository_dr1%2FDR1%2FR1%2FMER%2F101280484%2FNISP%2FEUC_MER_BGSUB-MOSAIC-NIR-H_TILE101280484-DB5D74_20251007T084731.828892Z_00.00.fits&TAPCLIENT=ASTROQUERY&POS=CIRCLE%2C58.1332495%2C-49.1830038%2C0.0004166666666666667",
+        "dataset": null,
+        "association_table": null,
+        "tile_id": "101280484",
+        "band": "H",
+        "mosaic_class": "deep",
+        "processing_dataset": "DR1_R1",
+        "processing_plan": "MER_ProcessTile_EUCLID_2.0.32-DATA_RELEASE_DEEP-jbenarro-PLAN-000001",
+        "processing_pipeline": "MER_ProcessTile_EUCLID_2.0.32",
+        "processing_version": "11.3.1",
+        "raw_sha256": "d304a759fae4086d23d64f7170b0dd2562eab6ae7120b3d9f471d08b55e4c758",
+        "source_header_sha256": null,
+        "cutout_header_sha256": "856823963ba07e1681a4d33b77538da7fe1d17a69baf338e23434d1e0f313b23",
+        "requested_source_id": "-581332463491830110"
+      }
+    }
+  ]
+}

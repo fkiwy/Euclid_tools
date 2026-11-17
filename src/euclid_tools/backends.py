@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from typing import Optional
+from euclid_tools.validation import positive_scalar
 
 
 def resolve_radius(radius: Optional[float] = None, search_radius: Optional[float] = None) -> float:
@@ -10,7 +11,7 @@ def resolve_radius(radius: Optional[float] = None, search_radius: Optional[float
         raise TypeError("Either 'radius' or 'search_radius' must be provided")
     if radius is not None and search_radius is not None and radius != search_radius:
         raise ValueError("'radius' and 'search_radius' must agree when both are given")
-    return radius if radius is not None else search_radius
+    return positive_scalar(radius if radius is not None else search_radius, 'radius')
 
 
 class EuclidArchiveBackend(ABC):
@@ -42,15 +43,28 @@ class EuclidArchiveBackend(ABC):
 class ESABackend(EuclidArchiveBackend):
     name = "esa"
 
+    def discover_spectra(self, object_id, *, release="dr1", **kwargs):
+        from euclid_tools import esa_tools
+        return esa_tools.discover_spectra(object_id, release=release, **kwargs)
+
+    def retrieve_spectra(self, object_id, *, release="dr1", **kwargs):
+        from euclid_tools import esa_tools
+        return esa_tools.retrieve_spectra(object_id, release=release, **kwargs)
+
+    def discover_mosaics(self, ra, dec, radius=None, search_radius=None, *, release="dr1", **kwargs):
+        from euclid_tools import esa_tools
+        return esa_tools.discover_mosaics(ra, dec, radius=radius, search_radius=search_radius,
+                                         release=release, **kwargs)
+
     def retrieve_objects(self, ra, dec, radius=None, search_radius=None, **kwargs):
         from euclid_tools import esa_tools
 
         return esa_tools.retrieve_objects(ra=ra, dec=dec, radius=resolve_radius(radius, search_radius), **kwargs)
 
-    def retrieve_object_by_id(self, object_id):
+    def retrieve_object_by_id(self, object_id, **kwargs):
         from euclid_tools import esa_tools
 
-        return esa_tools.retrieve_object_by_id(object_id)
+        return esa_tools.retrieve_object_by_id(object_id, **kwargs)
 
     def retrieve_spectrum(self, object_id, **kwargs):
         from euclid_tools import esa_tools
@@ -73,20 +87,35 @@ class ESABackend(EuclidArchiveBackend):
 class IRSABackend(EuclidArchiveBackend):
     name = "irsa"
 
+    def discover_spectra(self, object_id, *, release="dr1", **kwargs):
+        from euclid_tools import irsa_tools
+        return irsa_tools.discover_spectra(object_id, release=release, **kwargs)
+
     def retrieve_objects(self, ra, dec, radius=None, search_radius=None, **kwargs):
         from euclid_tools import irsa_tools
 
         return irsa_tools.retrieve_objects(ra=ra, dec=dec, radius=resolve_radius(radius, search_radius), **kwargs)
 
-    def retrieve_object_by_id(self, object_id):
+    def retrieve_object_by_id(self, object_id, **kwargs):
         from euclid_tools import irsa_tools
 
-        return irsa_tools.retrieve_object_by_id(object_id)
+        return irsa_tools.retrieve_object_by_id(object_id, **kwargs)
 
     def retrieve_spectrum(self, object_id, **kwargs):
         from euclid_tools import irsa_tools
 
         return irsa_tools.retrieve_spectrum(object_id, **kwargs)
+
+    def retrieve_spectra(self, object_id, *, release="dr1", **kwargs):
+        from euclid_tools import irsa_tools
+
+        return irsa_tools.retrieve_spectra(object_id, release=release, **kwargs)
+
+    def discover_mosaics(self, ra, dec, radius=None, search_radius=None, *, release="dr1", **kwargs):
+        from euclid_tools import irsa_tools
+
+        return irsa_tools.discover_mosaics(ra, dec, radius=radius, search_radius=search_radius,
+                                          release=release, **kwargs)
 
     def retrieve_cutout(self, ra, dec, radius=None, search_radius=None, cutout_size=None, band=None, **kwargs):
         from euclid_tools import irsa_tools

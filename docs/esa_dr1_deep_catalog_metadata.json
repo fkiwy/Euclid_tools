@@ -1,0 +1,268 @@
+[
+  {
+    "table_name": "dr1.mer_catalogue_deep_survey",
+    "column_name": "flux_j_templfit",
+    "datatype": "double",
+    "unit": "uJy",
+    "description": "NIR J band source template fitting flux (TPHOT measurement)"
+  },
+  {
+    "table_name": "dr1.mer_catalogue_deep_survey",
+    "column_name": "fluxerr_h_templfit",
+    "datatype": "double",
+    "unit": "uJy",
+    "description": "NIR H band source template fitting flux error (TPHOT measurement)"
+  },
+  {
+    "table_name": "dr1.mer_catalogue_deep_survey",
+    "column_name": "fluxerr_y_templfit",
+    "datatype": "double",
+    "unit": "uJy",
+    "description": "NIR Y band source template fitting flux error (TPHOT measurement)"
+  },
+  {
+    "table_name": "dr1.mer_catalogue_deep_survey",
+    "column_name": "point_like_flag",
+    "datatype": "short",
+    "unit": "NA",
+    "description": "Point-like flag : flag set to 1 for VIS detections with (DET_QUALITY_FLAG==0) AND (POINT_LIKE_PROBA&gt;threshold), otherwise set to NaN"
+  },
+  {
+    "table_name": "dr1.mer_catalogue_deep_survey",
+    "column_name": "flux_h_templfit",
+    "datatype": "double",
+    "unit": "uJy",
+    "description": "NIR H band source template fitting flux (TPHOT measurement)"
+  },
+  {
+    "table_name": "dr1.mer_catalogue_deep_survey",
+    "column_name": "det_quality_flag",
+    "datatype": "short",
+    "unit": "NA",
+    "description": "Detection step flags that could indicate the possible corruption of the MAG_STARGAL_SEP values"
+  },
+  {
+    "table_name": "dr1.mer_catalogue_deep_survey",
+    "column_name": "point_like_prob",
+    "datatype": "double",
+    "unit": "NA",
+    "description": "Probability between 0 and 1 that the source is point-like (the estimation uses a \"star probability cube\" defined in the MDB).  Value is set to NaN for NIR-only objects (use MUMAX_MINUS_MAG for NIR-only objcts)"
+  },
+  {
+    "table_name": "dr1.mer_catalogue_deep_survey",
+    "column_name": "flux_y_templfit",
+    "datatype": "double",
+    "unit": "uJy",
+    "description": "NIR Y band source template fitting flux (TPHOT measurement)"
+  },
+  {
+    "table_name": "dr1.mer_catalogue_deep_survey",
+    "column_name": "flag_j",
+    "datatype": "int",
+    "unit": "NA",
+    "description": "Objects flag keeping track of the flagged pixels in the NIR J flag image"
+  },
+  {
+    "table_name": "dr1.mer_catalogue_deep_survey",
+    "column_name": "flag_h",
+    "datatype": "int",
+    "unit": "NA",
+    "description": "Objects flag keeping track of the flagged pixels in the NIR H flag image"
+  },
+  {
+    "table_name": "dr1.mer_catalogue_deep_survey",
+    "column_name": "flux_vis_psf",
+    "datatype": "double",
+    "unit": "uJy",
+    "description": "VIS band source PSF-fitting photometry flux (TPHOT measurement)"
+  },
+  {
+    "table_name": "dr1.mer_catalogue_deep_survey",
+    "column_name": "fluxerr_vis_psf",
+    "datatype": "double",
+    "unit": "uJy",
+    "description": "VIS band source PSF-fitting photometry flux error (TPHOT measurement)"
+  },
+  {
+    "table_name": "dr1.mer_catalogue_deep_survey",
+    "column_name": "fluxerr_j_templfit",
+    "datatype": "double",
+    "unit": "uJy",
+    "description": "NIR J band source template fitting flux error (TPHOT measurement)"
+  },
+  {
+    "table_name": "dr1.mer_catalogue_deep_survey",
+    "column_name": "declination",
+    "datatype": "double",
+    "unit": "deg",
+    "description": "Source barycenter DEC coordinate (SExtractor DELTA_J2000) decimal degrees"
+  },
+  {
+    "table_name": "dr1.mer_catalogue_deep_survey",
+    "column_name": "right_ascension",
+    "datatype": "double",
+    "unit": "deg",
+    "description": "Source barycenter RA coordinate (SExtractor ALPHA_J2000) decimal degrees"
+  },
+  {
+    "table_name": "dr1.mer_catalogue_deep_survey",
+    "column_name": "flag_y",
+    "datatype": "int",
+    "unit": "NA",
+    "description": "Objects flag keeping track of the flagged pixels in the NIR Y flag image"
+  },
+  {
+    "table_name": "dr1.mer_catalogue_deep_survey",
+    "column_name": "gaia_match_quality",
+    "datatype": "double",
+    "unit": "NA",
+    "description": "The quality of the GAIA match"
+  },
+  {
+    "table_name": "dr1.mer_catalogue_deep_survey",
+    "column_name": "object_id",
+    "datatype": "long",
+    "unit": "NA",
+    "description": "Euclid unique source identifier"
+  },
+  {
+    "table_name": "dr1.mer_catalogue_deep_survey",
+    "column_name": "flag_vis",
+    "datatype": "int",
+    "unit": "NA",
+    "description": "Objects flag keeping track of the flagged pixels in the VIS flag image"
+  },
+  {
+    "table_name": "dr1.mer_catalogue_wide_survey",
+    "column_name": "flag_y",
+    "datatype": "int",
+    "unit": "NA",
+    "description": "Objects flag keeping track of the flagged pixels in the NIR Y flag image"
+  },
+  {
+    "table_name": "dr1.mer_catalogue_wide_survey",
+    "column_name": "object_id",
+    "datatype": "long",
+    "unit": "NA",
+    "description": "Euclid unique source identifier"
+  },
+  {
+    "table_name": "dr1.mer_catalogue_wide_survey",
+    "column_name": "gaia_match_quality",
+    "datatype": "double",
+    "unit": "NA",
+    "description": "The quality of the GAIA match"
+  },
+  {
+    "table_name": "dr1.mer_catalogue_wide_survey",
+    "column_name": "flag_vis",
+    "datatype": "int",
+    "unit": "NA",
+    "description": "Objects flag keeping track of the flagged pixels in the VIS flag image"
+  },
+  {
+    "table_name": "dr1.mer_catalogue_wide_survey",
+    "column_name": "fluxerr_vis_psf",
+    "datatype": "double",
+    "unit": "uJy",
+    "description": "VIS band source PSF-fitting photometry flux error (TPHOT measurement)"
+  },
+  {
+    "table_name": "dr1.mer_catalogue_wide_survey",
+    "column_name": "fluxerr_j_templfit",
+    "datatype": "double",
+    "unit": "uJy",
+    "description": "NIR J band source template fitting flux error (TPHOT measurement)"
+  },
+  {
+    "table_name": "dr1.mer_catalogue_wide_survey",
+    "column_name": "declination",
+    "datatype": "double",
+    "unit": "deg",
+    "description": "Source barycenter DEC coordinate (SExtractor DELTA_J2000) decimal degrees"
+  },
+  {
+    "table_name": "dr1.mer_catalogue_wide_survey",
+    "column_name": "right_ascension",
+    "datatype": "double",
+    "unit": "deg",
+    "description": "Source barycenter RA coordinate (SExtractor ALPHA_J2000) decimal degrees"
+  },
+  {
+    "table_name": "dr1.mer_catalogue_wide_survey",
+    "column_name": "point_like_prob",
+    "datatype": "double",
+    "unit": "NA",
+    "description": "Probability between 0 and 1 that the source is point-like (the estimation uses a \"star probability cube\" defined in the MDB).  Value is set to NaN for NIR-only objects (use MUMAX_MINUS_MAG for NIR-only objcts)"
+  },
+  {
+    "table_name": "dr1.mer_catalogue_wide_survey",
+    "column_name": "det_quality_flag",
+    "datatype": "short",
+    "unit": "NA",
+    "description": "Detection step flags that could indicate the possible corruption of the MAG_STARGAL_SEP values"
+  },
+  {
+    "table_name": "dr1.mer_catalogue_wide_survey",
+    "column_name": "flux_y_templfit",
+    "datatype": "double",
+    "unit": "uJy",
+    "description": "NIR Y band source template fitting flux (TPHOT measurement)"
+  },
+  {
+    "table_name": "dr1.mer_catalogue_wide_survey",
+    "column_name": "flag_h",
+    "datatype": "int",
+    "unit": "NA",
+    "description": "Objects flag keeping track of the flagged pixels in the NIR H flag image"
+  },
+  {
+    "table_name": "dr1.mer_catalogue_wide_survey",
+    "column_name": "flag_j",
+    "datatype": "int",
+    "unit": "NA",
+    "description": "Objects flag keeping track of the flagged pixels in the NIR J flag image"
+  },
+  {
+    "table_name": "dr1.mer_catalogue_wide_survey",
+    "column_name": "flux_vis_psf",
+    "datatype": "double",
+    "unit": "uJy",
+    "description": "VIS band source PSF-fitting photometry flux (TPHOT measurement)"
+  },
+  {
+    "table_name": "dr1.mer_catalogue_wide_survey",
+    "column_name": "flux_j_templfit",
+    "datatype": "double",
+    "unit": "uJy",
+    "description": "NIR J band source template fitting flux (TPHOT measurement)"
+  },
+  {
+    "table_name": "dr1.mer_catalogue_wide_survey",
+    "column_name": "fluxerr_y_templfit",
+    "datatype": "double",
+    "unit": "uJy",
+    "description": "NIR Y band source template fitting flux error (TPHOT measurement)"
+  },
+  {
+    "table_name": "dr1.mer_catalogue_wide_survey",
+    "column_name": "fluxerr_h_templfit",
+    "datatype": "double",
+    "unit": "uJy",
+    "description": "NIR H band source template fitting flux error (TPHOT measurement)"
+  },
+  {
+    "table_name": "dr1.mer_catalogue_wide_survey",
+    "column_name": "flux_h_templfit",
+    "datatype": "double",
+    "unit": "uJy",
+    "description": "NIR H band source template fitting flux (TPHOT measurement)"
+  },
+  {
+    "table_name": "dr1.mer_catalogue_wide_survey",
+    "column_name": "point_like_flag",
+    "datatype": "short",
+    "unit": "NA",
+    "description": "Point-like flag : flag set to 1 for VIS detections with (DET_QUALITY_FLAG==0) AND (POINT_LIKE_PROBA&gt;threshold), otherwise set to NaN"
+  }
+]

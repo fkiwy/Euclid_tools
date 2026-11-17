@@ -31,6 +31,16 @@ from matplotlib.ticker import FormatStrFormatter, ScalarFormatter
 from scipy.interpolate import PchipInterpolator
 from scipy.optimize import curve_fit
 
+def _matplotlib_array(values):
+    """Copy numeric plotting values/masks without Astropy Column subclasses.
+
+    Matplotlib's polygon stacking can produce malformed MaskedColumn objects.
+    Values are already in the SED display units; this changes only the container.
+    """
+    return np.ma.array(np.asarray(values), mask=np.ma.getmaskarray(values),
+                       copy=True, subok=False)
+
+
 SVO_URL = "http://svo2.cab.inta-csic.es/theory/fps3/fps.php"
 
 from enum import Enum
@@ -826,7 +836,10 @@ class SED:
                 if spec_uncertainty:
                     flux_lower_bound = flux - uncertainty
                     flux_upper_bound = flux + uncertainty
-                    plt.fill_between(wavelength, flux_lower_bound + delta, flux_upper_bound + delta, color=color, alpha=0.2, label="Uncertainty")
+                    plt.fill_between(_matplotlib_array(wavelength),
+                                     _matplotlib_array(flux_lower_bound + delta),
+                                     _matplotlib_array(flux_upper_bound + delta),
+                                     color=color, alpha=0.2, label="Uncertainty")
             if label_aside_curve:
                 if label_position == "left" or label_position == "both":
                     plt.text(wavelength[0], (flux + delta)[0], waveflux.label, fontsize=7, color=color, ha="right", va="bottom")
